@@ -9,6 +9,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from application.ports.llm_port import LLMPort
 from application.ports.retrieval_port import RetrievalSourcePort
 from infrastructure.reasoning.state import ConversationState, ReasoningStepEvent
+from sentinel_domain.sme import SmeTemplate, StepKind
 
 # Haiku by default for low latency; set REASONING_MODEL in .env.local to override.
 _FAST_MODEL = os.environ.get("REASONING_MODEL", "claude-haiku-4-5-20251001")
@@ -19,18 +20,27 @@ def _emit(state: ConversationState, ev: ReasoningStepEvent) -> None:
     state["token_total"] = state.get("token_total", 0) + ev.total_tokens
 
 
+def _step_name(template: SmeTemplate, kind: StepKind, fallback: str) -> str:
+    """Return the first configured step name of the given kind, or the fallback."""
+    return next((s.name for s in template.steps if s.kind == kind), fallback)
+
+
 def build_graph(
     *,
     llm: LLMPort,
     retriever: RetrievalSourcePort,
     checkpointer: AsyncPostgresSaver,
+    sme_template: SmeTemplate,
 ):
+    retrieve_label = _step_name(sme_template, StepKind.RETRIEVE, "Retrieve context")
+    reason_label   = _step_name(sme_template, StepKind.REASON,   "Reason & answer")
+
     async def retrieve(state: ConversationState) -> ConversationState:
         t0 = time.perf_counter()
         chunks = await retriever.retrieve(query=state["question"], top_k=6)
         state["retrieved"] = [c.__dict__ for c in chunks]
         _emit(state, ReasoningStepEvent(
-            step_id="retrieve", step_name="Retrieve context", phase="finished",
+            step_id="retrieve", step_name=retrieve_label, phase="finished",
             latency_ms=(time.perf_counter() - t0) * 1000,
             output_preview=f"{len(chunks)} chunks",
         ))
@@ -57,7 +67,7 @@ def build_graph(
         state["analysis"] = res.text
         state["answer"] = res.text
         _emit(state, ReasoningStepEvent(
-            step_id="reason", step_name="Reason & answer", phase="finished",
+            step_id="reason", step_name=reason_label, phase="finished",
             latency_ms=(time.perf_counter() - t0) * 1000,
             prompt_tokens=res.usage.prompt_tokens,
             completion_tokens=res.usage.completion_tokens,

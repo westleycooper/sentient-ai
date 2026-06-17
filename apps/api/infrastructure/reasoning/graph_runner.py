@@ -33,6 +33,7 @@ class GraphRunner:
             llm=self._llm,
             retriever=retriever,
             checkpointer=self._checkpointer,
+            sme_template=sme_template,
         )
         config = {"configurable": {"thread_id": conversation_id}}
         initial_state: ConversationState = {
