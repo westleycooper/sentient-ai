@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -20,10 +21,35 @@ from interface.routers import conversations, sme
 configure_logging()
 configure_tracing()
 
+# Validate STT/TTS keys at startup so missing config fails loudly, not silently on first request.
+_STT_REQUIRED_KEYS = {"deepgram": ["DEEPGRAM_API_KEY"], "openai": ["OPENAI_API_KEY"], "azure": ["AZURE_SPEECH_KEY"]}
+_TTS_REQUIRED_KEYS = {"deepgram": ["DEEPGRAM_API_KEY"], "elevenlabs": ["ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"], "openai": ["OPENAI_API_KEY"], "azure": ["AZURE_SPEECH_KEY"]}
+
+for _provider, _keys in [
+    (os.getenv("STT_PROVIDER", "stub"), _STT_REQUIRED_KEYS),
+    (os.getenv("TTS_PROVIDER", "stub"), _TTS_REQUIRED_KEYS),
+]:
+    for _key in _keys.get(_provider, []):
+        if not os.getenv(_key):
+            raise RuntimeError(f"Missing required env var for {_provider}: {_key}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+    from interface.dependencies import set_checkpointer
+
+    async with AsyncPostgresSaver.from_conn_string(os.environ["DATABASE_URL"]) as cp:
+        await cp.setup()
+        set_checkpointer(cp)
+        yield
+
+
 app = FastAPI(
     title="Sentinel API",
     version="0.1.0",
-    description="Multi-reasoning voice agent platform. OpenAPI schema is committed to packages/contracts/.",
+    description="Multi-reasoning voice agent platform.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

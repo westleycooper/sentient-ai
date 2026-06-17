@@ -1,7 +1,5 @@
-import { useState } from "react";
 import {
   Box,
-  Button,
   Divider,
   IconButton,
   MenuItem,
@@ -47,7 +45,7 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="subtitle2" color="text.secondary">
           Reasoning Steps
         </Typography>
@@ -60,8 +58,8 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
 
       {steps.map((step, idx) => (
         <Box key={step.id}>
-          <Stack direction="row" spacing={1} alignItems="flex-start">
-            <Stack spacing={1} flex={1}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
+            <Stack spacing={1} sx={{ flex: 1 }}>
               <Stack direction="row" spacing={1}>
                 <TextField
                   label="Step name"
@@ -69,7 +67,7 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
                   value={step.name}
                   onChange={(e) => update(idx, { name: e.target.value })}
                   sx={{ flex: 1 }}
-                  inputProps={{ "aria-label": `Step ${idx + 1} name` }}
+                  slotProps={{ htmlInput: { "aria-label": `Step ${idx + 1} name` } }}
                 />
                 <Select
                   size="small"
@@ -98,7 +96,7 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
                     /* ignore invalid JSON mid-edit */
                   }
                 }}
-                inputProps={{ "aria-label": `Step ${idx + 1} config` }}
+                slotProps={{ htmlInput: { "aria-label": `Step ${idx + 1} config` } }}
               />
             </Stack>
             <Tooltip title="Remove step">

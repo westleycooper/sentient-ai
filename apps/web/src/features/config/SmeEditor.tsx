@@ -44,7 +44,7 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
   return (
     <Box component="form" onSubmit={(e) => { e.preventDefault(); onSave(draft); }}>
       <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <TextField
             label="Template name"
             value={draft.name}
@@ -137,7 +137,7 @@ function RulesEditor({
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" justifyContent="space-between">
+      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
         <Typography variant="subtitle2" color="text.secondary">
           Rules
         </Typography>
@@ -146,12 +146,12 @@ function RulesEditor({
         </Button>
       </Stack>
       {rules.map((rule, idx) => (
-        <Stack key={rule.id} direction="row" spacing={1} alignItems="center">
+        <Stack key={rule.id} direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Switch
             checked={rule.enabled}
             onChange={(e) => update(idx, { enabled: e.target.checked })}
             size="small"
-            inputProps={{ "aria-label": `Enable rule ${idx + 1}` }}
+            slotProps={{ input: { "aria-label": `Enable rule ${idx + 1}` } }}
           />
           <TextField
             value={rule.description}
@@ -159,7 +159,7 @@ function RulesEditor({
             size="small"
             fullWidth
             placeholder="Rule description"
-            inputProps={{ "aria-label": `Rule ${idx + 1} description` }}
+            slotProps={{ htmlInput: { "aria-label": `Rule ${idx + 1} description` } }}
           />
           <Button size="small" color="error" onClick={() => remove(idx)} aria-label={`Remove rule ${idx + 1}`}>
             Remove

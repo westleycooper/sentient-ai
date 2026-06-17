@@ -27,8 +27,8 @@ export function SmeTemplateCard({ template, selected, onSelect }: SmeTemplateCar
     >
       <CardActionArea onClick={() => onSelect(template.id)}>
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-            <Typography variant="subtitle1" fontWeight={600}>
+          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               {template.name}
             </Typography>
             {template.is_default && (

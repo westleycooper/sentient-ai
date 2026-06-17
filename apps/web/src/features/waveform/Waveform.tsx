@@ -42,7 +42,7 @@ export function Waveform({ amplitude, color = "#4f9cff", active = true }: Wavefo
         const x = (i / (N - 1)) * 2 - 1;
         const a = amp.length ? amp[Math.floor((i / N) * amp.length)] : 0;
         positions[i * 3] = x;
-        positions[i * 3 + 1] = active ? (a - 0.5) * 1.6 : 0;
+        positions[i * 3 + 1] = active ? a * 0.8 : 0;
         positions[i * 3 + 2] = 0;
       }
       geom.attributes.position.needsUpdate = true;

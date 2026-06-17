@@ -93,7 +93,12 @@ export interface ErrorEvent {
   message: string;
 }
 
-export type TurnEvent = StepEvent | CompleteEvent | ErrorEvent;
+export interface TranscriptEvent {
+  type: "transcript";
+  text: string;
+}
+
+export type TurnEvent = TranscriptEvent | StepEvent | CompleteEvent | ErrorEvent;
 
 // --- SME hooks ---
 
@@ -115,6 +120,7 @@ export function useSmeTemplate(id: string) {
 export function useSaveSmeTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["sme", "save"],
     mutationFn: (template: SmeTemplate) =>
       api.put<SmeTemplate>(`/sme/${template.id}`, template),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sme"] }),
@@ -124,6 +130,7 @@ export function useSaveSmeTemplate() {
 export function useDeleteSmeTemplate() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["sme", "delete"],
     mutationFn: (id: string) => api.delete(`/sme/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sme"] }),
   });
@@ -142,6 +149,7 @@ export function useConversation(conversationId: string | null) {
 export function useStartConversation() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["conversations", "start"],
     mutationFn: (smeId: string) =>
       api.post<StartConversationResponse>("/conversations", { sme_id: smeId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
