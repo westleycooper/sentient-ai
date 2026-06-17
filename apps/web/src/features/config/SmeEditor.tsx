@@ -8,7 +8,11 @@ import {
   Box,
   Button,
   Divider,
+  FormControl,
   FormControlLabel,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Switch,
   Tab,
@@ -55,6 +59,19 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
             size="small"
             sx={{ flex: 1 }}
           />
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <InputLabel id="vis-kind-label">Waveform</InputLabel>
+            <Select
+              labelId="vis-kind-label"
+              label="Waveform"
+              value={draft.visualisation_kind ?? "wave"}
+              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wave3d")}
+              aria-label="Waveform visualisation"
+            >
+              <MenuItem value="wave">Sound Wave</MenuItem>
+              <MenuItem value="wave3d">3D Wave</MenuItem>
+            </Select>
+          </FormControl>
           <FormControlLabel
             control={
               <Switch
@@ -63,7 +80,7 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
                 slotProps={{ input: { "aria-label": "Lock — prevent deletion" } }}
               />
             }
-            label="Lock (prevent deletion)"
+            label="Lock"
           />
         </Stack>
 

@@ -33,6 +33,7 @@ class PostgresSmeRepository:
         row.sources = [s.model_dump() for s in template.sources]
         row.rules = [r.model_dump() for r in template.rules]
         row.is_default = template.is_default
+        row.visualisation_kind = template.visualisation_kind
         await self._session.commit()
 
     async def delete_template(self, template_id: str) -> None:
@@ -51,4 +52,5 @@ class PostgresSmeRepository:
             sources=[RetrievalSourceConfig(**s) for s in (row.sources or [])],
             rules=[SmeRule(**r) for r in (row.rules or [])],
             is_default=row.is_default,
+            visualisation_kind=row.visualisation_kind or "wave",
         )
