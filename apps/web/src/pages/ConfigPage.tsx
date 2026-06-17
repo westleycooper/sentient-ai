@@ -26,6 +26,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 import { SmeTemplateCard } from "../features/config/SmeTemplateCard";
 import { SmeEditor } from "../features/config/SmeEditor";
@@ -35,12 +37,14 @@ import {
   useDeleteSmeTemplate,
   type SmeTemplate,
 } from "../api/hooks";
+import { useUiStore } from "../store/uiStore";
 
 export function ConfigPage() {
   const navigate = useNavigate();
   const { data: templates = [], isLoading } = useSmeTemplates();
   const saveMutation = useSaveSmeTemplate();
   const deleteMutation = useDeleteSmeTemplate();
+  const { defaultSmeId, setDefaultSme } = useUiStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; severity: "success" | "error" } | null>(null);
@@ -76,6 +80,7 @@ export function ConfigPage() {
       sources: [],
       rules: [],
       is_default: false,
+      visualisation_kind: "wave",
     };
     setSelectedId(blank.id);
     saveMutation.mutate(blank);
@@ -138,9 +143,20 @@ export function ConfigPage() {
                   <SmeTemplateCard
                     template={t}
                     selected={t.id === (selected?.id ?? "")}
+                    isStartupDefault={t.id === defaultSmeId}
                     onSelect={setSelectedId}
                   />
                   <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", mt: 0.5 }}>
+                    <Tooltip title={t.id === defaultSmeId ? "Default on startup" : "Set as startup default"}>
+                      <IconButton
+                        size="small"
+                        onClick={() => setDefaultSme(t.id)}
+                        aria-label={`Set ${t.name} as startup default`}
+                        sx={{ color: t.id === defaultSmeId ? "warning.main" : "text.disabled" }}
+                      >
+                        {t.id === defaultSmeId ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Clone template">
                       <IconButton size="small" onClick={() => handleClone(t)} aria-label={`Clone ${t.name}`}>
                         <ContentCopyIcon fontSize="small" />

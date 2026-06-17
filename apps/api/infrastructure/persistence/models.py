@@ -52,3 +52,4 @@ class SmeTemplateModel(Base):
     sources: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
     rules: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")

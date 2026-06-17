@@ -12,10 +12,11 @@ import type { SmeTemplate } from "../../api/hooks";
 interface SmeTemplateCardProps {
   template: SmeTemplate;
   selected: boolean;
+  isStartupDefault?: boolean;
   onSelect: (id: string) => void;
 }
 
-export function SmeTemplateCard({ template, selected, onSelect }: SmeTemplateCardProps) {
+export function SmeTemplateCard({ template, selected, isStartupDefault, onSelect }: SmeTemplateCardProps) {
   return (
     <Card
       variant="outlined"
@@ -27,13 +28,18 @@ export function SmeTemplateCard({ template, selected, onSelect }: SmeTemplateCar
     >
       <CardActionArea onClick={() => onSelect(template.id)}>
         <CardContent>
-          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               {template.name}
             </Typography>
-            {template.is_default && (
-              <Chip label="Locked" size="small" color="secondary" variant="outlined" />
-            )}
+            <Stack direction="row" spacing={0.5}>
+              {isStartupDefault && (
+                <Chip label="Default" size="small" color="warning" variant="outlined" />
+              )}
+              {template.is_default && (
+                <Chip label="Locked" size="small" color="secondary" variant="outlined" />
+              )}
+            </Stack>
           </Stack>
           <Typography
             variant="body2"

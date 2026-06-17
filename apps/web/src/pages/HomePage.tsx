@@ -43,7 +43,7 @@ import type { TurnEvent, TranscriptEvent } from "../api/hooks";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { drawerOpen, toggleDrawer, selectedSmeId, selectSme, recording, setRecording } =
+  const { drawerOpen, toggleDrawer, selectedSmeId, defaultSmeId, selectSme, recording, setRecording } =
     useUiStore();
 
   const [amplitude, setAmplitude] = useState<Float32Array>(new Float32Array(256));
@@ -69,7 +69,7 @@ export function HomePage() {
   const { data: conversation } = useConversation(conversationId);
   const startConvMutation = useStartConversation();
 
-  const activeSmeId = selectedSmeId ?? templates[0]?.id ?? "";
+  const activeSmeId = selectedSmeId ?? defaultSmeId ?? templates[0]?.id ?? "";
   const activeSme = templates.find((t) => t.id === activeSmeId) ?? templates[0] ?? null;
 
   const handleAmplitudeChunk = useCallback((buf: Float32Array) => {
@@ -483,7 +483,13 @@ export function HomePage() {
             bgcolor: "background.paper",
           }}
         >
-          <Waveform amplitude={amplitude} active={recording || isTtsPlaying} color="#82aad4" peakColor="#c9819a" />
+          <Waveform
+            amplitude={amplitude}
+            active={recording || isTtsPlaying}
+            color="#82aad4"
+            peakColor="#c9819a"
+            kind={activeSme?.visualisation_kind ?? "wave"}
+          />
 
           {/* Reasoning steps overlay */}
           <Box

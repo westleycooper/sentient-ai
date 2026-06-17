@@ -19,6 +19,7 @@ class SmeTemplateResponse(BaseModel):
     sources: list[dict]
     rules: list[dict]
     is_default: bool
+    visualisation_kind: str = "wave"
 
     @classmethod
     def from_domain(cls, t: SmeTemplate) -> "SmeTemplateResponse":
@@ -30,6 +31,7 @@ class SmeTemplateResponse(BaseModel):
             sources=[s.model_dump() for s in t.sources],
             rules=[r.model_dump() for r in t.rules],
             is_default=t.is_default,
+            visualisation_kind=t.visualisation_kind,
         )
 
 
@@ -41,6 +43,7 @@ class SaveSmeTemplateRequest(BaseModel):
     sources: list[dict] = Field(default_factory=list)
     rules: list[dict] = Field(default_factory=list)
     is_default: bool = False
+    visualisation_kind: str = "wave"
 
 
 # --- Conversations ---

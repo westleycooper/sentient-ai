@@ -44,6 +44,7 @@ async def save_sme_template(
         sources=[RetrievalSourceConfig(**s) for s in body.sources],
         rules=[SmeRule(**r) for r in body.rules],
         is_default=body.is_default,
+        visualisation_kind=body.visualisation_kind,
     )
     saved = await uc.execute(template)
     return SmeTemplateResponse.from_domain(saved)
