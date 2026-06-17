@@ -1,0 +1,136 @@
+"""Conversations router: create session, retrieve history, stream a turn via SSE."""
+from __future__ import annotations
+
+import json
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+
+from application.use_cases.process_turn import ProcessTurnUseCase
+from application.use_cases.start_conversation import StartConversationUseCase
+from interface.dependencies import (
+    get_conv_repo,
+    get_process_turn_uc,
+    get_start_conversation_uc,
+)
+from interface.dto import (
+    ConversationResponse,
+    MessageResponse,
+    StartConversationRequest,
+    StartConversationResponse,
+    TurnErrorEventResponse,
+    TurnRequest,
+)
+
+router = APIRouter(prefix="/conversations", tags=["conversations"])
+logger = logging.getLogger(__name__)
+
+
+@router.post("", response_model=StartConversationResponse, status_code=201)
+async def start_conversation(
+    body: StartConversationRequest,
+    uc: StartConversationUseCase = Depends(get_start_conversation_uc),
+):
+    try:
+        conv = await uc.execute(sme_id=body.sme_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return StartConversationResponse(
+        conversation_id=conv.id,
+        sme_id=conv.sme_id,
+        created_at=conv.created_at,
+    )
+
+
+@router.get("/{conversation_id}", response_model=ConversationResponse)
+async def get_conversation(conversation_id: str, repo=Depends(get_conv_repo)):
+    conv = await repo.get(conversation_id)
+    if conv is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return ConversationResponse(
+        id=conv.id,
+        sme_id=conv.sme_id,
+        created_at=conv.created_at,
+        messages=[
+            MessageResponse(
+                id=m.id,
+                role=m.role.value,
+                content=m.content,
+                created_at=m.created_at,
+                token_count=m.token_count,
+                citations=m.citations,
+            )
+            for m in conv.messages
+        ],
+    )
+
+
+@router.post("/{conversation_id}/turn")
+async def process_turn(
+    conversation_id: str,
+    body: TurnRequest,
+    uc: ProcessTurnUseCase = Depends(get_process_turn_uc),
+):
+    """
+    Stream reasoning step events + final answer as Server-Sent Events.
+
+    Each event is a JSON object with a `type` field:
+    - `step` — a ReasoningStepEvent (step_id, step_name, phase, tokens, latency…)
+    - `complete` — final answer with total token count and citations
+    - `error` — something went wrong
+    """
+
+    async def event_stream():
+        try:
+            last_event: dict = {}
+            async for partial in uc.execute(
+                conversation_id=conversation_id, user_text=body.user_text
+            ):
+                last_event = partial
+                for ev in partial.get("events", []):
+                    data = {
+                        "type": "step",
+                        "step_id": ev.step_id,
+                        "step_name": ev.step_name,
+                        "phase": ev.phase,
+                        "latency_ms": ev.latency_ms,
+                        "prompt_tokens": ev.prompt_tokens,
+                        "completion_tokens": ev.completion_tokens,
+                        "total_tokens": ev.total_tokens,
+                        "model": ev.model,
+                        "estimated_cost": ev.estimated_cost,
+                        "output_preview": ev.output_preview,
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+
+            complete = {
+                "type": "complete",
+                "answer": last_event.get("answer", ""),
+                "total_tokens": last_event.get("token_total", 0),
+                "citations": last_event.get("citations", []),
+            }
+            yield f"data: {json.dumps(complete)}\n\n"
+
+        except ValueError as exc:
+            err = TurnErrorEventResponse(message=str(exc))
+            yield f"data: {json.dumps(err.model_dump())}\n\n"
+        except Exception as exc:
+            logger.exception("turn_stream_error", extra={"conversation_id": conversation_id})
+            err = TurnErrorEventResponse(message="Internal error — see server logs.")
+            yield f"data: {json.dumps(err.model_dump())}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.post("/{conversation_id}/audio-turn")
+async def process_audio_turn(
+    conversation_id: str,
+    uc: ProcessTurnUseCase = Depends(get_process_turn_uc),
+):
+    """
+    Accept audio/webm upload, transcribe via STT, then stream the same SSE turn events.
+    Full implementation wires SttPort; stub returns placeholder transcript.
+    """
+    from fastapi import UploadFile, File
+    raise HTTPException(status_code=501, detail="Audio upload endpoint — wire STT adapter to enable.")

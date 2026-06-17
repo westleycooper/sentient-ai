@@ -1,0 +1,9 @@
+packages:
+  - apps/web
+  - packages/contracts
+
+onlyBuiltDependencies:
+  - esbuild
+
+allowBuilds:
+  esbuild: true

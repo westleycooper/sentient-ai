@@ -1,0 +1,49 @@
+version: "3.9"
+# Local development compose. cloud-agnostic (CLAUDE.md §8).
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: sentinel
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://sentinel:sentinel_dev@postgres:5432/sentinel
+      ENV: local
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app
+      - ./packages/domain:/packages/domain
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install && pnpm dev --host"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    environment:
+      VITE_API_BASE: http://localhost:8000
+
+volumes:
+  pgdata:

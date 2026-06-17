@@ -1,0 +1,64 @@
+[project]
+name = "sentinel-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2",
+  "langgraph>=0.2",
+  "langgraph-checkpoint-postgres>=0.1",
+  "psycopg[binary]>=3.1",
+  "langchain>=0.2",
+  "langchain-anthropic>=0.1",
+  "sqlalchemy[asyncio]>=2",
+  "asyncpg>=0.29",
+  "alembic>=1.13",
+  "httpx>=0.27",
+  "opentelemetry-sdk>=1.25",
+  "opentelemetry-instrumentation-fastapi>=0.46b0",
+  "azure-monitor-opentelemetry>=1.6",
+  "python-multipart>=0.0.9",
+  "sse-starlette>=2.1",
+  "sentinel-domain",
+  "python-dotenv>=1.2.2",
+]
+
+[tool.uv.sources]
+sentinel-domain = { path = "../../packages/domain", editable = true }
+
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["domain", "application"]
+omit = [
+  "tests/*",
+  "application/ports/blob_store_port.py",
+  "application/ports/embedding_port.py",
+  "application/ports/llm_port.py",
+  "application/ports/retrieval_port.py",
+  "application/ports/stt_port.py",
+  "application/ports/tts_port.py",
+]
+
+[tool.coverage.report]
+fail_under = 90
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.0",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+]

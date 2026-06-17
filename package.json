@@ -1,0 +1,12 @@
+{
+  "name": "sentinel",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:web": "pnpm --filter sentinel-web dev",
+    "build:web": "pnpm --filter sentinel-web build",
+    "test:web": "pnpm --filter sentinel-web test",
+    "typecheck": "pnpm --filter sentinel-web typecheck"
+  },
+  "packageManager": "pnpm@11.7.0"
+}
