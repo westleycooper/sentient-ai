@@ -47,8 +47,8 @@ export function ReasoningSteps({ steps, isStreaming }: ReasoningStepsProps) {
 function StepRow({ step }: { step: StepEvent }) {
   const done = step.phase === "finished";
   const label = step.step_name;
-  const tokens = step.total_tokens > 0 ? `${step.total_tokens} tok` : null;
-  const latency = step.latency_ms != null ? `${Math.round(step.latency_ms)}ms` : null;
+  const tokens = step.total_tokens > 0 ? `${step.total_tokens} tokens` : null;
+  const latency = step.latency_ms != null ? `${Math.round(step.latency_ms)} ms` : null;
 
   return (
     <Collapse in>

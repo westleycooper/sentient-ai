@@ -34,7 +34,7 @@ export const theme = createTheme({
     h6: { fontWeight: 700 },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 6,
   },
   components: {
     MuiButton: {
