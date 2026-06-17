@@ -7,7 +7,7 @@
  * - Reasoning steps overlay (fades in during a turn)
  * - Toolbar: SME selector, transcript drawer toggle, config link
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -59,14 +59,49 @@ export function HomePage() {
   // AudioContext created once on first mic click so it's inside a user gesture
   const ttsCtxRef = useRef<AudioContext | null>(null);
 
+  // VAD (voice activity detection) refs — all mutable, no re-render on change
+  const vadHasSpeechRef = useRef(false);
+  const vadSilenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const vadIsActiveRef = useRef(false);      // true only while mic is recording
+  const vadMicStopRef = useRef<(() => void) | null>(null);  // set after handleMicStop defined
+
   const { data: templates = [] } = useSmeTemplates();
   const { data: conversation } = useConversation(conversationId);
   const startConvMutation = useStartConversation();
 
   const activeSmeId = selectedSmeId ?? templates[0]?.id ?? "";
+  const activeSme = templates.find((t) => t.id === activeSmeId) ?? templates[0] ?? null;
 
   const handleAmplitudeChunk = useCallback((buf: Float32Array) => {
     setAmplitude(new Float32Array(buf));
+
+    if (!vadIsActiveRef.current) return;
+
+    // RMS of time-domain signal: 0 = silence, ~0.02+ = speech
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+
+    const SPEECH_THRESHOLD = 0.015;
+    const SILENCE_THRESHOLD = 0.008;
+    const SILENCE_MS = 2000;
+
+    if (rms > SPEECH_THRESHOLD) {
+      vadHasSpeechRef.current = true;
+      if (vadSilenceTimerRef.current) {
+        clearTimeout(vadSilenceTimerRef.current);
+        vadSilenceTimerRef.current = null;
+      }
+    } else if (vadHasSpeechRef.current && rms < SILENCE_THRESHOLD && !vadSilenceTimerRef.current) {
+      vadSilenceTimerRef.current = setTimeout(() => {
+        vadSilenceTimerRef.current = null;
+        if (vadIsActiveRef.current) {
+          vadIsActiveRef.current = false;
+          vadHasSpeechRef.current = false;
+          vadMicStopRef.current?.();
+        }
+      }, SILENCE_MS);
+    }
   }, []);
 
   const { state: recState, start: startRec, stop: stopRec } = useVoiceRecorder(handleAmplitudeChunk);
@@ -77,6 +112,102 @@ export function HomePage() {
     setConversationId(res.conversation_id);
     return res.conversation_id;
   }, [conversationId, activeSmeId, startConvMutation]);
+
+  // --- Greeting ---
+  // Re-runs whenever the active SME changes (including initial load).
+  // Always resets conversation + steps so the new SME gets a fresh thread.
+  const greetingPlayedRef = useRef(false);
+
+  useEffect(() => {
+    if (!activeSme) return;
+
+    // Reset conversation binding — ensureConversation will create a new one
+    // for the selected SME on the next user turn.
+    setConversationId(null);
+    setSteps([]);
+    setIsStreaming(false);
+    greetingPlayedRef.current = false;
+
+    const greetingText = `Hello, I'm Sentinel, your ${activeSme.name}. How can I help?`;
+
+    // Show text immediately
+    setLocalMessages([{
+      id: "greeting",
+      role: "assistant",
+      content: greetingText,
+      created_at: new Date().toISOString(),
+      token_count: 0,
+      citations: [],
+    }]);
+
+    // cancelled = true when the effect cleans up (i.e. SME changed again before
+    // the user interacted), so the stale speak closure never fires.
+    let cancelled = false;
+
+    // Speak on first interaction (browser requires a user gesture for AudioContext)
+    const speak = async () => {
+      if (cancelled || greetingPlayedRef.current) return;
+      greetingPlayedRef.current = true;
+      try {
+        if (!ttsCtxRef.current || ttsCtxRef.current.state === "closed") {
+          ttsCtxRef.current = new AudioContext();
+        }
+        await ttsCtxRef.current.resume();
+        const res = await fetch("/api/tts/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: greetingText }),
+        });
+        if (!res.ok || !res.body) return;
+
+        const chunks: Uint8Array[] = [];
+        const reader = res.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) chunks.push(value);
+        }
+        const totalLen = chunks.reduce((n, c) => n + c.byteLength, 0);
+        const merged = new Uint8Array(totalLen);
+        let offset = 0;
+        for (const c of chunks) { merged.set(c, offset); offset += c.byteLength; }
+        if (!merged.byteLength) return;
+
+        const ctx = ttsCtxRef.current;
+        const audioBuf = await ctx.decodeAudioData(merged.buffer);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 512;
+        const source = ctx.createBufferSource();
+        source.buffer = audioBuf;
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        const freqBuf = new Float32Array(analyser.frequencyBinCount);
+        const tick = () => {
+          analyser.getFloatTimeDomainData(freqBuf);
+          setAmplitude(new Float32Array(freqBuf));
+          ttsAnimRef.current = requestAnimationFrame(tick);
+        };
+        setIsTtsPlaying(true);
+        tick();
+        source.onended = () => {
+          cancelAnimationFrame(ttsAnimRef.current);
+          setIsTtsPlaying(false);
+          setAmplitude(new Float32Array(256));
+        };
+        source.start();
+      } catch { /* non-fatal — text greeting still visible */ }
+    };
+
+    document.addEventListener("click", speak, { once: true });
+    document.addEventListener("keydown", speak, { once: true });
+    return () => {
+      cancelled = true;
+      document.removeEventListener("click", speak);
+      document.removeEventListener("keydown", speak);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSme?.id]);
 
   const playTts = useCallback(async (convId: string, text: string) => {
     cancelAnimationFrame(ttsAnimRef.current);
@@ -139,6 +270,12 @@ export function HomePage() {
   }, []);
 
   const handleMicStop = useCallback(async () => {
+    // Cancel VAD timer so it can't fire again after manual stop
+    vadIsActiveRef.current = false;
+    if (vadSilenceTimerRef.current) {
+      clearTimeout(vadSilenceTimerRef.current);
+      vadSilenceTimerRef.current = null;
+    }
     setRecording(false);
     const blob = await stopRec();
     setAmplitude(new Float32Array(256));
@@ -195,6 +332,9 @@ export function HomePage() {
     stopStreamRef.current = stopStream;
   }, [stopRec, ensureConversation, setRecording, playTts]);
 
+  // Keep VAD ref pointing at the latest handleMicStop (safe forward ref pattern)
+  vadMicStopRef.current = handleMicStop;
+
   const handleSendText = useCallback(async (text: string) => {
     const convId = await ensureConversation();
     const userMsg: Message = {
@@ -249,6 +389,13 @@ export function HomePage() {
     if (!ttsCtxRef.current || ttsCtxRef.current.state === "closed") {
       ttsCtxRef.current = new AudioContext();
     }
+    // Reset VAD state for this recording session
+    vadHasSpeechRef.current = false;
+    vadIsActiveRef.current = true;
+    if (vadSilenceTimerRef.current) {
+      clearTimeout(vadSilenceTimerRef.current);
+      vadSilenceTimerRef.current = null;
+    }
     setRecording(true);
     await startRec();
   }, [startRec, setRecording]);
@@ -262,76 +409,108 @@ export function HomePage() {
       sx={{
         height: "100dvh",
         display: "flex",
-        flexDirection: "column",
         bgcolor: "background.default",
         overflow: "hidden",
       }}
     >
-      {/* Top bar */}
-      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
-        <Toolbar variant="dense">
-          <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, letterSpacing: "-0.02em" }}>
-            Sentinel
-          </Typography>
-
-          {templates.length > 0 && (
-            <Select
-              size="small"
-              value={activeSmeId}
-              onChange={(e) => selectSme(e.target.value)}
-              sx={{ mr: 1, minWidth: 180 }}
-              aria-label="Select subject matter expert"
-            >
-              {templates.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
-
-          <Tooltip title="Transcript">
-            <IconButton onClick={toggleDrawer} aria-label="Toggle transcript drawer">
-              <ChatIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Configure SMEs">
-            <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
-              <SettingsIcon />
-            </IconButton>
-          </Tooltip>
-        </Toolbar>
-      </AppBar>
-
-      {/* Waveform */}
-      <Box sx={{ flex: 1, position: "relative" }}>
-        <Waveform amplitude={amplitude} active={recording || isTtsPlaying} />
-
-        {/* Reasoning steps overlay */}
-        <Box
+      {/* Main panel */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          p: { xs: 2, md: 4 },
+          pb: { xs: 2, md: 4 },
+          gap: 2,
+        }}
+      >
+        {/* Top bar */}
+        <AppBar
+          position="static"
+          color="transparent"
+          elevation={0}
           sx={{
-            position: "absolute",
-            bottom: 32,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 10,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            flexShrink: 0,
           }}
         >
-          <ReasoningSteps steps={steps} isStreaming={isStreaming} />
+          <Toolbar variant="dense">
+            <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, letterSpacing: "-0.02em" }}>
+              Sentinel
+            </Typography>
+
+            {templates.length > 0 && (
+              <Select
+                size="small"
+                value={activeSmeId}
+                onChange={(e) => selectSme(e.target.value)}
+                sx={{ mr: 1, minWidth: 180 }}
+                aria-label="Select subject matter expert"
+              >
+                {templates.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            )}
+
+            <Tooltip title={drawerOpen ? "Hide transcript" : "Show transcript"}>
+              <IconButton onClick={toggleDrawer} aria-label="Toggle transcript drawer">
+                <ChatIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Configure SMEs">
+              <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          </Toolbar>
+        </AppBar>
+
+        {/* Waveform */}
+        <Box
+          sx={{
+            flex: 1,
+            position: "relative",
+            borderRadius: 3,
+            overflow: "hidden",
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+          }}
+        >
+          <Waveform amplitude={amplitude} active={recording || isTtsPlaying} color="#82aad4" peakColor="#c9819a" />
+
+          {/* Reasoning steps overlay */}
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 24,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 10,
+            }}
+          >
+            <ReasoningSteps steps={steps} isStreaming={isStreaming} />
+          </Box>
         </Box>
+
+        {/* Mic button */}
+        <Stack sx={{ alignItems: "center", flexShrink: 0 }}>
+          <MicButton
+            state={recState}
+            onStart={handleMicStart}
+            onStop={handleMicStop}
+            disabled={isStreaming}
+          />
+        </Stack>
       </Box>
 
-      {/* Mic button */}
-      <Stack sx={{ alignItems: "center", pb: 5, pt: 2 }}>
-        <MicButton
-          state={recState}
-          onStart={handleMicStart}
-          onStop={handleMicStop}
-          disabled={isStreaming}
-        />
-      </Stack>
-
-      {/* Transcript drawer */}
+      {/* Persistent transcript panel */}
       <TranscriptDrawer
         open={drawerOpen}
         onClose={toggleDrawer}

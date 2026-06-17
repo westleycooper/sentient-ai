@@ -117,21 +117,7 @@ def set_checkpointer(cp) -> None:
 
 
 async def get_graph_runner(session: AsyncSession = Depends(get_db_session)) -> GraphRunner:
-    return GraphRunner(
-        llm=_llm_adapter(),
-        retriever=_stub_retriever(),
-        checkpointer=_checkpointer,
-    )
-
-
-def _stub_retriever():
-    from application.ports.retrieval_port import RetrievedChunk
-
-    class _StubRetriever:
-        async def retrieve(self, *, query: str, top_k: int):
-            return [RetrievedChunk(source_id="stub", chunk_id="0", text=f"(no retrieval configured for: {query})", score=0.0)]
-
-    return _StubRetriever()
+    return GraphRunner(llm=_llm_adapter(), checkpointer=_checkpointer)
 
 
 # --- Use cases ---

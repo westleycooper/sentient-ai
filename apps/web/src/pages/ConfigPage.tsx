@@ -11,6 +11,7 @@ import {
   Alert,
   AppBar,
   Box,
+  Button,
   CircularProgress,
   Grid,
   IconButton,
@@ -21,6 +22,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -65,6 +67,20 @@ export function ConfigPage() {
     saveMutation.mutate(clone);
   };
 
+  const handleNew = () => {
+    const blank: SmeTemplate = {
+      id: `custom-${Date.now()}`,
+      name: "New Template",
+      soul: "",
+      steps: [],
+      sources: [],
+      rules: [],
+      is_default: false,
+    };
+    setSelectedId(blank.id);
+    saveMutation.mutate(blank);
+  };
+
   const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this template? This cannot be undone.")) return;
     try {
@@ -103,9 +119,20 @@ export function ConfigPage() {
             sx={{ borderRight: "1px solid", borderColor: "divider", overflowY: "auto", p: 2 }}
           >
             <Stack spacing={1.5}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Templates ({templates.length})
-              </Typography>
+              <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Templates ({templates.length})
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={handleNew}
+                  aria-label="Add new template"
+                >
+                  New
+                </Button>
+              </Stack>
               {templates.map((t) => (
                 <Box key={t.id}>
                   <SmeTemplateCard
@@ -124,6 +151,15 @@ export function ConfigPage() {
                         <IconButton size="small" color="error" onClick={() => handleDelete(t.id)} aria-label={`Delete ${t.name}`}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
+                      </Tooltip>
+                    )}
+                    {t.is_default && (
+                      <Tooltip title="Locked — toggle 'Lock' in the editor to enable deletion">
+                        <span>
+                          <IconButton size="small" disabled aria-label={`${t.name} is locked`}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     )}
                   </Stack>

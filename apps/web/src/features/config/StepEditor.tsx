@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Divider,
   IconButton,
   MenuItem,
@@ -46,15 +47,27 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
   return (
     <Stack spacing={2}>
       <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Reasoning Steps
-        </Typography>
-        <Tooltip title="Add step">
-          <IconButton size="small" onClick={add} aria-label="Add reasoning step">
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
+        <Stack spacing={0.25}>
+          <Typography variant="subtitle2">Reasoning Steps</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Executed in order on every turn. Steps compile into the LangGraph workflow.
+          </Typography>
+        </Stack>
+        <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined" aria-label="Add reasoning step">
+          Add step
+        </Button>
       </Stack>
+
+      {steps.length === 0 && (
+        <Box sx={{ textAlign: "center", py: 4, border: "1px dashed", borderColor: "divider", borderRadius: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            No steps yet.
+          </Typography>
+          <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined">
+            Add first step
+          </Button>
+        </Box>
+      )}
 
       {steps.map((step, idx) => (
         <Box key={step.id}>

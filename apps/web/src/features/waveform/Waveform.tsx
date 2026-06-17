@@ -1,65 +1,119 @@
 /**
- * Three.js sound-wave visualisation. ISOLATED feature (CLAUDE.md §6).
- * No Three.js imports leak outside this folder. Stable prop contract so the
- * future 3D AI head is a drop-in replacement: same props, same callers.
+ * Canvas 2D sound-wave visualisation. ISOLATED feature (CLAUDE.md §6).
+ * Stable prop contract — callers unchanged when swapped for the 3D AI head.
+ *
+ * Gradient: each segment is coloured by its amplitude — quiet segments use
+ * `color`, loud peaks shift toward `peakColor`. Since audio is near-silent at
+ * the edges, the line naturally starts and ends with the same base colour.
  */
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
 
 export interface WaveformProps {
-  /** Amplitude samples 0..1, updated in time with the TTS playback. */
   amplitude: Float32Array;
-  /** Visual config (colour, line count) — persisted per-user. */
   color?: string;
+  peakColor?: string;
   active?: boolean;
 }
 
-export function Waveform({ amplitude, color = "#4f9cff", active = true }: WaveformProps) {
-  const mountRef = useRef<HTMLDivElement>(null);
+function hexToRgb(hex: string) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+export function Waveform({
+  amplitude,
+  color = "#4f9cff",
+  peakColor = "#c084fc",
+  active = true,
+}: WaveformProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const ampRef = useRef(amplitude);
+  const activeRef = useRef(active);
   ampRef.current = amplitude;
+  activeRef.current = active;
 
   useEffect(() => {
-    const mount = mountRef.current!;
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-    camera.position.z = 1;
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    mount.appendChild(renderer.domElement);
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+    const c1 = hexToRgb(color);
+    const c2 = hexToRgb(peakColor);
 
-    const N = 256;
-    const positions = new Float32Array(N * 3);
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color }));
-    scene.add(line);
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+    };
+    resize();
 
     let raf = 0;
+
     const render = () => {
+      const { width, height } = canvas;
+      const dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, width, height);
+
       const amp = ampRef.current;
-      for (let i = 0; i < N; i++) {
-        const x = (i / (N - 1)) * 2 - 1;
-        const a = amp.length ? amp[Math.floor((i / N) * amp.length)] : 0;
-        positions[i * 3] = x;
-        positions[i * 3 + 1] = active ? a * 0.8 : 0;
-        positions[i * 3 + 2] = 0;
+      const N = amp.length || 256;
+      const cy = height / 2;
+
+      if (!activeRef.current) {
+        // Idle flat line — same thickness as active waveform
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3.5 * dpr;
+        ctx.lineCap = "round";
+        ctx.globalAlpha = 0.25;
+        ctx.moveTo(0, cy);
+        ctx.lineTo(width, cy);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        raf = requestAnimationFrame(render);
+        return;
       }
-      geom.attributes.position.needsUpdate = true;
-      renderer.render(scene, camera);
+
+      ctx.lineWidth = 3.5 * dpr;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      for (let i = 1; i < N; i++) {
+        const x0 = ((i - 1) / (N - 1)) * width;
+        const x1 = (i / (N - 1)) * width;
+        const a0 = amp[i - 1];
+        const a1 = amp[i];
+        const y0 = cy - a0 * cy * 0.82;
+        const y1 = cy - a1 * cy * 0.82;
+
+        // Colour driven by amplitude magnitude: 0 = base, 1 = peak
+        const t = Math.min(1, Math.abs(a1) * 3.0);
+        const r = Math.round(c1.r + (c2.r - c1.r) * t);
+        const g = Math.round(c1.g + (c2.g - c1.g) * t);
+        const b = Math.round(c1.b + (c2.b - c1.b) * t);
+
+        ctx.beginPath();
+        ctx.strokeStyle = `rgb(${r},${g},${b})`;
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
       raf = requestAnimationFrame(render);
     };
+
     render();
 
-    const onResize = () => renderer.setSize(mount.clientWidth, mount.clientHeight);
-    window.addEventListener("resize", onResize);
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-      renderer.dispose();
-      mount.removeChild(renderer.domElement);
+      ro.disconnect();
     };
-  }, [color, active]);
+  }, [color, peakColor]);
 
-  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} aria-hidden />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: "100%", height: "100%", display: "block" }}
+      aria-hidden
+    />
+  );
 }

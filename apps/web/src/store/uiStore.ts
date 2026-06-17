@@ -11,7 +11,7 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  drawerOpen: false,
+  drawerOpen: true,
   recording: false,
   selectedSmeId: null,
   toggleDrawer: () => set((s) => ({ drawerOpen: !s.drawerOpen })),

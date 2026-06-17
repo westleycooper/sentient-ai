@@ -58,13 +58,22 @@ export function TranscriptDrawer({ open, onClose, messages, steps, isStreaming, 
       anchor="right"
       open={open}
       onClose={onClose}
+      variant="persistent"
       sx={{
+        width: open ? DRAWER_WIDTH : 0,
+        flexShrink: 0,
+        transition: "width 0.25s",
         "& .MuiDrawer-paper": {
           width: DRAWER_WIDTH,
           bgcolor: "background.paper",
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
+          position: "relative",
+          height: "100%",
+          border: "none",
+          borderLeft: "1px solid",
+          borderColor: "divider",
         },
       }}
     >
@@ -188,7 +197,7 @@ function StepsBlock({ steps, isStreaming }: { steps: StepEvent[]; isStreaming: b
         </Typography>
         {!isStreaming && totalTokens > 0 && (
           <Typography variant="caption" color="text.disabled" sx={{ mr: 1 }}>
-            {totalTokens} tok · {Math.round(totalMs)}ms
+            {totalTokens} tokens · {Math.round(totalMs)}ms
           </Typography>
         )}
         {isStreaming ? (
@@ -221,7 +230,7 @@ function StepRow({ step }: { step: StepEvent }) {
           )}
           {step.total_tokens > 0 && (
             <Chip
-              label={`${step.total_tokens} tok`}
+              label={`${step.total_tokens} tokens`}
               size="small"
               variant="outlined"
               sx={{ height: 16, fontSize: "0.65rem", "& .MuiChip-label": { px: 0.75 } }}
@@ -268,7 +277,7 @@ function MessageBubble({ message }: { message: Message }) {
         )}
         {message.token_count > 0 && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-            {message.token_count} tokens
+            {message.token_count.toLocaleString()} tokens
           </Typography>
         )}
       </Box>

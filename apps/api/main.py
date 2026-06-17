@@ -16,7 +16,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from infrastructure.observability.logging import configure_logging
 from infrastructure.observability.tracing import configure_tracing
-from interface.routers import conversations, sme
+from interface.routers import conversations, sme, tts
 
 configure_logging()
 configure_tracing()
@@ -64,6 +64,7 @@ FastAPIInstrumentor.instrument_app(app)
 
 app.include_router(sme.router)
 app.include_router(conversations.router)
+app.include_router(tts.router)
 
 
 @app.get("/health", tags=["ops"], include_in_schema=False)
