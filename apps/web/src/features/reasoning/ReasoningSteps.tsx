@@ -52,7 +52,7 @@ function StepRow({ step }: { step: StepEvent }) {
 
   return (
     <Collapse in>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
         {done ? (
           <CheckCircleIcon sx={{ fontSize: 16, color: "success.main" }} />
         ) : (

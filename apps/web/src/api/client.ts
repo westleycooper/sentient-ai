@@ -23,6 +23,59 @@ export const api = {
   delete: (path: string) => request<void>(path, { method: "DELETE" }),
 };
 
+/** POST audio blob as multipart/form-data and stream SSE events back. Returns a cleanup fn. */
+export function streamAudioTurn(
+  path: string,
+  blob: Blob,
+  onEvent: (data: unknown) => void,
+  onError?: (err: Error) => void
+): () => void {
+  const controller = new AbortController();
+
+  (async () => {
+    const form = new FormData();
+    form.append("audio", blob, "audio.webm");
+
+    const res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      body: form,
+      signal: controller.signal,
+    });
+
+    if (!res.ok || !res.body) {
+      onError?.(new Error(`Audio turn stream failed: ${res.status}`));
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          try {
+            onEvent(JSON.parse(line.slice(6)));
+          } catch {
+            /* skip malformed frames */
+          }
+        }
+      }
+    }
+  })().catch((err: unknown) => {
+    if ((err as Error)?.name !== "AbortError") {
+      onError?.(err as Error);
+    }
+  });
+
+  return () => controller.abort();
+}
+
 /** Open an SSE stream and call `onEvent` for each parsed data frame. Returns a cleanup fn. */
 export function streamEvents(
   path: string,

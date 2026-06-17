@@ -11,9 +11,7 @@ import {
   Alert,
   AppBar,
   Box,
-  Button,
   CircularProgress,
-  Divider,
   Grid,
   IconButton,
   Paper,
@@ -101,9 +99,7 @@ export function ConfigPage() {
         <Grid container sx={{ flex: 1, overflow: "hidden" }}>
           {/* Template list */}
           <Grid
-            item
-            xs={12}
-            md={4}
+            size={{ xs: 12, md: 4 }}
             sx={{ borderRight: "1px solid", borderColor: "divider", overflowY: "auto", p: 2 }}
           >
             <Stack spacing={1.5}>
@@ -117,7 +113,7 @@ export function ConfigPage() {
                     selected={t.id === (selected?.id ?? "")}
                     onSelect={setSelectedId}
                   />
-                  <Stack direction="row" spacing={0.5} justifyContent="flex-end" sx={{ mt: 0.5 }}>
+                  <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", mt: 0.5 }}>
                     <Tooltip title="Clone template">
                       <IconButton size="small" onClick={() => handleClone(t)} aria-label={`Clone ${t.name}`}>
                         <ContentCopyIcon fontSize="small" />
@@ -142,7 +138,7 @@ export function ConfigPage() {
           </Grid>
 
           {/* Editor */}
-          <Grid item xs={12} md={8} sx={{ overflowY: "auto", p: 3 }}>
+          <Grid size={{ xs: 12, md: 8 }} sx={{ overflowY: "auto", p: 3 }}>
             {selected ? (
               <Paper variant="outlined" sx={{ p: 3 }}>
                 <SmeEditor

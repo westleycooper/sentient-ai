@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from domain.conversation import Conversation, Message, MessageRole
 from infrastructure.persistence.models import ConversationModel, MessageModel
@@ -15,7 +16,13 @@ class PostgresConversationRepository:
         self._session = session
 
     async def save(self, conversation: Conversation) -> None:
-        row = await self._session.get(ConversationModel, conversation.id)
+        stmt = (
+            select(ConversationModel)
+            .where(ConversationModel.id == conversation.id)
+            .options(selectinload(ConversationModel.messages))
+        )
+        result = await self._session.execute(stmt)
+        row = result.scalar_one_or_none()
         if row is None:
             row = ConversationModel(id=conversation.id, sme_id=conversation.sme_id,
                                    created_at=conversation.created_at)
@@ -39,6 +46,7 @@ class PostgresConversationRepository:
         stmt = (
             select(ConversationModel)
             .where(ConversationModel.id == conversation_id)
+            .options(selectinload(ConversationModel.messages))
         )
         result = await self._session.execute(stmt)
         row = result.scalar_one_or_none()
@@ -50,6 +58,7 @@ class PostgresConversationRepository:
         stmt = (
             select(ConversationModel)
             .where(ConversationModel.sme_id == sme_id)
+            .options(selectinload(ConversationModel.messages))
             .order_by(ConversationModel.created_at.desc())
             .limit(limit)
         )

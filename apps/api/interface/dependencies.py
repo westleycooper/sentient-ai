@@ -25,6 +25,37 @@ from infrastructure.stt.stub_stt_adapter import StubSttAdapter
 from infrastructure.tts.stub_tts_adapter import StubTtsAdapter
 
 
+def _build_stt_adapter():
+    provider = os.environ.get("STT_PROVIDER", "stub")
+    if provider == "deepgram":
+        from infrastructure.stt.deepgram_adapter import DeepgramSttAdapter
+        return DeepgramSttAdapter()
+    if provider == "openai":
+        from infrastructure.stt.openai_stt_adapter import OpenAISttAdapter
+        return OpenAISttAdapter()
+    if provider == "azure":
+        from infrastructure.stt.azure_stt_adapter import AzureSttAdapter
+        return AzureSttAdapter()
+    return StubSttAdapter()
+
+
+def _build_tts_adapter():
+    provider = os.environ.get("TTS_PROVIDER", "stub")
+    if provider == "deepgram":
+        from infrastructure.tts.deepgram_tts_adapter import DeepgramTtsAdapter
+        return DeepgramTtsAdapter()
+    if provider == "elevenlabs":
+        from infrastructure.tts.elevenlabs_adapter import ElevenLabsTtsAdapter
+        return ElevenLabsTtsAdapter()
+    if provider == "openai":
+        from infrastructure.tts.openai_tts_adapter import OpenAITtsAdapter
+        return OpenAITtsAdapter()
+    if provider == "azure":
+        from infrastructure.tts.azure_tts_adapter import AzureTtsAdapter
+        return AzureTtsAdapter()
+    return StubTtsAdapter()
+
+
 @lru_cache(maxsize=1)
 def _engine():
     url = os.environ["DATABASE_URL"].replace("postgresql://", "postgresql+asyncpg://", 1)
@@ -48,12 +79,20 @@ def _llm_adapter() -> AnthropicLlmAdapter:
 
 @lru_cache(maxsize=1)
 def _stt_adapter():
-    return StubSttAdapter()
+    return _build_stt_adapter()
 
 
 @lru_cache(maxsize=1)
 def _tts_adapter():
-    return StubTtsAdapter()
+    return _build_tts_adapter()
+
+
+def get_stt_adapter():
+    return _stt_adapter()
+
+
+def get_tts_adapter():
+    return _tts_adapter()
 
 
 # --- Repos ---
@@ -68,13 +107,20 @@ async def get_sme_repo(session: AsyncSession = Depends(get_db_session)) -> SmeRe
 
 # --- Graph runner ---
 
+# Checkpointer is initialised once at startup via lifespan and stored here.
+_checkpointer = None
+
+
+def set_checkpointer(cp) -> None:
+    global _checkpointer
+    _checkpointer = cp
+
+
 async def get_graph_runner(session: AsyncSession = Depends(get_db_session)) -> GraphRunner:
-    from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-    checkpointer = AsyncPostgresSaver.from_conn_string(os.environ["DATABASE_URL"])
     return GraphRunner(
         llm=_llm_adapter(),
         retriever=_stub_retriever(),
-        checkpointer=checkpointer,
+        checkpointer=_checkpointer,
     )
 
 

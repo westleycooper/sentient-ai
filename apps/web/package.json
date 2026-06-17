@@ -22,6 +22,7 @@
     "@tanstack/react-query-devtools": "^5.56.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.0",
     "three": "^0.168.0",
     "zustand": "^5.0.0"

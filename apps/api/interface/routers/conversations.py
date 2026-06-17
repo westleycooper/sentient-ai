@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
 from application.use_cases.process_turn import ProcessTurnUseCase
@@ -13,6 +13,8 @@ from interface.dependencies import (
     get_conv_repo,
     get_process_turn_uc,
     get_start_conversation_uc,
+    get_stt_adapter,
+    get_tts_adapter,
 )
 from interface.dto import (
     ConversationResponse,
@@ -126,11 +128,83 @@ async def process_turn(
 @router.post("/{conversation_id}/audio-turn")
 async def process_audio_turn(
     conversation_id: str,
+    audio: UploadFile,
     uc: ProcessTurnUseCase = Depends(get_process_turn_uc),
+    stt=Depends(get_stt_adapter),
+    tts=Depends(get_tts_adapter),
 ):
     """
-    Accept audio/webm upload, transcribe via STT, then stream the same SSE turn events.
-    Full implementation wires SttPort; stub returns placeholder transcript.
+    Accept audio upload, transcribe via STT, stream SSE reasoning events, then
+    stream TTS audio back.
+
+    Flow: audio bytes → STT → ProcessTurn (SSE events) → answer text → TTS audio stream.
+    Two responses can't be combined, so this endpoint streams SSE events AND
+    a separate /audio-turn/tts endpoint serves the audio once the answer is known.
+    For now: transcribe + run turn SSE exactly like /turn. Client plays TTS separately.
     """
-    from fastapi import UploadFile, File
-    raise HTTPException(status_code=501, detail="Audio upload endpoint — wire STT adapter to enable.")
+    audio_bytes = await audio.read()
+    mime_type = audio.content_type or "audio/webm"
+
+    try:
+        user_text = await stt.transcribe(audio_bytes=audio_bytes, mime_type=mime_type)
+    except Exception as exc:
+        logger.exception("stt_error", extra={"conversation_id": conversation_id})
+        raise HTTPException(status_code=502, detail=f"STT failed: {exc}") from exc
+
+    if not user_text.strip():
+        raise HTTPException(status_code=422, detail="Could not transcribe audio — no speech detected.")
+
+    async def event_stream():
+        # Emit the transcript first so the UI can show it immediately
+        yield f"data: {json.dumps({'type': 'transcript', 'text': user_text})}\n\n"
+        try:
+            last_event: dict = {}
+            async for partial in uc.execute(conversation_id=conversation_id, user_text=user_text):
+                last_event = partial
+                for ev in partial.get("events", []):
+                    data = {
+                        "type": "step",
+                        "step_id": ev.step_id,
+                        "step_name": ev.step_name,
+                        "phase": ev.phase,
+                        "latency_ms": ev.latency_ms,
+                        "prompt_tokens": ev.prompt_tokens,
+                        "completion_tokens": ev.completion_tokens,
+                        "total_tokens": ev.total_tokens,
+                        "model": ev.model,
+                        "estimated_cost": ev.estimated_cost,
+                        "output_preview": ev.output_preview,
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+
+            answer = last_event.get("answer", "")
+            complete = {
+                "type": "complete",
+                "answer": answer,
+                "total_tokens": last_event.get("token_total", 0),
+                "citations": last_event.get("citations", []),
+            }
+            yield f"data: {json.dumps(complete)}\n\n"
+
+        except Exception as exc:
+            logger.exception("audio_turn_stream_error", extra={"conversation_id": conversation_id})
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Internal error'})}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@router.post("/{conversation_id}/tts")
+async def synthesise_text(
+    conversation_id: str,
+    body: TurnRequest,
+    tts=Depends(get_tts_adapter),
+):
+    """
+    Convert answer text to speech. Called by the frontend after receiving the
+    'complete' SSE event. Streams audio bytes back (mp3).
+    """
+    async def audio_stream():
+        async for chunk in tts.synthesise(text=body.user_text):
+            yield chunk
+
+    return StreamingResponse(audio_stream(), media_type="audio/mpeg")
