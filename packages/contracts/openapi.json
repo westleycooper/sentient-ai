@@ -1,0 +1,186 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sentinel API",
+    "version": "0.1.0",
+    "description": "Multi-reasoning voice agent platform. Generated from FastAPI — do not hand-edit. Regenerate with /regen-contracts."
+  },
+  "paths": {
+    "/sme": {
+      "get": {
+        "tags": ["sme"],
+        "summary": "List Sme Templates",
+        "operationId": "list_sme_templates",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/SmeTemplateResponse" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sme/{template_id}": {
+      "get": {
+        "tags": ["sme"],
+        "summary": "Get Sme Template",
+        "operationId": "get_sme_template",
+        "parameters": [{ "name": "template_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SmeTemplateResponse" } } } },
+          "404": { "description": "Not Found" }
+        }
+      },
+      "put": {
+        "tags": ["sme"],
+        "summary": "Save Sme Template",
+        "operationId": "save_sme_template",
+        "parameters": [{ "name": "template_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SaveSmeTemplateRequest" } } } },
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SmeTemplateResponse" } } } } }
+      },
+      "delete": {
+        "tags": ["sme"],
+        "summary": "Delete Sme Template",
+        "operationId": "delete_sme_template",
+        "parameters": [{ "name": "template_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "204": { "description": "Successful Response" }, "400": { "description": "Bad Request" } }
+      }
+    },
+    "/conversations": {
+      "post": {
+        "tags": ["conversations"],
+        "summary": "Start Conversation",
+        "operationId": "start_conversation",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StartConversationRequest" } } } },
+        "responses": { "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StartConversationResponse" } } } } }
+      }
+    },
+    "/conversations/{conversation_id}": {
+      "get": {
+        "tags": ["conversations"],
+        "summary": "Get Conversation",
+        "operationId": "get_conversation",
+        "parameters": [{ "name": "conversation_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConversationResponse" } } } } }
+      }
+    },
+    "/conversations/{conversation_id}/turn": {
+      "post": {
+        "tags": ["conversations"],
+        "summary": "Process Turn (SSE)",
+        "operationId": "process_turn",
+        "description": "Stream reasoning step events + final answer as Server-Sent Events.",
+        "parameters": [{ "name": "conversation_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TurnRequest" } } } },
+        "responses": { "200": { "description": "text/event-stream", "content": { "text/event-stream": { "schema": { "type": "string" } } } } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StepKind": { "type": "string", "enum": ["retrieve", "reason", "tool_call", "summarise", "guardrail_check"] },
+      "ReasoningStep": {
+        "type": "object",
+        "required": ["id", "name", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "kind": { "$ref": "#/components/schemas/StepKind" },
+          "config": { "type": "object" },
+          "next_default": { "type": "string", "nullable": true },
+          "next_on": { "type": "object", "additionalProperties": { "type": "string" } }
+        }
+      },
+      "RetrievalSourceConfig": {
+        "type": "object",
+        "required": ["id", "name", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "kind": { "type": "string", "enum": ["http_api", "json_set"] },
+          "config": { "type": "object" }
+        }
+      },
+      "SmeRule": {
+        "type": "object",
+        "required": ["id", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean", "default": true }
+        }
+      },
+      "SmeTemplateResponse": {
+        "type": "object",
+        "required": ["id", "name", "soul", "steps", "sources", "rules", "is_default"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "soul": { "type": "string" },
+          "steps": { "type": "array", "items": { "$ref": "#/components/schemas/ReasoningStep" } },
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/RetrievalSourceConfig" } },
+          "rules": { "type": "array", "items": { "$ref": "#/components/schemas/SmeRule" } },
+          "is_default": { "type": "boolean" }
+        }
+      },
+      "SaveSmeTemplateRequest": {
+        "type": "object",
+        "required": ["id", "name", "soul"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "soul": { "type": "string" },
+          "steps": { "type": "array", "items": { "$ref": "#/components/schemas/ReasoningStep" } },
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/RetrievalSourceConfig" } },
+          "rules": { "type": "array", "items": { "$ref": "#/components/schemas/SmeRule" } },
+          "is_default": { "type": "boolean", "default": false }
+        }
+      },
+      "StartConversationRequest": {
+        "type": "object",
+        "required": ["sme_id"],
+        "properties": { "sme_id": { "type": "string" } }
+      },
+      "StartConversationResponse": {
+        "type": "object",
+        "required": ["conversation_id", "sme_id", "created_at"],
+        "properties": {
+          "conversation_id": { "type": "string" },
+          "sme_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["id", "role", "content", "created_at", "token_count", "citations"],
+        "properties": {
+          "id": { "type": "string" },
+          "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+          "content": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "token_count": { "type": "integer" },
+          "citations": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "ConversationResponse": {
+        "type": "object",
+        "required": ["id", "sme_id", "created_at", "messages"],
+        "properties": {
+          "id": { "type": "string" },
+          "sme_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "messages": { "type": "array", "items": { "$ref": "#/components/schemas/MessageResponse" } }
+        }
+      },
+      "TurnRequest": {
+        "type": "object",
+        "required": ["user_text"],
+        "properties": { "user_text": { "type": "string" } }
+      }
+    }
+  }
+}

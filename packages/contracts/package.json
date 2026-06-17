@@ -1,0 +1,13 @@
+{
+  "name": "@sentinel/contracts",
+  "version": "0.1.0",
+  "description": "Generated types and TanStack Query hooks from the Sentinel OpenAPI schema.",
+  "main": "src/index.ts",
+  "scripts": {
+    "generate": "openapi-typescript openapi.json --output src/generated/types.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0",
+    "typescript": "^5.5.0"
+  }
+}
