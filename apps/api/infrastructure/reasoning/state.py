@@ -21,6 +21,7 @@ class ReasoningStepEvent:
 class ConversationState(TypedDict, total=False):
     conversation_id: str
     sme_id: str
+    soul: str              # SME persona/system prompt — injected from template
     question: str
     retrieved: list[dict[str, Any]]   # provenance-carrying chunks
     analysis: str

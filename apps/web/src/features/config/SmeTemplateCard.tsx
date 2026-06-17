@@ -32,7 +32,7 @@ export function SmeTemplateCard({ template, selected, onSelect }: SmeTemplateCar
               {template.name}
             </Typography>
             {template.is_default && (
-              <Chip label="Default" size="small" color="secondary" variant="outlined" />
+              <Chip label="Locked" size="small" color="secondary" variant="outlined" />
             )}
           </Stack>
           <Typography

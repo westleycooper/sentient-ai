@@ -89,8 +89,30 @@ def ftse100_default() -> SmeTemplate:
         ],
         sources=[
             RetrievalSourceConfig(
-                id="ftse-http", name="FTSE market data API", kind=RetrievalSourceKind.HTTP_API,
-                config={"url_env": "FTSE_API_URL", "auth_secret_ref": "kv:ftse-api-key"},
+                id="yahoo-ftse",
+                name="Yahoo Finance — FTSE 100 Index",
+                kind=RetrievalSourceKind.HTTP_API,
+                config={
+                    "url": "https://query1.finance.yahoo.com/v8/finance/chart/%5EFTSE",
+                    "method": "GET",
+                    "params": {"interval": "1d", "range": "5d"},
+                    "auth_header": "",
+                    "auth_value": "",
+                },
+            ),
+            RetrievalSourceConfig(
+                id="yahoo-ftse-stocks",
+                name="Yahoo Finance — Top 10 FTSE 100 Stocks",
+                kind=RetrievalSourceKind.HTTP_API,
+                config={
+                    "url_template": "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}",
+                    "tickers": [
+                        "AZN.L", "SHEL.L", "HSBA.L", "ULVR.L", "BP.L",
+                        "RIO.L", "GSK.L", "BATS.L", "DGE.L", "GLEN.L",
+                    ],
+                    "method": "GET",
+                    "params": {"interval": "1d", "range": "1d"},
+                },
             ),
         ],
         rules=[
@@ -123,7 +145,7 @@ def mental_health_default() -> SmeTemplate:
             SmeRule(id="signpost", description="Always signpost professional services for crisis situations."),
             SmeRule(id="no-diagnosis", description="Never diagnose medical conditions."),
         ],
-        is_default=True,
+        is_default=False,
     )
 
 
@@ -137,18 +159,32 @@ def recruitment_default() -> SmeTemplate:
             "You are encouraging, constructive, and honest about skill gaps."
         ),
         steps=[
-            ReasoningStep(id="retrieve", name="Retrieve job context", kind=StepKind.RETRIEVE,
-                          config={"source_id": "jobs-json", "top_k": 5}, next_default="reason"),
+            ReasoningStep(id="retrieve", name="Retrieve live jobs", kind=StepKind.RETRIEVE,
+                          config={"source_id": "remotive-jobs", "top_k": 8}, next_default="reason"),
             ReasoningStep(id="reason", name="Career analysis", kind=StepKind.REASON,
                           config={"prompt": "Provide actionable career guidance."}, next_default="summarise"),
             ReasoningStep(id="summarise", name="Structured advice", kind=StepKind.SUMMARISE,
                           config={"format": "bullet_points"}),
         ],
+        sources=[
+            RetrievalSourceConfig(
+                id="remotive-jobs",
+                name="Remotive — Remote Jobs (free, no key)",
+                kind=RetrievalSourceKind.HTTP_API,
+                config={
+                    "url": "https://remotive.com/api/remote-jobs",
+                    "method": "GET",
+                    "params": {"limit": "20"},
+                    "auth_header": "",
+                    "auth_value": "",
+                },
+            ),
+        ],
         rules=[
             SmeRule(id="constructive", description="Always frame feedback constructively."),
             SmeRule(id="no-bias", description="Never comment on protected characteristics."),
         ],
-        is_default=True,
+        is_default=False,
     )
 
 

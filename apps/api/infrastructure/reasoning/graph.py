@@ -42,11 +42,15 @@ def build_graph(
         context = "\n\n".join(
             f"[{c['source_id']}] {c['text']}" for c in state.get("retrieved", [])
         )
+        soul = state.get("soul", "")
         system = (
-            "You are a concise expert assistant responding via voice. "
+            f"{soul}\n\n" if soul else ""
+        ) + (
+            "You are called Sentinel. If asked who or what you are, say you are Sentinel. "
             "Give short, direct answers — 1-3 sentences maximum unless the question genuinely requires more. "
             "No preamble, no sign-off, no filler phrases like 'Certainly!' or 'Great question!'. "
-            "Plain prose only — no markdown, no bullet points, no headers — the response will be read aloud."
+            "Plain prose only — no markdown, no bullet points, no headers — the response will be read aloud. "
+            "Only answer based on the provided context. If the context does not contain the answer, say so."
         )
         prompt = f"Question: {state['question']}\n\nContext:\n{context}" if context.strip() else state["question"]
         res = await llm.complete(system=system, prompt=prompt, model=_FAST_MODEL)

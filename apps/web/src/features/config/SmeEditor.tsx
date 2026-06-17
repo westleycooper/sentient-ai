@@ -17,7 +17,9 @@ import {
   Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
+import AddIcon from "@mui/icons-material/Add";
 import { StepEditor } from "./StepEditor";
+import { RagSourcesEditor } from "./RagSourcesEditor";
 import type { SmeTemplate } from "../../api/hooks";
 
 interface SmeEditorProps {
@@ -58,16 +60,18 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
               <Switch
                 checked={draft.is_default}
                 onChange={(e) => set("is_default", e.target.checked)}
+                slotProps={{ input: { "aria-label": "Lock — prevent deletion" } }}
               />
             }
-            label="Show as default"
+            label="Lock (prevent deletion)"
           />
         </Stack>
 
         <Tabs value={tab} onChange={(_, v) => setTab(v)} aria-label="SME editor sections">
           <Tab label="Soul / Persona" id="tab-soul" aria-controls="tabpanel-soul" />
-          <Tab label="Steps" id="tab-steps" aria-controls="tabpanel-steps" />
-          <Tab label="Rules" id="tab-rules" aria-controls="tabpanel-rules" />
+          <Tab label={`Steps (${draft.steps.length})`} id="tab-steps" aria-controls="tabpanel-steps" />
+          <Tab label={`Rules (${draft.rules.length})`} id="tab-rules" aria-controls="tabpanel-rules" />
+          <Tab label={`RAG Sources (${draft.sources.length})`} id="tab-sources" aria-controls="tabpanel-sources" />
         </Tabs>
 
         <Divider />
@@ -95,10 +99,13 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
 
         {tab === 2 && (
           <Box role="tabpanel" id="tabpanel-rules" aria-labelledby="tab-rules">
-            <RulesEditor
-              rules={draft.rules}
-              onChange={(r) => set("rules", r)}
-            />
+            <RulesEditor rules={draft.rules} onChange={(r) => set("rules", r)} />
+          </Box>
+        )}
+
+        {tab === 3 && (
+          <Box role="tabpanel" id="tabpanel-sources" aria-labelledby="tab-sources">
+            <RagSourcesEditor sources={draft.sources} onChange={(s) => set("sources", s)} />
           </Box>
         )}
 
@@ -137,14 +144,29 @@ function RulesEditor({
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-        <Typography variant="subtitle2" color="text.secondary">
-          Rules
-        </Typography>
-        <Button size="small" onClick={add} aria-label="Add rule">
-          + Add rule
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Stack spacing={0.25}>
+          <Typography variant="subtitle2">Rules</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Behavioural constraints enforced on every response.
+          </Typography>
+        </Stack>
+        <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined" aria-label="Add rule">
+          Add rule
         </Button>
       </Stack>
+
+      {rules.length === 0 && (
+        <Box sx={{ textAlign: "center", py: 4, border: "1px dashed", borderColor: "divider", borderRadius: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            No rules yet.
+          </Typography>
+          <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined">
+            Add first rule
+          </Button>
+        </Box>
+      )}
+
       {rules.map((rule, idx) => (
         <Stack key={rule.id} direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Switch
@@ -158,7 +180,7 @@ function RulesEditor({
             onChange={(e) => update(idx, { description: e.target.value })}
             size="small"
             fullWidth
-            placeholder="Rule description"
+            placeholder="e.g. Never discuss competitor products"
             slotProps={{ htmlInput: { "aria-label": `Rule ${idx + 1} description` } }}
           />
           <Button size="small" color="error" onClick={() => remove(idx)} aria-label={`Remove rule ${idx + 1}`}>
@@ -166,11 +188,6 @@ function RulesEditor({
           </Button>
         </Stack>
       ))}
-      {rules.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          No rules yet.
-        </Typography>
-      )}
     </Stack>
   );
 }
