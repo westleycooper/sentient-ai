@@ -495,9 +495,11 @@ export function HomePage() {
             position: "relative",
             borderRadius: 3,
             overflow: "hidden",
-            border: "1px solid",
-            borderColor: "divider",
             bgcolor: "background.paper",
+            ...(activeSme?.visualisation_kind !== "wave3d" && {
+              border: "1px solid",
+              borderColor: "divider",
+            }),
           }}
         >
           <Waveform
