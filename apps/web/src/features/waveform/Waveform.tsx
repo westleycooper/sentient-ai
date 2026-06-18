@@ -27,11 +27,11 @@ function hexToRgb(hex: string) {
 
 // ── wave3d (dot waterfall) constants ─────────────────────────────────────────
 const N_ROWS      = 20;
-const N_COLS      = 128;
-const Z_SPACING   = 0.55;
+const N_COLS      = 64;
+const Z_SPACING   = 1.10;
 const TOTAL_DEPTH = N_ROWS * Z_SPACING;
-const SCROLL_SPEED = 0.07;
-const X_HALF      = 7;
+const SCROLL_SPEED = 0.105;
+const X_HALF      = 14;
 const AMP_SCALE   = 4.0;
 const BG          = 0x0e1013;
 
@@ -69,37 +69,33 @@ export function Waveform({
 
     // ════════════════════════════════════════ THREE.JS 3D WAVE ══════════════
     if (kind === "wave3d") {
-      const W = container.clientWidth  || 800;
-      const H = container.clientHeight || 400;
+      // Size the container as a perfect square using parent dimensions
+      const parent = container.parentElement!;
+      const squarePx = () => Math.round(Math.min(parent.clientWidth || 400, parent.clientHeight || 400) * 0.72);
+      const S = squarePx();
+      container.style.width  = S + "px";
+      container.style.height = S + "px";
 
-      // Renderer
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      // Renderer — transparent background so only dots are drawn
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(W, H);
-      renderer.setClearColor(BG, 1);
-      renderer.domElement.style.cssText = "display:block;width:100%;height:100%;";
+      renderer.setSize(S, S);
+      renderer.setClearColor(0, 0);
+      renderer.domElement.style.cssText = "display:block;width:100%;height:100%;position:absolute;top:0;left:0;";
       container.appendChild(renderer.domElement);
 
-      // Scene — no fog; vertex colour fade handles depth
+      // Gradient overlay — fades the front rows into the background colour
+      const gradEl = document.createElement("div");
+      gradEl.style.cssText = "position:absolute;bottom:10%;left:0;right:0;height:22%;background:linear-gradient(to top,#0e1013 0%,transparent 100%);pointer-events:none;z-index:1;";
+      container.appendChild(gradEl);
+
+      // Scene — no background; canvas corners are transparent
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(BG);
 
-      // Camera — angled view from above and in front of the grid
-      const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 60);
+      // Camera — square aspect (1:1); angled view from above and in front
+      const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 60);
       camera.position.set(0, 7, 11);
-      camera.lookAt(0, 0, -3);
-
-      // ── Soft glow circle texture (built once on canvas, then handed to GPU) ──
-      const texCanvas = document.createElement("canvas");
-      texCanvas.width = texCanvas.height = 64;
-      const tc = texCanvas.getContext("2d")!;
-      const radGrad = tc.createRadialGradient(32, 32, 0, 32, 32, 32);
-      radGrad.addColorStop(0,   "rgba(255,255,255,1)");
-      radGrad.addColorStop(0.35,"rgba(255,255,255,0.8)");
-      radGrad.addColorStop(1,   "rgba(255,255,255,0)");
-      tc.fillStyle = radGrad;
-      tc.fillRect(0, 0, 64, 64);
-      const pointTex = new THREE.CanvasTexture(texCanvas);
+      camera.lookAt(0, 5, 3);
 
       // ── Geometry: N_ROWS × N_COLS Points (one per dot, simpler than LineSegments) ──
       const nVerts    = N_ROWS * N_COLS;
@@ -112,14 +108,25 @@ export function Waveform({
       geo.setAttribute("position", posAttr);
       geo.setAttribute("color",    colAttr);
 
+      // Sharp 4×4 square pixel texture — NearestFilter prevents circular anti-aliasing
+      const pxCanvas = document.createElement("canvas");
+      pxCanvas.width = pxCanvas.height = 4;
+      const pxCtx = pxCanvas.getContext("2d")!;
+      pxCtx.fillStyle = "white";
+      pxCtx.fillRect(0, 0, 4, 4);
+      const squareTex = new THREE.CanvasTexture(pxCanvas);
+      squareTex.magFilter = THREE.NearestFilter;
+      squareTex.minFilter = THREE.NearestFilter;
+      squareTex.generateMipmaps = false;
+
       const mat = new THREE.PointsMaterial({
         vertexColors: true,
-        size: 0.14,
-        sizeAttenuation: true,   // closer dots appear larger — free depth cue
-        map: pointTex,
+        size: 0.28,
+        sizeAttenuation: true,
+        map: squareTex,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending, // peaks bloom brighter
+        blending: THREE.AdditiveBlending,
       });
 
       const dotCloud = new THREE.Points(geo, mat);
@@ -203,21 +210,22 @@ export function Waveform({
       render3D();
 
       const ro = new ResizeObserver(() => {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        if (!w || !h) return;
-        renderer.setSize(w, h);
-        camera.aspect = w / h;
+        const s = squarePx();
+        if (!s) return;
+        container.style.width  = s + "px";
+        container.style.height = s + "px";
+        renderer.setSize(s, s);
+        camera.aspect = 1;
         camera.updateProjectionMatrix();
       });
-      ro.observe(container);
+      ro.observe(parent);
 
       return () => {
         cancelAnimationFrame(raf);
         ro.disconnect();
         geo.dispose();
         mat.dispose();
-        pointTex.dispose();
+        squareTex.dispose();
         renderer.dispose();
       };
     }
@@ -437,9 +445,32 @@ export function Waveform({
 
   return (
     <div
-      ref={containerRef}
-      style={{ width: "100%", height: "100%", position: "relative" }}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: kind === "wave3d" ? "#0e1013" : undefined,
+      }}
       aria-hidden
-    />
+    >
+      <div
+        ref={containerRef}
+        style={{
+          ...(kind === "wave3d" ? {
+            flexShrink: 0,
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: "1px solid rgba(0,180,200,0.25)",
+            position: "relative",
+          } : {
+            width: "100%",
+            height: "100%",
+            position: "relative",
+          }),
+        }}
+      />
+    </div>
   );
 }
