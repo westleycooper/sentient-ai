@@ -41,6 +41,11 @@ class GraphRunner:
             "sme_id": sme_template.id,
             "soul": sme_template.soul,
             "question": user_text,
+            "events": [],       # reset each turn — events are per-turn, not cumulative
+            "token_total": 0,
+            "retrieved": [],    # reset each turn — retrieval is per-question
+            "blocked": False,   # reset each turn — prior block must not carry forward
+            # history is intentionally omitted — checkpointer grows it across turns
         }
         async for chunk in graph.astream(initial_state, config=config):
             for node_name, partial_state in chunk.items():

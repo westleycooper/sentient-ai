@@ -74,7 +74,19 @@ def _make_reason_node(step: ReasoningStep, llm: LLMPort):
         )
         if extra_prompt:
             system += f"\n\nAdditional instruction: {extra_prompt}"
-        prompt = f"Question: {state['question']}\n\nContext:\n{context}" if context.strip() else state["question"]
+        history = state.get("history") or []
+        recent = history[-10:]  # last 5 exchanges (10 messages)
+        if recent:
+            history_lines = "\n".join(
+                ("User" if m["role"] == "user" else "Assistant") + ": " + m["content"]
+                for m in recent
+            )
+            if context.strip():
+                prompt = f"Conversation so far:\n{history_lines}\n\nCurrent question: {state['question']}\n\nContext:\n{context}"
+            else:
+                prompt = f"Conversation so far:\n{history_lines}\n\nCurrent question: {state['question']}"
+        else:
+            prompt = f"Question: {state['question']}\n\nContext:\n{context}" if context.strip() else state["question"]
         res = await llm.complete(system=system, prompt=prompt, model=_FAST_MODEL)
         state["analysis"] = res.text
         state["answer"] = res.text
@@ -332,6 +344,14 @@ def build_graph(
 
     node_names = list(node_registry.keys())
 
+    # ── History node — always runs last, checkpoints Q&A for next turn ────────
+
+    async def update_history(state: ConversationState) -> ConversationState:
+        history = list(state.get("history") or [])
+        history.append({"role": "user", "content": state.get("question", "")})
+        history.append({"role": "assistant", "content": state.get("answer", "")})
+        return {"history": history}
+
     # ── Assemble graph ─────────────────────────────────────────────────────
 
     g: StateGraph = StateGraph(ConversationState)
@@ -342,43 +362,44 @@ def build_graph(
         g.add_node(name, fn)
     if has_output:
         g.add_node("output_guard", output_guard)
+    g.add_node("update_history", update_history)
 
     # Determine the first and last pipeline node (or fall through to guards)
     first_pipeline = node_names[0] if node_names else None
     last_pipeline = node_names[-1] if node_names else None
 
-    # After input guard: go to first pipeline step or output guard or END
-    after_input = first_pipeline or ("output_guard" if has_output else END)
+    # After input guard: go to first pipeline step, output guard, or history
+    after_input = first_pipeline or ("output_guard" if has_output else "update_history")
 
     if has_input:
         g.add_edge(START, "input_guard")
+        # Blocked turns skip the pipeline but still record history
         g.add_conditional_edges(
             "input_guard",
-            lambda s, _dst=after_input: END if s.get("blocked") else _dst,
+            lambda s, _dst=after_input: "update_history" if s.get("blocked") else _dst,
         )
     elif first_pipeline:
         g.add_edge(START, first_pipeline)
     elif has_output:
         g.add_edge(START, "output_guard")
     else:
-        g.add_edge(START, END)
+        g.add_edge(START, "update_history")
 
     # Wire pipeline steps sequentially
     for i, name in enumerate(node_names):
         if i < len(node_names) - 1:
             g.add_edge(name, node_names[i + 1])
 
-    # After last pipeline node: go to output guard or END
+    # After last pipeline node: go to output guard or history
     if last_pipeline:
         if has_output:
             g.add_edge(last_pipeline, "output_guard")
         else:
-            g.add_edge(last_pipeline, END)
+            g.add_edge(last_pipeline, "update_history")
 
     if has_output:
-        g.add_edge("output_guard", END)
+        g.add_edge("output_guard", "update_history")
 
-    # Edge case: only guards, no pipeline — input_guard already routes to after_input
-    # which resolves to output_guard or END, so no additional edge needed here.
+    g.add_edge("update_history", END)
 
     return g.compile(checkpointer=checkpointer)

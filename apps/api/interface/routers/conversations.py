@@ -85,12 +85,14 @@ async def process_turn(
 
     async def event_stream():
         try:
-            last_event: dict = {}
+            state: dict = {}
+            emitted = 0
             async for partial in uc.execute(
                 conversation_id=conversation_id, user_text=body.user_text
             ):
-                last_event = partial
-                for ev in partial.get("events", []):
+                state.update(partial)
+                events = state.get("events", [])
+                for ev in events[emitted:]:
                     data = {
                         "type": "step",
                         "step_id": ev.step_id,
@@ -105,12 +107,13 @@ async def process_turn(
                         "output_preview": ev.output_preview,
                     }
                     yield f"data: {json.dumps(data)}\n\n"
+                emitted = len(events)
 
             complete = {
                 "type": "complete",
-                "answer": last_event.get("answer", ""),
-                "total_tokens": last_event.get("token_total", 0),
-                "citations": last_event.get("citations", []),
+                "answer": state.get("answer", ""),
+                "total_tokens": state.get("token_total", 0),
+                "citations": state.get("citations", []),
             }
             yield f"data: {json.dumps(complete)}\n\n"
 
@@ -158,10 +161,12 @@ async def process_audio_turn(
         # Emit the transcript first so the UI can show it immediately
         yield f"data: {json.dumps({'type': 'transcript', 'text': user_text})}\n\n"
         try:
-            last_event: dict = {}
+            state: dict = {}
+            emitted = 0
             async for partial in uc.execute(conversation_id=conversation_id, user_text=user_text):
-                last_event = partial
-                for ev in partial.get("events", []):
+                state.update(partial)
+                events = state.get("events", [])
+                for ev in events[emitted:]:
                     data = {
                         "type": "step",
                         "step_id": ev.step_id,
@@ -176,13 +181,14 @@ async def process_audio_turn(
                         "output_preview": ev.output_preview,
                     }
                     yield f"data: {json.dumps(data)}\n\n"
+                emitted = len(events)
 
-            answer = last_event.get("answer", "")
+            answer = state.get("answer", "")
             complete = {
                 "type": "complete",
                 "answer": answer,
-                "total_tokens": last_event.get("token_total", 0),
-                "citations": last_event.get("citations", []),
+                "total_tokens": state.get("token_total", 0),
+                "citations": state.get("citations", []),
             }
             yield f"data: {json.dumps(complete)}\n\n"
 
