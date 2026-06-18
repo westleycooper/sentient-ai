@@ -46,7 +46,6 @@ export function ReasoningSteps({ steps, isStreaming }: ReasoningStepsProps) {
 
 function StepRow({ step }: { step: StepEvent }) {
   const done = step.phase === "finished";
-  const label = step.step_name;
   const tokens = step.total_tokens > 0 ? `${step.total_tokens} tokens` : null;
   const latency = step.latency_ms != null ? `${Math.round(step.latency_ms)} ms` : null;
 
@@ -59,7 +58,7 @@ function StepRow({ step }: { step: StepEvent }) {
           <HourglassTopIcon sx={{ fontSize: 16, color: "warning.main" }} />
         )}
         <Typography variant="caption" sx={{ flex: 1, color: "text.secondary" }}>
-          {label}
+          {step.step_name}
         </Typography>
         {tokens && (
           <Tooltip title="Token usage for this step">
