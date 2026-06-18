@@ -23,7 +23,7 @@ export function ReasoningSteps({ steps, isStreaming }: ReasoningStepsProps) {
     <Box
       sx={{
         width: "100%",
-        maxWidth: 480,
+        maxWidth: 552,
         bgcolor: "background.paper",
         borderRadius: 2,
         p: 1.5,
