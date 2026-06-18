@@ -144,7 +144,7 @@ export function HomePage() {
     setIsStreaming(false);
     greetingPlayedRef.current = false;
 
-    const greetingText = `Hello, I'm Sentinel, your ${activeSme.name}. How can I help?`;
+    const greetingText = `Hello, I'm Westley, your ${activeSme.name}. How can I help?`;
 
     // Show text immediately
     setLocalMessages([{
@@ -456,7 +456,7 @@ export function HomePage() {
         >
           <Toolbar variant="dense" disableGutters sx={{ pl: "10px" }}>
             <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Sentinel
+              Westley
             </Typography>
 
             {templates.length > 0 && (
