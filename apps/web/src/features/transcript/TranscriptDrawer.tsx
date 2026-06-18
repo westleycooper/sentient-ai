@@ -251,13 +251,13 @@ function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user";
   return (
     <Stack direction={isUser ? "row-reverse" : "row"} spacing={1} sx={{ alignItems: "flex-start" }}>
-      <Avatar sx={{ width: 28, height: 28, bgcolor: isUser ? "primary.main" : "secondary.main" }}>
+      <Avatar sx={{ width: 28, height: 28, bgcolor: isUser ? "#005a64" : "secondary.main" }}>
         {isUser ? <PersonIcon sx={{ fontSize: 16 }} /> : <SmartToyIcon sx={{ fontSize: 16 }} />}
       </Avatar>
       <Box
         sx={{
           flex: 1,
-          bgcolor: isUser ? "primary.dark" : "background.default",
+          bgcolor: isUser ? "#00454d" : "background.default",
           borderRadius: 2,
           p: 1.5,
           maxWidth: "85%",
