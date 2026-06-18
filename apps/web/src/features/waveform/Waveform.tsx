@@ -2,15 +2,15 @@
  * Sound-wave visualisation. ISOLATED feature (CLAUDE.md §6).
  * Stable prop contract — callers unchanged when swapped for the 3D AI head.
  *
- * kind="wave"   — classic 2D oscilloscope line with hill-shaped opacity fade
- * kind="wave3d" — Three.js WebGL: N_ROWS horizontal waveform rows stacked
- *                 along the Z axis (waterfall) with depth fog, vertex colours,
- *                 and exponential fade to background
+ * kind="wave"       — classic 2D oscilloscope line with hill-shaped opacity fade
+ * kind="wave3d"     — Three.js WebGL: dot-cloud waterfall along the Z axis
+ * kind="wave3dgrid" — Three.js WebGL: polygon terrain mesh where amplitude
+ *                     raises vertices, with additive wireframe overlay
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export type WaveformKind = "wave" | "wave3d";
+export type WaveformKind = "wave" | "wave3d" | "wave3dgrid";
 
 export interface WaveformProps {
   amplitude: Float32Array;
@@ -25,15 +25,22 @@ function hexToRgb(hex: string) {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-// ── 3D constants ─────────────────────────────────────────────────────────────
-const N_ROWS      = 20;   // rows kept in the waterfall
-const N_COLS      = 128;  // samples per row (resampled from analyser buffer)
-const Z_SPACING   = 0.55; // world-unit gap between rows
-const TOTAL_DEPTH = N_ROWS * Z_SPACING;          // ~11 units
-const SCROLL_SPEED = 0.07; // world units advanced per RAF (~4.2 u/s at 60 fps)
-const X_HALF      = 7;    // half-width of the grid (units)
-const AMP_SCALE   = 4.0;  // amplitude → vertical displacement scale
-const BG          = 0x18151f;
+// ── wave3d (dot waterfall) constants ─────────────────────────────────────────
+const N_ROWS      = 20;
+const N_COLS      = 128;
+const Z_SPACING   = 0.55;
+const TOTAL_DEPTH = N_ROWS * Z_SPACING;
+const SCROLL_SPEED = 0.07;
+const X_HALF      = 7;
+const AMP_SCALE   = 4.0;
+const BG          = 0x0e1013;
+
+// ── wave3dgrid (static square-cell mesh) constants ───────────────────────────
+const G_X      = 28;    // vertex columns across X  (~half original cell count)
+const G_Z      = 20;    // vertex rows along Z
+const G_XHALF  = 8;     // half-width (world units) — cell width = 16/27 ≈ 0.593
+const G_ZSPACE = 0.60;  // row spacing ≈ cell width → square cells
+const G_AMP    = 6.75;  // amplitude → Y displacement
 
 export function Waveform({
   amplitude,
@@ -211,6 +218,139 @@ export function Waveform({
         geo.dispose();
         mat.dispose();
         pointTex.dispose();
+        renderer.dispose();
+      };
+    }
+
+    // ════════════════════════════════════ THREE.JS 3D GRID TERRAIN ══════════
+    if (kind === "wave3dgrid") {
+      const W = container.clientWidth  || 800;
+      const H = container.clientHeight || 400;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(W, H);
+      renderer.setClearColor(BG, 1);
+      renderer.domElement.style.cssText = "display:block;width:100%;height:100%;";
+      container.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(BG);
+
+      const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 80);
+      camera.position.set(0, 7, 12);
+      camera.lookAt(0, 0, -3);
+
+      // ── Shared vertex buffer ──────────────────────────────────────────────
+      const nVerts  = G_X * G_Z;
+      const positions = new Float32Array(nVerts * 3);
+      const colors    = new Float32Array(nVerts * 3);
+
+      // ── Edge index buffer: horizontal + vertical lines only (no diagonals) ─
+      const nHEdges    = G_Z * (G_X - 1);
+      const nVEdges    = G_X * (G_Z - 1);
+      const lineIdx    = new Uint32Array((nHEdges + nVEdges) * 2);
+      {
+        let ei = 0;
+        for (let z = 0; z < G_Z; z++)
+          for (let x = 0; x < G_X - 1; x++) {
+            lineIdx[ei++] = z * G_X + x;
+            lineIdx[ei++] = z * G_X + x + 1;
+          }
+        for (let z = 0; z < G_Z - 1; z++)
+          for (let x = 0; x < G_X; x++) {
+            lineIdx[ei++] =  z      * G_X + x;
+            lineIdx[ei++] = (z + 1) * G_X + x;
+          }
+      }
+
+      const geo     = new THREE.BufferGeometry();
+      const posAttr = new THREE.BufferAttribute(positions, 3);
+      const colAttr = new THREE.BufferAttribute(colors, 3);
+      geo.setAttribute("position", posAttr);
+      geo.setAttribute("color",    colAttr);
+      geo.setIndex(new THREE.BufferAttribute(lineIdx, 1));
+
+      // Bake X and Z once
+      {
+        let vi = 0;
+        for (let z = 0; z < G_Z; z++)
+          for (let x = 0; x < G_X; x++) {
+            positions[vi * 3]     = -G_XHALF + (x / (G_X - 1)) * G_XHALF * 2;
+            positions[vi * 3 + 1] = 0;
+            positions[vi * 3 + 2] = -z * G_ZSPACE;
+            vi++;
+          }
+        posAttr.needsUpdate = true;
+      }
+
+      const c1n = { r: c1.r / 255, g: c1.g / 255, b: c1.b / 255 };
+      const c2n = { r: c2.r / 255, g: c2.g / 255, b: c2.b / 255 };
+
+      const lineMat = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      scene.add(new THREE.LineSegments(geo, lineMat));
+
+      const renderGrid = () => {
+        const amp    = ampRef.current;
+        const N      = amp.length || 256;
+        const active = activeRef.current;
+        let vi       = 0;
+
+        for (let z = 0; z < G_Z; z++) {
+          // cosine envelope along Z: 1 at centre row, 0 at front/back edges
+          const dz = Math.abs(z / (G_Z - 1) - 0.5) * 2;
+          const fz = 0.5 * (1 + Math.cos(Math.PI * dz));
+          // depth dim: front 100%, back 35%
+          const dim = 1 - (z / (G_Z - 1)) * 0.65;
+
+          for (let x = 0; x < G_X; x++) {
+            // cosine envelope along X: 1 at centre column, 0 at left/right edges
+            const dx  = Math.abs(x / (G_X - 1) - 0.5) * 2;
+            const fx  = 0.5 * (1 + Math.cos(Math.PI * dx));
+            const env = fx * fz; // 2D dome: 1 at grid centre, 0 at all four edges
+
+            const si = Math.min(N - 1, Math.floor((x / (G_X - 1)) * (N - 1)));
+            const a  = active ? (amp[si] || 0) : 0;
+            const t  = Math.min(1, Math.abs(a) * 3.5);
+
+            positions[vi * 3 + 1] = a * G_AMP * env;
+
+            // peak brightness scales with amplitude * dome; floor glow at rest
+            const f = dim * (t * env + 0.15 * env);
+            colors[vi * 3]     = (c1n.r + (c2n.r - c1n.r) * t) * f;
+            colors[vi * 3 + 1] = (c1n.g + (c2n.g - c1n.g) * t) * f;
+            colors[vi * 3 + 2] = (c1n.b + (c2n.b - c1n.b) * t) * f;
+            vi++;
+          }
+        }
+
+        posAttr.needsUpdate = true;
+        colAttr.needsUpdate = true;
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(renderGrid);
+      };
+      renderGrid();
+
+      const ro = new ResizeObserver(() => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      });
+      ro.observe(container);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+        geo.dispose();
+        lineMat.dispose();
         renderer.dispose();
       };
     }
