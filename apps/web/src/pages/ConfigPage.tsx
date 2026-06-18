@@ -117,11 +117,11 @@ export function ConfigPage() {
           <CircularProgress />
         </Box>
       ) : (
-        <Grid container sx={{ flex: 1, overflow: "hidden" }}>
+        <Grid container sx={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
           {/* Template list */}
           <Grid
             size={{ xs: 12, md: 4 }}
-            sx={{ borderRight: "1px solid", borderColor: "divider", overflowY: "auto", p: 2 }}
+            sx={{ height: "100%", borderRight: "1px solid", borderColor: "divider", overflowY: "auto", p: 2 }}
           >
             <Stack spacing={1.5}>
               <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
@@ -190,7 +190,7 @@ export function ConfigPage() {
           </Grid>
 
           {/* Editor */}
-          <Grid size={{ xs: 12, md: 8 }} sx={{ overflowY: "auto", p: 3 }}>
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: "100%", overflowY: "auto", p: 3 }}>
             {selected ? (
               <Paper variant="outlined" sx={{ p: 3 }}>
                 <SmeEditor
