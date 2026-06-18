@@ -29,3 +29,4 @@ class ConversationState(TypedDict, total=False):
     citations: list[dict[str, Any]]
     events: list[ReasoningStepEvent]
     token_total: int
+    blocked: bool

@@ -2,7 +2,9 @@ import {
   Box,
   Button,
   Divider,
+  FormControl,
   IconButton,
+  InputLabel,
   MenuItem,
   Select,
   Stack,
@@ -15,6 +17,17 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { ReasoningStep } from "../../api/hooks";
 
 const STEP_KINDS = ["retrieve", "reason", "tool_call", "summarise", "guardrail_check"] as const;
+
+const GUARDRAIL_CHECKS = [
+  { id: "no_personal_advice_solicitation", label: "No personal advice solicitation", phase: "input" },
+  { id: "no_personalised_advice",          label: "No personalised advice in output", phase: "output" },
+  { id: "crisis_detection",               label: "Crisis detection",                 phase: "input" },
+  { id: "no_harmful_content",             label: "No harmful content",               phase: "output" },
+  { id: "no_protected_characteristics",   label: "No protected characteristics",     phase: "output" },
+  { id: "constructive_tone",              label: "Constructive tone",                phase: "output" },
+  { id: "no_profanity",                   label: "No profanity",                     phase: "input" },
+  { id: "no_off_topic",                   label: "No off-topic queries",             phase: "input" },
+] as const;
 
 interface StepEditorProps {
   steps: ReasoningStep[];
@@ -96,21 +109,43 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
                   ))}
                 </Select>
               </Stack>
-              <TextField
-                label="Config (JSON)"
-                size="small"
-                multiline
-                rows={2}
-                value={JSON.stringify(step.config, null, 2)}
-                onChange={(e) => {
-                  try {
-                    update(idx, { config: JSON.parse(e.target.value) });
-                  } catch {
-                    /* ignore invalid JSON mid-edit */
-                  }
-                }}
-                slotProps={{ htmlInput: { "aria-label": `Step ${idx + 1} config` } }}
-              />
+              {step.kind === "guardrail_check" ? (
+                <FormControl size="small" fullWidth>
+                  <InputLabel id={`guard-check-label-${idx}`}>Guardrail check</InputLabel>
+                  <Select
+                    labelId={`guard-check-label-${idx}`}
+                    label="Guardrail check"
+                    value={step.config.check ?? ""}
+                    onChange={(e) => update(idx, { config: { ...step.config, check: e.target.value } })}
+                    inputProps={{ "aria-label": `Step ${idx + 1} guardrail check` }}
+                  >
+                    {GUARDRAIL_CHECKS.map((g) => (
+                      <MenuItem key={g.id} value={g.id}>
+                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                          <Typography variant="body2">{g.label}</Typography>
+                          <Typography variant="caption" color="text.secondary">({g.phase})</Typography>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : (
+                <TextField
+                  label="Config (JSON)"
+                  size="small"
+                  multiline
+                  rows={2}
+                  value={JSON.stringify(step.config, null, 2)}
+                  onChange={(e) => {
+                    try {
+                      update(idx, { config: JSON.parse(e.target.value) });
+                    } catch {
+                      /* ignore invalid JSON mid-edit */
+                    }
+                  }}
+                  slotProps={{ htmlInput: { "aria-label": `Step ${idx + 1} config` } }}
+                />
+              )}
             </Stack>
             <Tooltip title="Remove step">
               <IconButton size="small" onClick={() => remove(idx)} aria-label={`Remove step ${idx + 1}`} sx={{ mt: 0.5 }}>

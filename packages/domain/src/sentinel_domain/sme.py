@@ -161,12 +161,18 @@ def recruitment_default() -> SmeTemplate:
             "You are encouraging, constructive, and honest about skill gaps."
         ),
         steps=[
+            ReasoningStep(id="guard-in", name="Profanity check", kind=StepKind.GUARDRAIL_CHECK,
+                          config={"check": "no_profanity"}, next_default="retrieve"),
             ReasoningStep(id="retrieve", name="Retrieve live jobs", kind=StepKind.RETRIEVE,
                           config={"source_id": "remotive-jobs", "top_k": 8}, next_default="reason"),
             ReasoningStep(id="reason", name="Career analysis", kind=StepKind.REASON,
                           config={"prompt": "Provide actionable career guidance."}, next_default="summarise"),
             ReasoningStep(id="summarise", name="Structured advice", kind=StepKind.SUMMARISE,
                           config={"format": "bullet_points"}),
+            ReasoningStep(id="guard-out-bias", name="Bias check", kind=StepKind.GUARDRAIL_CHECK,
+                          config={"check": "no_protected_characteristics"}),
+            ReasoningStep(id="guard-out-tone", name="Tone check", kind=StepKind.GUARDRAIL_CHECK,
+                          config={"check": "constructive_tone"}),
         ],
         sources=[
             RetrievalSourceConfig(
