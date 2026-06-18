@@ -22,6 +22,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import ChatIcon from "@mui/icons-material/Chat";
 import SettingsIcon from "@mui/icons-material/Settings";
 
@@ -42,6 +43,7 @@ import { streamAudioTurn, streamEvents } from "../api/client";
 import type { TurnEvent, TranscriptEvent } from "../api/hooks";
 
 export function HomePage() {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { drawerOpen, toggleDrawer, selectedSmeId, defaultSmeId, selectSme, recording, setRecording } =
     useUiStore();
@@ -430,14 +432,9 @@ export function HomePage() {
           position="static"
           color="transparent"
           elevation={0}
-          sx={{
-            borderRadius: 2,
-            border: "1px solid",
-            borderColor: "divider",
-            flexShrink: 0,
-          }}
+          sx={{ flexShrink: 0 }}
         >
-          <Toolbar variant="dense">
+          <Toolbar variant="dense" disableGutters sx={{ pl: "10px" }}>
             <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, letterSpacing: "-0.02em" }}>
               Sentinel
             </Typography>
@@ -486,8 +483,8 @@ export function HomePage() {
           <Waveform
             amplitude={amplitude}
             active={recording || isTtsPlaying}
-            color="#82aad4"
-            peakColor="#c9819a"
+            color={theme.palette.primary.main}
+            peakColor={theme.palette.secondary.light}
             kind={activeSme?.visualisation_kind ?? "wave"}
           />
 

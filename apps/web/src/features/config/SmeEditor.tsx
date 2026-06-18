@@ -65,11 +65,12 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
               labelId="vis-kind-label"
               label="Waveform"
               value={draft.visualisation_kind ?? "wave"}
-              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wave3d")}
+              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wave3d" | "wave3dgrid")}
               aria-label="Waveform visualisation"
             >
               <MenuItem value="wave">Sound Wave</MenuItem>
               <MenuItem value="wave3d">3D Wave</MenuItem>
+              <MenuItem value="wave3dgrid">3D Grid</MenuItem>
             </Select>
           </FormControl>
           <FormControlLabel

@@ -1,32 +1,32 @@
 import { createTheme } from "@mui/material/styles";
 
-// Pastel retro palette — dark warm-grey base with dusty rose, periwinkle, and sage accents.
+// Dark neutral-grey base with teal accents.
 export const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#c9819a",       // dusty rose
-      light: "#dfa8bc",
-      dark: "#a05e78",
+      main: "#00b4c8",       // teal
+      light: "#33c8d8",
+      dark: "#008a9a",
     },
     secondary: {
-      main: "#82aad4",       // periwinkle blue
-      light: "#a8c4e2",
-      dark: "#5a84b0",
+      main: "#00909e",       // darker muted teal for icons / chips
+      light: "#00b4c8",
+      dark: "#006b77",
     },
     background: {
-      default: "#18151f",    // dark warm purple-grey
-      paper: "#221e2c",      // slightly lighter
+      default: "#0e1013",    // dark neutral grey (no purple)
+      paper: "#13161b",      // card / drawer background
     },
     text: {
-      primary: "#efe8f5",    // soft lavender-white
-      secondary: "#a899bc",  // muted lavender
+      primary: "#e2e8f0",    // cool white, no lavender
+      secondary: "#7e8fa0",  // neutral blue-grey, no pink
     },
-    divider: "rgba(201, 129, 154, 0.15)",
+    divider: "rgba(0, 180, 200, 0.15)",
     error:   { main: "#d4827a" },
-    success: { main: "#86c9a8" },
+    success: { main: "#00b4c8" },
     warning: { main: "#d4b082" },
-    info:    { main: "#82aad4" },
+    info:    { main: "#00b4c8" },
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -49,17 +49,28 @@ export const theme = createTheme({
     },
     MuiDivider: {
       styleOverrides: {
-        root: { borderColor: "rgba(201, 129, 154, 0.15)" },
+        root: { borderColor: "rgba(0, 180, 200, 0.15)" },
       },
     },
     MuiOutlinedInput: {
       styleOverrides: {
-        notchedOutline: { borderColor: "rgba(130, 170, 212, 0.25)" },
+        notchedOutline: { borderColor: "rgba(0, 180, 200, 0.25)" },
       },
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderColor: "rgba(201, 129, 154, 0.35)" },
+        root: { borderColor: "rgba(0, 180, 200, 0.35)" },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: "#000",
+          fontSize: "0.8rem",
+        },
+        arrow: {
+          color: "#000",
+        },
       },
     },
   },

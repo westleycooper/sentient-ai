@@ -59,7 +59,7 @@ class SmeTemplate(BaseModel):
     sources: list[RetrievalSourceConfig] = Field(default_factory=list)
     rules: list[SmeRule] = Field(default_factory=list)
     is_default: bool = False
-    visualisation_kind: Literal["wave", "wave3d"] = "wave"
+    visualisation_kind: Literal["wave", "wave3d", "wave3dgrid"] = "wave"
 
     def model_json_schema_export(self) -> dict:
         return self.model_json_schema()

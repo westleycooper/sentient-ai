@@ -41,7 +41,7 @@ export interface SmeTemplate {
   sources: RetrievalSource[];
   rules: SmeRule[];
   is_default: boolean;
-  visualisation_kind: "wave" | "wave3d";
+  visualisation_kind: "wave" | "wave3d" | "wave3dgrid";
 }
 
 export interface Message {
