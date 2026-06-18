@@ -46,10 +46,10 @@ export function MicButton({ state, onStart, onStop, disabled }: MicButtonProps) 
             sx={{
               width: 72,
               height: 72,
-              bgcolor: isRecording ? "error.main" : "primary.main",
+              bgcolor: isRecording ? "error.dark" : "primary.dark",
               color: "#fff",
               "&:hover": {
-                bgcolor: isRecording ? "error.dark" : "primary.dark",
+                bgcolor: isRecording ? "error.main" : "primary.main",
               },
               "&.Mui-disabled": { bgcolor: "action.disabledBackground" },
               transition: "background-color 0.2s",

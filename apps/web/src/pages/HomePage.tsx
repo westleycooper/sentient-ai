@@ -13,8 +13,11 @@ import {
   Alert,
   AppBar,
   Box,
+  Chip,
+  Divider,
   IconButton,
   MenuItem,
+  Popover,
   Select,
   Snackbar,
   Stack,
@@ -24,6 +27,8 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import ChatIcon from "@mui/icons-material/Chat";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import HistoryIcon from "@mui/icons-material/History";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 import { Waveform } from "../features/waveform/Waveform";
@@ -50,11 +55,18 @@ export function HomePage() {
 
   const [amplitude, setAmplitude] = useState<Float32Array>(new Float32Array(256));
   const [steps, setSteps] = useState<StepEvent[]>([]);
+  const [stepHistory, setStepHistory] = useState<StepEvent[][]>([]);
+  const [stepsByMsgId, setStepsByMsgId] = useState<Record<string, StepEvent[]>>({});
+  const stepsRef = useRef<StepEvent[]>([]);
+  const [historyAnchor, setHistoryAnchor] = useState<HTMLElement | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isTtsPlaying, setIsTtsPlaying] = useState(false);
+
+  // Keep a ref so archive-on-clear in callbacks always sees fresh steps
+  stepsRef.current = steps;
 
   const stopStreamRef = useRef<(() => void) | null>(null);
   const ttsAnimRef = useRef<number>(0);
@@ -127,6 +139,8 @@ export function HomePage() {
     // for the selected SME on the next user turn.
     setConversationId(null);
     setSteps([]);
+    setStepHistory([]);
+    setStepsByMsgId({});
     setIsStreaming(false);
     greetingPlayedRef.current = false;
 
@@ -294,6 +308,7 @@ export function HomePage() {
       citations: [],
     };
     setLocalMessages((prev) => [...prev, userMsg]);
+    if (stepsRef.current.length > 0) setStepHistory((prev) => [...prev, stepsRef.current]);
     setSteps([]);
     setIsStreaming(true);
 
@@ -310,8 +325,10 @@ export function HomePage() {
         } else if (ev.type === "step") {
           setSteps((prev) => [...prev, ev as StepEvent]);
         } else if (ev.type === "complete") {
+          const assistantMsgId = crypto.randomUUID();
+          setStepsByMsgId((prev) => ({ ...prev, [assistantMsgId]: stepsRef.current }));
           const assistantMsg: Message = {
-            id: crypto.randomUUID(),
+            id: assistantMsgId,
             role: "assistant",
             content: ev.answer,
             created_at: new Date().toISOString(),
@@ -348,6 +365,7 @@ export function HomePage() {
       citations: [],
     };
     setLocalMessages((prev) => [...prev, userMsg]);
+    if (stepsRef.current.length > 0) setStepHistory((prev) => [...prev, stepsRef.current]);
     setSteps([]);
     setIsStreaming(true);
 
@@ -363,8 +381,10 @@ export function HomePage() {
         if (ev.type === "step") {
           setSteps((prev) => [...prev, ev as StepEvent]);
         } else if (ev.type === "complete") {
+          const assistantMsgId = crypto.randomUUID();
+          setStepsByMsgId((prev) => ({ ...prev, [assistantMsgId]: stepsRef.current }));
           const assistantMsg: Message = {
-            id: crypto.randomUUID(),
+            id: assistantMsgId,
             role: "assistant",
             content: ev.answer,
             created_at: new Date().toISOString(),
@@ -488,7 +508,7 @@ export function HomePage() {
             kind={activeSme?.visualisation_kind ?? "wave"}
           />
 
-          {/* Reasoning steps overlay */}
+          {/* Reasoning steps overlay — most recent run only */}
           <Box
             sx={{
               position: "absolute",
@@ -500,7 +520,92 @@ export function HomePage() {
           >
             <ReasoningSteps steps={steps} isStreaming={isStreaming} />
           </Box>
+
+          {/* Step history button — bottom-left */}
+          {stepHistory.length > 0 && (
+            <Box sx={{ position: "absolute", bottom: 16, left: 16, zIndex: 10 }}>
+              <Tooltip title="Step history">
+                <IconButton
+                  size="small"
+                  onClick={(e) => setHistoryAnchor(e.currentTarget)}
+                  aria-label="Show step history"
+                  sx={{
+                    bgcolor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    "&:hover": { bgcolor: "action.hover" },
+                  }}
+                >
+                  <HistoryIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
         </Box>
+
+        {/* Step history popover */}
+        <Popover
+          open={Boolean(historyAnchor)}
+          anchorEl={historyAnchor}
+          onClose={() => setHistoryAnchor(null)}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          transformOrigin={{ vertical: "bottom", horizontal: "left" }}
+          slotProps={{
+            paper: {
+              sx: {
+                p: 2,
+                width: 340,
+                maxHeight: 420,
+                overflowY: "auto",
+                bgcolor: "background.paper",
+                border: "1px solid",
+                borderColor: "divider",
+              },
+            },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+            Step History
+          </Typography>
+          {[...stepHistory].reverse().map((run, i) => {
+            const runNumber = stepHistory.length - i;
+            return (
+              <Box key={runNumber}>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  sx={{ display: "block", mb: 0.5, fontWeight: 600 }}
+                >
+                  Run {runNumber}
+                </Typography>
+                <Stack spacing={0.25} sx={{ mb: 0.75 }}>
+                  {run.map((step) => (
+                    <Stack
+                      key={step.step_id}
+                      direction="row"
+                      spacing={0.75}
+                      sx={{ alignItems: "center" }}
+                    >
+                      <CheckCircleIcon sx={{ fontSize: 12, color: "text.disabled", flexShrink: 0 }} />
+                      <Typography variant="caption" color="text.disabled" sx={{ flex: 1 }}>
+                        {step.step_name}
+                      </Typography>
+                      {step.latency_ms != null && (
+                        <Chip
+                          label={`${Math.round(step.latency_ms)} ms`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 16, fontSize: 9, opacity: 0.7 }}
+                        />
+                      )}
+                    </Stack>
+                  ))}
+                </Stack>
+                {i < stepHistory.length - 1 && <Divider sx={{ mb: 0.75 }} />}
+              </Box>
+            );
+          })}
+        </Popover>
 
         {/* Mic button */}
         <Stack sx={{ alignItems: "center", flexShrink: 0 }}>
@@ -519,6 +624,7 @@ export function HomePage() {
         onClose={toggleDrawer}
         messages={messages}
         steps={steps}
+        stepsByMsgId={stepsByMsgId}
         onSendText={handleSendText}
         isStreaming={isStreaming}
       />

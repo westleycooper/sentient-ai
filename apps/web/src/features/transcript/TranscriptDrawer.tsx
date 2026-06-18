@@ -31,11 +31,12 @@ interface TranscriptDrawerProps {
   onClose: () => void;
   messages: Message[];
   steps: StepEvent[];
+  stepsByMsgId: Record<string, StepEvent[]>;
   isStreaming: boolean;
   onSendText: (text: string) => void;
 }
 
-export function TranscriptDrawer({ open, onClose, messages, steps, isStreaming, onSendText }: TranscriptDrawerProps) {
+export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId, isStreaming, onSendText }: TranscriptDrawerProps) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -50,8 +51,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, isStreaming, 
     onSendText(text);
   };
 
-  // Steps are injected after the last user message
-  const lastUserIdx = messages.map((m) => m.role).lastIndexOf("user");
+  const isLastMsg = (idx: number) => idx === messages.length - 1;
 
   return (
     <Drawer
@@ -110,21 +110,30 @@ export function TranscriptDrawer({ open, onClose, messages, steps, isStreaming, 
           <Stack spacing={2} divider={<Divider />}>
             {messages.map((msg, idx) => (
               <Box key={msg.id}>
-                <MessageBubble message={msg} />
-                {idx === lastUserIdx && steps.length > 0 && (
-                  <Box sx={{ mt: 1.5 }}>
-                    <StepsBlock steps={steps} isStreaming={isStreaming} />
+                {/* Steps for this assistant response, shown before the bubble */}
+                {msg.role === "assistant" && stepsByMsgId[msg.id]?.length > 0 && (
+                  <Box sx={{ mb: 1.5 }}>
+                    <StepsBlock steps={stepsByMsgId[msg.id]} isStreaming={false} />
                   </Box>
                 )}
+
+                {/* Live steps after the last user message while streaming */}
+                {msg.role === "user" && isLastMsg(idx) && isStreaming && (
+                  <Box sx={{ mt: 1.5 }}>
+                    {steps.length > 0 ? (
+                      <StepsBlock steps={steps} isStreaming={isStreaming} />
+                    ) : (
+                      <Stack sx={{ alignItems: "center" }} spacing={1}>
+                        <CircularProgress size={20} />
+                        <Typography variant="caption" color="text.secondary">Thinking…</Typography>
+                      </Stack>
+                    )}
+                  </Box>
+                )}
+
+                <MessageBubble message={msg} />
               </Box>
             ))}
-          </Stack>
-        )}
-
-        {isStreaming && steps.length === 0 && (
-          <Stack sx={{ alignItems: "center", mt: 2 }} spacing={1}>
-            <CircularProgress size={20} />
-            <Typography variant="caption" color="text.secondary">Thinking…</Typography>
           </Stack>
         )}
         <div ref={bottomRef} />
