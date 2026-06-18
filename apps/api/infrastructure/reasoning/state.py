@@ -30,3 +30,4 @@ class ConversationState(TypedDict, total=False):
     events: list[ReasoningStepEvent]
     token_total: int
     blocked: bool
+    history: list[dict[str, str]]    # [{"role": "user"|"assistant", "content": "..."}]
