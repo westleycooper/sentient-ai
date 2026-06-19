@@ -3,14 +3,24 @@ param location string
 param tags object
 param keyVaultName string
 param appInsightsConnectionStringSecretRef string
+
 // Managed Identity used for Key Vault + Postgres + ACR. App stays cloud-agnostic:
 // all behaviour driven by env vars below, identical to local docker-compose.
+
+resource env 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: '${name}-env'
+  location: location
+  tags: tags
+  properties: {}
+}
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: name
   location: location
   tags: tags
   identity: { type: 'SystemAssigned' }
   properties: {
+    environmentId: env.id
     configuration: { ingress: { external: true, targetPort: 8000 } }
     template: {
       containers: [ {
@@ -26,4 +36,6 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
 }
+
 output name string = app.name
+output principalId string = app.identity.principalId

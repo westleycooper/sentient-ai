@@ -1,0 +1,7 @@
+env                 = "dev"
+location            = "uksouth"
+org                 = "sentinel"
+owner               = "platform-team"
+cost_center         = "cc-1234"
+data_classification = "confidential"
+resource_group_name = "sentinel-dev-rg"
