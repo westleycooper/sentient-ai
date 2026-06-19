@@ -47,8 +47,9 @@ This starts a `pgvector`-enabled Postgres on port 5432 with the credentials alre
 
 ```bash
 cd apps/api
-uv sync                        # install Python dependencies
-uv run alembic upgrade head    # create tables (run once, and after migrations)
+uv sync                                        # install Python dependencies
+uv run alembic upgrade head                    # create tables (run once, and after migrations)
+uv run python scripts/seed_defaults.py         # seed default SME templates (run once)
 uv run uvicorn main:app --reload
 ```
 
@@ -325,6 +326,7 @@ Open `.env.local` and set `ANTHROPIC_API_KEY=sk-ant-...`. The `DATABASE_URL` def
 cd apps\api
 uv sync
 uv run alembic upgrade head
+uv run python scripts/seed_defaults.py
 uv run uvicorn main:app --reload
 ```
 
