@@ -10,7 +10,7 @@ a slide-out chat transcript.
 
 ## Getting started
 
-See **[SETUP.md](SETUP.md)** for full installation instructions — macOS, Linux, and Windows (WSL 2 and native PowerShell).
+See **[SETUP.md](SETUP.md)** for full installation instructions covering macOS, Linux, and Windows — with or without Docker, and with or without WSL 2.
 
 ---
 
