@@ -239,14 +239,21 @@ The rest of the setup is identical — `DATABASE_URL` defaults are already corre
 | Node | 20+ | [nvm-windows](https://github.com/coreybutler/nvm-windows/releases) or [nodejs.org](https://nodejs.org) |
 | pnpm | 11+ | `npm install -g pnpm` |
 | PostgreSQL | 16 | [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) |
-| pgvector | latest | [pre-built for Windows](https://github.com/pgvector/pgvector/releases) — download the `.zip` matching your PG version |
+| pgvector | latest | Built from source — see step 3 below (requires Visual Studio Build Tools) |
+| VS Build Tools | 2022 | [visualstudio.microsoft.com](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) — select "Desktop development with C++" |
 | Git | any | [git-scm.com](https://git-scm.com) — choose "Use Unix-style line endings" |
 
-### 1. Install PostgreSQL 16
+> **Note:** pgvector has no pre-built Windows binaries — it must be compiled from source using Visual Studio. This adds meaningful setup overhead. If you are not comfortable with C build tooling, **WSL 2 is strongly recommended instead** — pgvector installs there with a single `apt` command.
 
-Run the EDB installer. Note the **password** you set for the `postgres` superuser and the **port** (default 5432). Keep **Stack Builder** unchecked — pgvector is installed manually below.
+### 1. Install Visual Studio Build Tools
 
-Add the Postgres bin directory to your PATH if the installer didn't (adjust version/path as needed):
+Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) (free). During install, select **Desktop development with C++**. This provides `nmake` and the MSVC compiler needed to build pgvector.
+
+### 2. Install PostgreSQL 16
+
+Run the [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads). Note the **password** you set for the `postgres` superuser and the **port** (default 5432).
+
+Add the Postgres bin directory to your PATH if the installer did not (adjust path as needed):
 
 ```powershell
 [System.Environment]::SetEnvironmentVariable(
@@ -258,17 +265,25 @@ Add the Postgres bin directory to your PATH if the installer didn't (adjust vers
 
 Restart PowerShell after changing the PATH.
 
-### 2. Install pgvector
+### 3. Build and install pgvector
 
-Download the pre-built Windows zip from the [pgvector releases page](https://github.com/pgvector/pgvector/releases) — pick the file matching `pg16-windows-x86_64`. Extract and copy the files:
+Open the **x64 Native Tools Command Prompt for VS 2022** (search the Start menu — this sets up the MSVC environment):
 
-```powershell
-# Adjust paths to match your PostgreSQL install location
-$pg = "C:\Program Files\PostgreSQL\16"
-Copy-Item vector.dll      "$pg\lib\"
-Copy-Item vector.control  "$pg\share\extension\"
-Copy-Item vector--*.sql   "$pg\share\extension\"
+```cmd
+:: Download the pgvector source
+curl -L https://github.com/pgvector/pgvector/archive/refs/heads/master.zip -o pgvector.zip
+tar -xf pgvector.zip
+cd pgvector-master
+
+:: Point the build at your PostgreSQL installation
+set "PGROOT=C:\Program Files\PostgreSQL\16"
+
+:: Build and install
+nmake /F Makefile.win
+nmake /F Makefile.win install
 ```
+
+You can then close the VS command prompt and return to PowerShell.
 
 ### 3. Create the database and user
 
