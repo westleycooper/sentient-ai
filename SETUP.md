@@ -117,30 +117,32 @@ pnpm test
 
 Use this if you prefer not to run Docker, or want Postgres running as a native service.
 
-### 1. Install PostgreSQL 16 and pgvector
+### 1. Install PostgreSQL and pgvector
+
+Any version 16 or later is supported. Use whatever version your package manager provides.
 
 **macOS (Homebrew):**
 
 ```bash
-brew install postgresql@16 pgvector
-brew services start postgresql@16
-echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zprofile
+brew install postgresql@17 pgvector   # or @16, @18 — whichever Homebrew has
+brew services start postgresql@17
+echo 'export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"' >> ~/.zprofile
 source ~/.zprofile
 ```
 
 **Ubuntu / Debian:**
 
 ```bash
-sudo apt install -y postgresql-16 postgresql-16-pgvector
+sudo apt install -y postgresql postgresql-pgvector
 sudo systemctl enable --now postgresql
 ```
 
 **Fedora / RHEL:**
 
 ```bash
-sudo dnf install -y postgresql16-server postgresql16-contrib
+sudo dnf install -y postgresql-server postgresql-contrib
 sudo postgresql-setup --initdb
-sudo systemctl enable --now postgresql-16
+sudo systemctl enable --now postgresql
 # pgvector must be built from source on RHEL — see https://github.com/pgvector/pgvector
 ```
 
@@ -201,13 +203,13 @@ Open your Ubuntu terminal and follow the [macOS / Linux with Docker](#macos--lin
 
 Same as above — run `wsl --install` in an Administrator PowerShell, restart, and complete Ubuntu setup.
 
-### 2. Install PostgreSQL 16 and pgvector inside WSL
+### 2. Install PostgreSQL and pgvector inside WSL
 
 In your Ubuntu terminal:
 
 ```bash
 sudo apt update
-sudo apt install -y postgresql-16 postgresql-16-pgvector
+sudo apt install -y postgresql postgresql-pgvector
 sudo systemctl enable --now postgresql
 ```
 
@@ -238,7 +240,7 @@ The rest of the setup is identical — `DATABASE_URL` defaults are already corre
 | uv | 0.4+ | `powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
 | Node | 20+ | [nvm-windows](https://github.com/coreybutler/nvm-windows/releases) or [nodejs.org](https://nodejs.org) |
 | pnpm | 11+ | `npm install -g pnpm` |
-| PostgreSQL | 16 | [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) |
+| PostgreSQL | 18 | [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) |
 | pgvector | latest | Built from source — see step 3 below (requires Visual Studio Build Tools) |
 | VS Build Tools | 2022 | [visualstudio.microsoft.com](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) — select "Desktop development with C++" |
 | Git | any | [git-scm.com](https://git-scm.com) — choose "Use Unix-style line endings" |
@@ -247,18 +249,23 @@ The rest of the setup is identical — `DATABASE_URL` defaults are already corre
 
 ### 1. Install Visual Studio Build Tools
 
-Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) (free). During install, select **Desktop development with C++**. This provides `nmake` and the MSVC compiler needed to build pgvector.
+Download [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) (free). During install, select the **Desktop development with C++** workload.
 
-### 2. Install PostgreSQL 16
+To minimise download size, uncheck all optional components on the right **except**:
+- ✅ **MSVC Build Tools for x64/x86 (Latest)** — the compiler, required
+
+You can safely uncheck: Windows 11 SDK, CMake tools, Testing tools, AddressSanitizer, and vcpkg. The three pre-ticked **Included** items are mandatory and cannot be removed. This reduces the install from ~6 GB to ~2 GB.
+
+### 2. Install PostgreSQL 18
 
 Run the [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads). Note the **password** you set for the `postgres` superuser and the **port** (default 5432).
 
-Add the Postgres bin directory to your PATH if the installer did not (adjust path as needed):
+Add the Postgres bin directory to your PATH if the installer did not:
 
 ```powershell
 [System.Environment]::SetEnvironmentVariable(
   "Path",
-  $Env:Path + ";C:\Program Files\PostgreSQL\16\bin",
+  $Env:Path + ";C:\Program Files\PostgreSQL\18\bin",
   "Machine"
 )
 ```
@@ -267,18 +274,20 @@ Restart PowerShell after changing the PATH.
 
 ### 3. Build and install pgvector
 
-Open the **x64 Native Tools Command Prompt for VS 2022** (search the Start menu — this sets up the MSVC environment):
+**Step 1 — Download and extract in PowerShell:**
+
+```powershell
+Invoke-WebRequest -Uri "https://github.com/pgvector/pgvector/archive/refs/heads/master.zip" -OutFile "$env:TEMP\pgvector.zip"
+Expand-Archive "$env:TEMP\pgvector.zip" -DestinationPath "$env:TEMP\pgvector"
+```
+
+**Step 2 — Build in the x64 Native Tools Command Prompt:**
+
+Search the Start menu for **x64 Native Tools Command Prompt for VS** and open it, then run:
 
 ```cmd
-:: Download the pgvector source
-curl -L https://github.com/pgvector/pgvector/archive/refs/heads/master.zip -o pgvector.zip
-tar -xf pgvector.zip
-cd pgvector-master
-
-:: Point the build at your PostgreSQL installation
-set "PGROOT=C:\Program Files\PostgreSQL\16"
-
-:: Build and install
+cd /D "%TEMP%\pgvector\pgvector-master"
+set "PGROOT=C:\Program Files\PostgreSQL\18"
 nmake /F Makefile.win
 nmake /F Makefile.win install
 ```
