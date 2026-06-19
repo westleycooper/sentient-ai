@@ -1,6 +1,14 @@
 # Developer setup
 
-## macOS / Linux
+- [macOS / Linux — with Docker](#macos--linux-with-docker) ← easiest
+- [macOS / Linux — without Docker](#macos--linux-without-docker)
+- [Windows — with Docker (WSL 2)](#windows--wsl-2-with-docker) ← easiest on Windows
+- [Windows — without Docker (WSL 2)](#windows--wsl-2-without-docker)
+- [Windows — native PowerShell (no WSL, no Docker)](#windows-native-powershell-no-wsl-no-docker)
+
+---
+
+## macOS / Linux — with Docker
 
 ### Prerequisites
 
@@ -105,60 +113,179 @@ pnpm test
 
 ---
 
-## Windows
+## macOS / Linux — without Docker
 
-### Option A — WSL 2 (recommended)
+Use this if you prefer not to run Docker, or want Postgres running as a native service.
 
-WSL 2 gives you a full Linux environment with native Docker support and avoids line-ending and shell-compatibility issues.
+### 1. Install PostgreSQL 16 and pgvector
 
-**1. Enable WSL 2 and install Ubuntu**
+**macOS (Homebrew):**
+
+```bash
+brew install postgresql@16 pgvector
+brew services start postgresql@16
+echo 'export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"' >> ~/.zprofile
+source ~/.zprofile
+```
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt install -y postgresql-16 postgresql-16-pgvector
+sudo systemctl enable --now postgresql
+```
+
+**Fedora / RHEL:**
+
+```bash
+sudo dnf install -y postgresql16-server postgresql16-contrib
+sudo postgresql-setup --initdb
+sudo systemctl enable --now postgresql-16
+# pgvector must be built from source on RHEL — see https://github.com/pgvector/pgvector
+```
+
+### 2. Create the database and user
+
+```bash
+sudo -u postgres psql <<'SQL'
+CREATE USER sentinel WITH PASSWORD 'sentinel_dev';
+CREATE DATABASE sentinel OWNER sentinel;
+\c sentinel
+CREATE EXTENSION IF NOT EXISTS vector;
+SQL
+```
+
+### 3. Configure the environment
+
+In `.env.local`, ensure:
+
+```
+DATABASE_URL=postgresql://sentinel:sentinel_dev@localhost:5432/sentinel
+```
+
+This is already the default in `.env.local.example` — no change needed if you copied it as-is.
+
+### 4. Continue from step 3 of the Docker setup
+
+Run the API and frontend exactly as described in [steps 3–5 above](#3-install-and-run-the-api).
+
+---
+
+## Windows — WSL 2 (with Docker)
+
+### 1. Enable WSL 2 and install Ubuntu
 
 Open PowerShell as Administrator:
 
 ```powershell
 wsl --install
 # Restart when prompted, then open the Ubuntu app to complete setup
-```
-
-If WSL is already installed, ensure you are on version 2:
-
-```powershell
 wsl --set-default-version 2
 ```
 
-**2. Install Docker Desktop**
+### 2. Install Docker Desktop
 
 Download [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/) and enable the WSL 2 backend under **Settings → Resources → WSL Integration**. Tick your Ubuntu distro.
 
-**3. Follow the macOS / Linux instructions**
+### 3. Follow the macOS / Linux (with Docker) instructions
 
-Open your Ubuntu terminal and follow the steps above — all commands are identical inside WSL 2.
+Open your Ubuntu terminal and follow the [macOS / Linux with Docker](#macos--linux-with-docker) steps — all commands are identical inside WSL 2.
 
-> **Tip:** Clone the repo inside WSL (`~/projects/sentient-ai`), not on the Windows filesystem (`/mnt/c/...`). Filesystem performance across the WSL boundary is significantly slower.
+> **Tip:** Clone the repo inside WSL (`~/projects/sentient-ai`), not on the Windows filesystem (`/mnt/c/...`). Cross-boundary filesystem performance is significantly slower.
 
 ---
 
-### Option B — Native Windows (PowerShell)
+## Windows — WSL 2 (without Docker)
 
-**1. Prerequisites**
+### 1. Enable WSL 2 and install Ubuntu
 
-| Tool | Version | Install |
-|------|---------|---------|
-| Python | 3.12+ | [python.org](https://python.org) — tick **Add to PATH** during install |
+Same as above — run `wsl --install` in an Administrator PowerShell, restart, and complete Ubuntu setup.
+
+### 2. Install PostgreSQL 16 and pgvector inside WSL
+
+In your Ubuntu terminal:
+
+```bash
+sudo apt update
+sudo apt install -y postgresql-16 postgresql-16-pgvector
+sudo systemctl enable --now postgresql
+```
+
+### 3. Create the database and user
+
+```bash
+sudo -u postgres psql <<'SQL'
+CREATE USER sentinel WITH PASSWORD 'sentinel_dev';
+CREATE DATABASE sentinel OWNER sentinel;
+\c sentinel
+CREATE EXTENSION IF NOT EXISTS vector;
+SQL
+```
+
+### 4. Follow the macOS / Linux (without Docker) steps from step 3
+
+The rest of the setup is identical — `DATABASE_URL` defaults are already correct.
+
+---
+
+## Windows — native PowerShell (no WSL, no Docker)
+
+### What you need to install
+
+| Tool | Version | Where to get it |
+|------|---------|-----------------|
+| Python | 3.12+ | [python.org](https://python.org) — tick **Add to PATH** |
 | uv | 0.4+ | `powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
 | Node | 20+ | [nvm-windows](https://github.com/coreybutler/nvm-windows/releases) or [nodejs.org](https://nodejs.org) |
 | pnpm | 11+ | `npm install -g pnpm` |
-| Docker Desktop | any | [docker.com](https://docker.com) — WSL 2 backend or Hyper-V |
+| PostgreSQL | 16 | [EDB installer](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) |
+| pgvector | latest | [pre-built for Windows](https://github.com/pgvector/pgvector/releases) — download the `.zip` matching your PG version |
 | Git | any | [git-scm.com](https://git-scm.com) — choose "Use Unix-style line endings" |
 
-**2. Configure Git line endings**
+### 1. Install PostgreSQL 16
+
+Run the EDB installer. Note the **password** you set for the `postgres` superuser and the **port** (default 5432). Keep **Stack Builder** unchecked — pgvector is installed manually below.
+
+Add the Postgres bin directory to your PATH if the installer didn't (adjust version/path as needed):
+
+```powershell
+[System.Environment]::SetEnvironmentVariable(
+  "Path",
+  $Env:Path + ";C:\Program Files\PostgreSQL\16\bin",
+  "Machine"
+)
+```
+
+Restart PowerShell after changing the PATH.
+
+### 2. Install pgvector
+
+Download the pre-built Windows zip from the [pgvector releases page](https://github.com/pgvector/pgvector/releases) — pick the file matching `pg16-windows-x86_64`. Extract and copy the files:
+
+```powershell
+# Adjust paths to match your PostgreSQL install location
+$pg = "C:\Program Files\PostgreSQL\16"
+Copy-Item vector.dll      "$pg\lib\"
+Copy-Item vector.control  "$pg\share\extension\"
+Copy-Item vector--*.sql   "$pg\share\extension\"
+```
+
+### 3. Create the database and user
+
+```powershell
+psql -U postgres -c "CREATE USER sentinel WITH PASSWORD 'sentinel_dev';"
+psql -U postgres -c "CREATE DATABASE sentinel OWNER sentinel;"
+psql -U postgres -d sentinel -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+### 4. Configure Git line endings
 
 ```powershell
 git config --global core.autocrlf false
 git config --global core.eol lf
 ```
 
-**3. Clone and configure**
+### 5. Clone and configure
 
 ```powershell
 git clone <repo-url>
@@ -166,15 +293,9 @@ cd sentient-ai
 Copy-Item .env.local.example .env.local
 ```
 
-Open `.env.local` and set `ANTHROPIC_API_KEY=sk-ant-...`.
+Open `.env.local` and set `ANTHROPIC_API_KEY=sk-ant-...`. The `DATABASE_URL` default already matches the user/database created above.
 
-**4. Start Postgres**
-
-```powershell
-docker compose up postgres -d
-```
-
-**5. Install and run the API**
+### 6. Install and run the API
 
 ```powershell
 cd apps\api
@@ -183,7 +304,7 @@ uv run alembic upgrade head
 uv run uvicorn main:app --reload
 ```
 
-**6. Install and run the frontend**
+### 7. Install and run the frontend
 
 Open a second terminal from the repo root:
 
@@ -194,3 +315,4 @@ pnpm dev
 ```
 
 Frontend is now at **http://localhost:5173**.
+
