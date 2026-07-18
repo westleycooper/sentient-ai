@@ -8,6 +8,23 @@ a slide-out chat transcript.
 
 ---
 
+## Quick start (already set up)
+
+```bash
+# Postgres
+docker compose up postgres -d
+
+# Terminal 1 — API
+cd apps/api && uv run uvicorn main:app --reload
+
+# Terminal 2 — Frontend
+cd apps/web && pnpm dev
+```
+
+Then open **http://localhost:5173**.
+
+---
+
 ## Getting started
 
 See **[SETUP.md](SETUP.md)** for full installation instructions covering macOS, Linux, and Windows — with or without Docker, and with or without WSL 2.
