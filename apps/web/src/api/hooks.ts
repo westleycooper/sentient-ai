@@ -41,7 +41,8 @@ export interface SmeTemplate {
   sources: RetrievalSource[];
   rules: SmeRule[];
   is_default: boolean;
-  visualisation_kind: "wave" | "wave3d" | "wave3dgrid";
+  visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid";
+  theme_id: string;
 }
 
 export interface Message {
@@ -134,6 +135,51 @@ export function useDeleteSmeTemplate() {
     mutationKey: ["sme", "delete"],
     mutationFn: (id: string) => api.delete(`/sme/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sme"] }),
+  });
+}
+
+// --- Agent Config types ---
+
+export interface AgentModel {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export interface AgentConfig {
+  model: string;
+  working_mode: "full" | "frontend_only";
+  system_prompt: string;
+  auto_allow_tools: string[];
+  /** Behavioural guardrails — enforced on every response via system prompt. */
+  rules: SmeRule[];
+  /** Retrieval sources for per-turn context injection. */
+  sources: RetrievalSource[];
+  theme_id: string;
+}
+
+// --- Agent Config hooks ---
+
+export function useAgentModels() {
+  return useQuery<AgentModel[]>({
+    queryKey: ["agent", "models"],
+    queryFn: () => api.get<AgentModel[]>("/agent/models"),
+  });
+}
+
+export function useAgentConfig() {
+  return useQuery<AgentConfig>({
+    queryKey: ["agent", "config"],
+    queryFn: () => api.get<AgentConfig>("/agent/config"),
+  });
+}
+
+export function useUpdateAgentConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["agent", "config", "save"],
+    mutationFn: (config: AgentConfig) => api.put<AgentConfig>("/agent/config", config),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["agent", "config"] }),
   });
 }
 

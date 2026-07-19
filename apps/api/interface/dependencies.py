@@ -13,11 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from application.ports.conversation_repository import ConversationRepositoryPort
 from application.ports.sme_repository import SmeRepositoryPort
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
+from application.use_cases.get_agent_config import GetAgentConfigUseCase
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
 from application.use_cases.process_turn import ProcessTurnUseCase
+from application.use_cases.save_agent_config import SaveAgentConfigUseCase
 from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
 from application.use_cases.start_conversation import StartConversationUseCase
 from infrastructure.llm.anthropic_adapter import AnthropicLlmAdapter
+from infrastructure.persistence.postgres_agent_config_repo import PostgresAgentConfigRepo
 from infrastructure.persistence.postgres_conversation_repo import PostgresConversationRepository
 from infrastructure.persistence.postgres_sme_repo import PostgresSmeRepository
 from infrastructure.reasoning.graph_runner import GraphRunner
@@ -103,6 +106,22 @@ async def get_conv_repo(session: AsyncSession = Depends(get_db_session)) -> Conv
 
 async def get_sme_repo(session: AsyncSession = Depends(get_db_session)) -> SmeRepositoryPort:
     return PostgresSmeRepository(session)
+
+
+async def get_agent_config_repo(session: AsyncSession = Depends(get_db_session)) -> PostgresAgentConfigRepo:
+    return PostgresAgentConfigRepo(session)
+
+
+async def get_agent_config_uc(
+    repo: PostgresAgentConfigRepo = Depends(get_agent_config_repo),
+) -> GetAgentConfigUseCase:
+    return GetAgentConfigUseCase(repo)
+
+
+async def get_save_agent_config_uc(
+    repo: PostgresAgentConfigRepo = Depends(get_agent_config_repo),
+) -> SaveAgentConfigUseCase:
+    return SaveAgentConfigUseCase(repo)
 
 
 # --- Graph runner ---

@@ -6,7 +6,7 @@
  * CLAUDE.md §6: all SME config on one page.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
   AppBar,
@@ -18,6 +18,8 @@ import {
   Paper,
   Snackbar,
   Stack,
+  Tab,
+  Tabs,
   Toolbar,
   Tooltip,
   Typography,
@@ -31,6 +33,7 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 
 import { SmeTemplateCard } from "../features/config/SmeTemplateCard";
 import { SmeEditor } from "../features/config/SmeEditor";
+import { AgentConfigEditor } from "../features/agent/AgentConfigEditor";
 import {
   useSmeTemplates,
   useSaveSmeTemplate,
@@ -41,11 +44,16 @@ import { useUiStore } from "../store/uiStore";
 
 export function ConfigPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: templates = [], isLoading } = useSmeTemplates();
   const saveMutation = useSaveSmeTemplate();
   const deleteMutation = useDeleteSmeTemplate();
   const { defaultSmeId, setDefaultSme } = useUiStore();
 
+  const [tab, setTab] = useState(() => {
+    const t = Number(searchParams.get("tab"));
+    return Number.isFinite(t) && t >= 0 ? t : 0;
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; severity: "success" | "error" } | null>(null);
 
@@ -81,6 +89,7 @@ export function ConfigPage() {
       rules: [],
       is_default: false,
       visualisation_kind: "wave",
+      theme_id: "dark-teal",
     };
     setSelectedId(blank.id);
     saveMutation.mutate(blank);
@@ -107,11 +116,34 @@ export function ConfigPage() {
             </IconButton>
           </Tooltip>
           <Typography variant="h6" sx={{ flex: 1 }}>
-            Configure Subject-Matter Experts
+            Configure
           </Typography>
         </Toolbar>
+        <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ px: 2 }}>
+          <Tab label="Voice SMEs" id="tab-sme" aria-controls="panel-sme" />
+          <Tab label="Code Agent" id="tab-agent" aria-controls="panel-agent" />
+        </Tabs>
       </AppBar>
 
+      {/* Code Agent tab */}
+      <Box
+        role="tabpanel"
+        id="panel-agent"
+        aria-labelledby="tab-agent"
+        hidden={tab !== 1}
+        sx={{ flex: 1, overflowY: "auto", p: 3 }}
+      >
+        {tab === 1 && <AgentConfigEditor />}
+      </Box>
+
+      {/* Voice SMEs tab */}
+      <Box
+        role="tabpanel"
+        id="panel-sme"
+        aria-labelledby="tab-sme"
+        hidden={tab !== 0}
+        sx={{ flex: 1, overflow: "hidden", minHeight: 0, display: tab === 0 ? "flex" : "none" }}
+      >
       {isLoading ? (
         <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <CircularProgress />
@@ -208,6 +240,7 @@ export function ConfigPage() {
           </Grid>
         </Grid>
       )}
+      </Box>
 
       <Snackbar
         open={Boolean(toast)}
