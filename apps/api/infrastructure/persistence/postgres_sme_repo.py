@@ -34,6 +34,7 @@ class PostgresSmeRepository:
         row.rules = [r.model_dump() for r in template.rules]
         row.is_default = template.is_default
         row.visualisation_kind = template.visualisation_kind
+        row.theme_id = template.theme_id
         await self._session.commit()
 
     async def delete_template(self, template_id: str) -> None:
@@ -53,4 +54,5 @@ class PostgresSmeRepository:
             rules=[SmeRule(**r) for r in (row.rules or [])],
             is_default=row.is_default,
             visualisation_kind=row.visualisation_kind or "wave",
+            theme_id=row.theme_id or "dark-teal",
         )

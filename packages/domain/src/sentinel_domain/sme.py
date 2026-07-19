@@ -59,7 +59,8 @@ class SmeTemplate(BaseModel):
     sources: list[RetrievalSourceConfig] = Field(default_factory=list)
     rules: list[SmeRule] = Field(default_factory=list)
     is_default: bool = False
-    visualisation_kind: Literal["wave", "wave3d", "wave3dgrid"] = "wave"
+    visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid"] = "wave"
+    theme_id: str = "dark-teal"
 
     def model_json_schema_export(self) -> dict:
         return self.model_json_schema()

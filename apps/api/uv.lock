@@ -1858,6 +1858,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
+    { name = "anthropic" },
     { name = "asyncpg" },
     { name = "azure-monitor-opentelemetry" },
     { name = "deepgram-sdk" },
@@ -1891,6 +1892,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13" },
+    { name = "anthropic", specifier = ">=0.40" },
     { name = "asyncpg", specifier = ">=0.29" },
     { name = "azure-monitor-opentelemetry", specifier = ">=1.6" },
     { name = "deepgram-sdk", specifier = ">=7.3.1" },

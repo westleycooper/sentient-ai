@@ -16,7 +16,8 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from infrastructure.observability.logging import configure_logging
 from infrastructure.observability.tracing import configure_tracing
-from interface.routers import conversations, sme, tts
+from interface.routers import agent_config, conversations, sme, tts, stt
+from interface.routers import agent as agent_router
 
 configure_logging()
 configure_tracing()
@@ -65,6 +66,12 @@ FastAPIInstrumentor.instrument_app(app)
 app.include_router(sme.router)
 app.include_router(conversations.router)
 app.include_router(tts.router)
+app.include_router(stt.router)
+app.include_router(agent_config.router)
+
+# Coding agent — local-only feature (ADR-0003). Never mounted in production.
+if os.getenv("ENV", "local") != "production":
+    app.include_router(agent_router.router)
 
 
 @app.get("/health", tags=["ops"], include_in_schema=False)
