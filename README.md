@@ -57,6 +57,20 @@ sentinel/
 - `docs/standards/` — DDD, RAG, Azure, security, observability, testing, stack versions.
 - `docs/adr/` — architecture decisions.
 
+## Local-only developer features
+
+Two features are mounted **only when `ENV != production`** (default in local dev)
+and are never exposed in a cloud deployment. The frontend hides their nav entry
+points the same way, driven by `GET /mcp-status`'s `mounted` flag.
+
+- **Coding agent** (`/agent`) — a voice-driven coding assistant with direct
+  read/write/execute access to this project's source tree, WebSocket-based with
+  a tool-approval gate on every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
+- **MCP server** (`/mcp`) — exposes Sentinel's SME templates and conversation
+  state to external MCP clients (e.g. Claude Desktop) over Streamable HTTP at
+  `/mcp`; the `/mcp` frontend page visualises what's exposed. No auth on the
+  MCP transport in v1, which is why it's local-only for now. See [ADR-0004](docs/adr/0004-mcp-server.md).
+
 ## Custom Claude Code commands
 
 `/new-sme`, `/new-service`, `/adr`, `/review`, `/regen-contracts`, `/check-boundaries`, `/pii-check`.

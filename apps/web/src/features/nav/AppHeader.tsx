@@ -20,9 +20,16 @@ interface AppHeaderProps {
   onToggleDrawer: () => void;
   /** Mode-specific controls rendered between the spacer and the chat icon. */
   children?: React.ReactNode;
+  /**
+   * Show the Code toggle. Defaults to true; callers should pass the
+   * GET /mcp-status `mounted` flag — the coding agent (ADR-0003) and the MCP
+   * server (ADR-0004) share the same `ENV != production` gate in main.py, so
+   * that one signal is reused here rather than adding a second status field.
+   */
+  showCodeToggle?: boolean;
 }
 
-export function AppHeader({ mode, drawerOpen, onToggleDrawer, children }: AppHeaderProps) {
+export function AppHeader({ mode, drawerOpen, onToggleDrawer, children, showCodeToggle = true }: AppHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -46,10 +53,12 @@ export function AppHeader({ mode, drawerOpen, onToggleDrawer, children }: AppHea
             <GraphicEqIcon sx={{ fontSize: 16, mr: 0.5 }} />
             Voice
           </ToggleButton>
-          <ToggleButton value="code" aria-label="Coding agent" sx={{ px: 1.5 }}>
-            <TerminalIcon sx={{ fontSize: 16, mr: 0.5 }} />
-            Code
-          </ToggleButton>
+          {showCodeToggle && (
+            <ToggleButton value="code" aria-label="Coding agent" sx={{ px: 1.5 }}>
+              <TerminalIcon sx={{ fontSize: 16, mr: 0.5 }} />
+              Code
+            </ToggleButton>
+          )}
         </ToggleButtonGroup>
 
         <Box sx={{ flex: 1 }} />

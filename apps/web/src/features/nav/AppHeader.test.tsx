@@ -53,6 +53,25 @@ describe("AppHeader", () => {
     expect(navigateMock).toHaveBeenCalledWith("/agent");
   });
 
+  it("shows the Code toggle by default", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("button", { name: /coding agent/i })).toBeInTheDocument();
+  });
+
+  it("hides the Code toggle when showCodeToggle is false", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} showCodeToggle={false} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /voice agent/i })).toBeInTheDocument();
+  });
+
   it("renders mode-specific children between the spacer and chat icon", () => {
     render(
       <MemoryRouter>
