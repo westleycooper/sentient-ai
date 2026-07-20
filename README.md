@@ -63,13 +63,18 @@ Two features are mounted **only when `ENV != production`** (default in local dev
 and are never exposed in a cloud deployment. The frontend hides their nav entry
 points the same way, driven by `GET /mcp-status`'s `mounted` flag.
 
-- **Coding agent** (`/agent`) — a voice-driven coding assistant with direct
-  read/write/execute access to this project's source tree, WebSocket-based with
-  a tool-approval gate on every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
-- **MCP server** (`/mcp`) — exposes Sentinel's SME templates and conversation
-  state to external MCP clients (e.g. Claude Desktop) over Streamable HTTP at
-  `/mcp`; the `/mcp` frontend page visualises what's exposed. No auth on the
-  MCP transport in v1, which is why it's local-only for now. See [ADR-0004](docs/adr/0004-mcp-server.md).
+- **Coding agent** (<a href="http://localhost:5173/agent" target="_blank" rel="noopener noreferrer"><code>/agent</code> ↗</a>) —
+  a voice-driven coding assistant with direct read/write/execute access to
+  this project's source tree, WebSocket-based with a tool-approval gate on
+  every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
+- **MCP server** (<a href="http://localhost:5173/mcp" target="_blank" rel="noopener noreferrer"><code>/mcp</code> ↗</a>) —
+  exposes Sentinel's SME templates and conversation state to external MCP
+  clients (e.g. Claude Desktop) over Streamable HTTP at `/mcp`; the linked
+  frontend page visualises what's exposed. No auth on the MCP transport in
+  v1, which is why it's local-only for now. See [ADR-0004](docs/adr/0004-mcp-server.md).
+
+Links above point at the local dev server (`pnpm dev`, see Quick start) and
+open in a new tab — they won't resolve unless that server is running.
 
 ## Custom Claude Code commands
 
