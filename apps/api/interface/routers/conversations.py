@@ -120,7 +120,7 @@ async def process_turn(
         except ValueError as exc:
             err = TurnErrorEventResponse(message=str(exc))
             yield f"data: {json.dumps(err.model_dump())}\n\n"
-        except Exception as exc:
+        except Exception:
             logger.exception("turn_stream_error", extra={"conversation_id": conversation_id})
             err = TurnErrorEventResponse(message="Internal error — see server logs.")
             yield f"data: {json.dumps(err.model_dump())}\n\n"
@@ -192,7 +192,7 @@ async def process_audio_turn(
             }
             yield f"data: {json.dumps(complete)}\n\n"
 
-        except Exception as exc:
+        except Exception:
             logger.exception("audio_turn_stream_error", extra={"conversation_id": conversation_id})
             yield f"data: {json.dumps({'type': 'error', 'message': 'Internal error'})}\n\n"
 

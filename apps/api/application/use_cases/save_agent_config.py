@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from application.ports.agent_config_port import AgentConfigPort
 from domain.agent_config import AgentConfig
 

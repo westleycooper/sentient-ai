@@ -1,9 +1,9 @@
 """Standalone TTS router — synthesise text without a conversation context."""
 from __future__ import annotations
 
-from pydantic import BaseModel
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from interface.dependencies import get_tts_adapter
 

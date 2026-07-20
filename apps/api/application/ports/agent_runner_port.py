@@ -4,11 +4,10 @@ Only dataclasses and ABCs here; no cloud SDK imports (CLAUDE.md §3).
 """
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator
-
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Event dataclasses — server → client over WebSocket
