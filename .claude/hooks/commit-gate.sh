@@ -45,19 +45,21 @@ if [ -n "$API_PY_FILES" ]; then
 fi
 
 if printf '%s\n' "$STAGED_FILES" | grep -qE '^apps/web/.*\.(ts|tsx|js|jsx)$'; then
-  echo "-- apps/web changed: running eslint + tsc + vitest --" >&2
-  # Not running `pnpm test:coverage` here (unlike apps/api's --cov above):
-  # most of the pre-existing frontend is untested, so enforcing the 80%
-  # threshold (CLAUDE.md §11) would block on debt, not regressions. Revisit
-  # once that debt is paid down.
+  echo "-- apps/web changed: running eslint + tsc + vitest --cov --" >&2
   if ! (cd apps/web && pnpm lint); then
     FAILURES+=("apps/web: eslint failed.")
   fi
   if ! (cd apps/web && pnpm typecheck); then
     FAILURES+=("apps/web: tsc --noEmit failed.")
   fi
-  if ! (cd apps/web && pnpm test); then
-    FAILURES+=("apps/web: vitest failed.")
+  # test:coverage enforces vite.config.ts's 80% lines threshold (CLAUDE.md
+  # §11). Repo-wide, not staged-scoped — coverage is cumulative, same
+  # reasoning as apps/api's --cov above. Frontend debt paid down to enable
+  # this; two files (Waveform.tsx wave3d/wave3dgrid, and the untestable-in-
+  # jsdom parts of HomePage/AgentPage's audio pipeline) sit intentionally
+  # below 80% by agreed pragmatic scope, offset by the rest of the suite.
+  if ! (cd apps/web && pnpm test:coverage); then
+    FAILURES+=("apps/web: vitest failed, or line coverage dropped below 80% (CLAUDE.md §11).")
   fi
 fi
 
