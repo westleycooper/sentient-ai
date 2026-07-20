@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Real git pre-commit hook — tracked in the repo (unlike .git/hooks/, which is
+# per-clone and never committed) so it's a team-shared baseline, not a
+# per-developer opt-in. Enabled via:
+#   git config core.hooksPath .githooks
+# (see SETUP.md, step 1). Catches manual commits and IDE git panels, which
+# Claude Code's own PreToolUse hooks cannot see — those only fire on tool calls
+# Claude itself makes (see .claude/hooks/pre-commit-gate.sh).
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+exec "$REPO_ROOT/.claude/hooks/commit-gate.sh"
