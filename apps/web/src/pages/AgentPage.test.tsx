@@ -83,10 +83,16 @@ const AGENT_MODELS: AgentModel[] = [{ id: "claude-sonnet-5", label: "Sonnet 5", 
 
 const INITIAL_UI_STATE = useUiStore.getState();
 
-async function renderPage() {
+async function renderPage({ mcpMounted = true }: { mcpMounted?: boolean } = {}) {
   vi.mocked(api.get).mockImplementation((path: string) => {
     if (path === "/agent/config") return Promise.resolve(AGENT_CONFIG);
     if (path === "/agent/models") return Promise.resolve(AGENT_MODELS);
+    if (path === "/mcp-status") {
+      return Promise.resolve({
+        mounted: mcpMounted, mount_path: "/mcp", resources: [], tools: [],
+        sme_template_count: 0, conversations_touched_count: 0,
+      });
+    }
     return Promise.reject(new Error(`unexpected path ${path}`));
   });
 
@@ -137,6 +143,18 @@ describe("AgentPage", () => {
     expect(screen.getByText("connecting…")).toBeInTheDocument();
     act(() => ws.simulateOpen());
     await waitFor(() => expect(screen.getByText("connected")).toBeInTheDocument());
+  });
+
+  it("does not show the Sentinel wordmark in the header", async () => {
+    await renderPage();
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+  });
+
+  it("hides the Code toggle when local features are disabled (production)", async () => {
+    await renderPage({ mcpMounted: false });
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument()
+    );
   });
 
   it("cycling the waveform visualisation updates the kind passed to Waveform", async () => {

@@ -210,12 +210,27 @@ export interface McpResourceInfo {
   name: string;
   description: string;
   wraps: string;
+  /** {param} names parsed from uri_template — MCP resource templates carry no richer schema than this. */
+  params: string[];
+}
+
+export interface McpJsonSchemaProperty {
+  type?: string;
+  title?: string;
+  default?: unknown;
+}
+
+export interface McpToolInputSchema {
+  properties: Record<string, McpJsonSchemaProperty>;
+  required?: string[];
 }
 
 export interface McpToolInfo {
   name: string;
   description: string;
   wraps: string;
+  /** Real JSON Schema from the mcp SDK's list_tools() — drives the explorer's form. */
+  input_schema: McpToolInputSchema;
 }
 
 export interface McpStatus {
@@ -232,5 +247,27 @@ export function useMcpStatus() {
     queryKey: ["mcp", "status"],
     queryFn: () => api.get<McpStatus>("/mcp-status"),
     refetchInterval: 15000,
+  });
+}
+
+// --- MCP interactive explorer (ADR-0004 addendum) ---
+
+export interface McpInteractResult {
+  content: unknown;
+}
+
+export function useReadMcpResource() {
+  return useMutation({
+    mutationKey: ["mcp", "read-resource"],
+    mutationFn: (uri: string) =>
+      api.post<McpInteractResult>("/mcp-status/resources/read", { uri }),
+  });
+}
+
+export function useCallMcpTool() {
+  return useMutation({
+    mutationKey: ["mcp", "call-tool"],
+    mutationFn: ({ name, arguments: args }: { name: string; arguments: Record<string, unknown> }) =>
+      api.post<McpInteractResult>("/mcp-status/tools/call", { name, arguments: args }),
   });
 }

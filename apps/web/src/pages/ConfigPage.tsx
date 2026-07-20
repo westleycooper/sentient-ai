@@ -39,6 +39,7 @@ import {
   useSmeTemplates,
   useSaveSmeTemplate,
   useDeleteSmeTemplate,
+  useMcpStatus,
   type SmeTemplate,
 } from "../api/hooks";
 import { useUiStore } from "../store/uiStore";
@@ -50,11 +51,18 @@ export function ConfigPage() {
   const saveMutation = useSaveSmeTemplate();
   const deleteMutation = useDeleteSmeTemplate();
   const { defaultSmeId, setDefaultSme } = useUiStore();
+  // Coding agent (ADR-0003) and MCP server (ADR-0004) share the ENV != production
+  // gate in main.py — reuse this one signal to hide both nav entry points in prod.
+  const { data: mcpStatus } = useMcpStatus();
+  const localFeaturesEnabled = mcpStatus?.mounted ?? false;
 
   const [tab, setTab] = useState(() => {
     const t = Number(searchParams.get("tab"));
     return Number.isFinite(t) && t >= 0 ? t : 0;
   });
+  // A deep link (e.g. /config?tab=1) or a stale selection can't land on the
+  // Code Agent tab once local features are confirmed off.
+  const effectiveTab = tab === 1 && !localFeaturesEnabled ? 0 : tab;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; severity: "success" | "error" } | null>(null);
 
@@ -119,36 +127,40 @@ export function ConfigPage() {
           <Typography variant="h6" sx={{ flex: 1 }}>
             Configure
           </Typography>
-          <Tooltip title="MCP server topology">
-            <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
-              <HubIcon />
-            </IconButton>
-          </Tooltip>
+          {localFeaturesEnabled && (
+            <Tooltip title="MCP server topology">
+              <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+                <HubIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Toolbar>
-        <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ px: 2 }}>
+        <Tabs value={effectiveTab} onChange={(_, v: number) => setTab(v)} sx={{ px: 2 }}>
           <Tab label="Voice SMEs" id="tab-sme" aria-controls="panel-sme" />
-          <Tab label="Code Agent" id="tab-agent" aria-controls="panel-agent" />
+          {localFeaturesEnabled && <Tab label="Code Agent" id="tab-agent" aria-controls="panel-agent" />}
         </Tabs>
       </AppBar>
 
       {/* Code Agent tab */}
-      <Box
-        role="tabpanel"
-        id="panel-agent"
-        aria-labelledby="tab-agent"
-        hidden={tab !== 1}
-        sx={{ flex: 1, overflowY: "auto", p: 3 }}
-      >
-        {tab === 1 && <AgentConfigEditor />}
-      </Box>
+      {localFeaturesEnabled && (
+        <Box
+          role="tabpanel"
+          id="panel-agent"
+          aria-labelledby="tab-agent"
+          hidden={effectiveTab !== 1}
+          sx={{ flex: 1, overflowY: "auto", p: 3 }}
+        >
+          {effectiveTab === 1 && <AgentConfigEditor />}
+        </Box>
+      )}
 
       {/* Voice SMEs tab */}
       <Box
         role="tabpanel"
         id="panel-sme"
         aria-labelledby="tab-sme"
-        hidden={tab !== 0}
-        sx={{ flex: 1, overflow: "hidden", minHeight: 0, display: tab === 0 ? "flex" : "none" }}
+        hidden={effectiveTab !== 0}
+        sx={{ flex: 1, overflow: "hidden", minHeight: 0, display: effectiveTab === 0 ? "flex" : "none" }}
       >
       {isLoading ? (
         <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>

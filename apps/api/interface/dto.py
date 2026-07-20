@@ -121,12 +121,18 @@ class McpResourceInfo(BaseModel):
     name: str
     description: str
     wraps: str  # underlying application-layer use case / port this resource reads from
+    # {param} names parsed from uri_template — MCP resource templates carry no
+    # richer per-param schema than this (see ADR-0004 addendum).
+    params: list[str] = Field(default_factory=list)
 
 
 class McpToolInfo(BaseModel):
     name: str
     description: str
     wraps: str
+    # Real JSON Schema from the mcp SDK's list_tools() (Pydantic-generated from
+    # the handler's type hints) — drives the explorer's schema-driven form.
+    input_schema: dict = Field(default_factory=dict)
 
 
 class McpStatusResponse(BaseModel):
@@ -136,3 +142,18 @@ class McpStatusResponse(BaseModel):
     tools: list[McpToolInfo]
     sme_template_count: int
     conversations_touched_count: int
+
+
+# --- MCP interactive explorer (ADR-0004 addendum) ---
+
+class McpReadResourceRequest(BaseModel):
+    uri: str
+
+
+class McpCallToolRequest(BaseModel):
+    name: str
+    arguments: dict = Field(default_factory=dict)
+
+
+class McpInteractResponse(BaseModel):
+    content: Any = None

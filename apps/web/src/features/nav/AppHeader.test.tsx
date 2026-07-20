@@ -53,6 +53,57 @@ describe("AppHeader", () => {
     expect(navigateMock).toHaveBeenCalledWith("/agent");
   });
 
+  it("shows the Code toggle by default", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("button", { name: /coding agent/i })).toBeInTheDocument();
+  });
+
+  it("hides the Code toggle when showCodeToggle is false", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} showCodeToggle={false} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /voice agent/i })).toBeInTheDocument();
+  });
+
+  it("replaces the Sentinel title with titleContent when provided", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={<span>SME picker</span>} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+    expect(screen.getByText("SME picker")).toBeInTheDocument();
+  });
+
+  it("titleContent={null} renders nothing in the title slot", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="code" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={null} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+  });
+
+  it("renders leftContent between the mode toggle and the spacer/children", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} leftContent={<button>Settings</button>}>
+          <button>Read aloud</button>
+        </AppHeader>
+      </MemoryRouter>
+    );
+    const buttons = screen.getAllByRole("button").map((b) => b.textContent);
+    expect(buttons.indexOf("Settings")).toBeGreaterThan(buttons.indexOf("Voice"));
+    expect(buttons.indexOf("Settings")).toBeLessThan(buttons.indexOf("Read aloud"));
+  });
+
   it("renders mode-specific children between the spacer and chat icon", () => {
     render(
       <MemoryRouter>

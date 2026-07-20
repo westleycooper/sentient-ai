@@ -44,6 +44,7 @@ import {
   useSmeTemplates,
   useStartConversation,
   useConversation,
+  useMcpStatus,
   type StepEvent,
   type Message,
 } from "../api/hooks";
@@ -94,6 +95,10 @@ export function HomePage() {
 
   const { data: templates = [] } = useSmeTemplates();
   const { data: conversation } = useConversation(conversationId);
+  // Coding agent (ADR-0003) and MCP server (ADR-0004) share the ENV != production
+  // gate in main.py — reuse this one signal to hide both nav entry points in prod.
+  const { data: mcpStatus } = useMcpStatus();
+  const localFeaturesEnabled = mcpStatus?.mounted ?? false;
   const startConvMutation = useStartConversation();
 
   const activeSmeId = selectedSmeId ?? defaultSmeId ?? templates[0]?.id ?? "";
@@ -176,7 +181,7 @@ export function HomePage() {
     setIsStreaming(false);
     greetingPlayedRef.current = false;
 
-    const greetingText = `Hello, I'm Sentinel, your ${activeSme.name}. How can I help?`;
+    const greetingText = `Hello, I'm your ${activeSme.name}. How can I help?`;
 
     // Show text immediately
     setLocalMessages([{
@@ -196,6 +201,7 @@ export function HomePage() {
     const speak = async () => {
       if (cancelled || greetingPlayedRef.current) return;
       greetingPlayedRef.current = true;
+      if (!readAloudRef.current) return;
       try {
         if (!ttsCtxRef.current || ttsCtxRef.current.state === "closed") {
           ttsCtxRef.current = new AudioContext();
@@ -484,22 +490,45 @@ export function HomePage() {
         }}
       >
         {/* Top bar */}
-        <AppHeader mode="voice" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer}>
-          {templates.length > 0 && (
-            <Select
-              size="small"
-              value={activeSmeId}
-              onChange={(e) => selectSme(e.target.value)}
-              sx={{ mr: 1, minWidth: 180 }}
-              aria-label="Select subject matter expert"
-            >
-              {templates.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
+        <AppHeader
+          mode="voice"
+          drawerOpen={drawerOpen}
+          onToggleDrawer={toggleDrawer}
+          showCodeToggle={localFeaturesEnabled}
+          titleContent={
+            templates.length > 0 ? (
+              <Select
+                size="small"
+                value={activeSmeId}
+                onChange={(e) => selectSme(e.target.value)}
+                sx={{ minWidth: 180 }}
+                aria-label="Select subject matter expert"
+              >
+                {templates.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : undefined
+          }
+          leftContent={
+            <>
+              <Tooltip title="Configure SMEs">
+                <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
+                  <SettingsIcon />
+                </IconButton>
+              </Tooltip>
+              {localFeaturesEnabled && (
+                <Tooltip title="MCP server topology">
+                  <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+                    <HubIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+          }
+        >
           <Tooltip title={`Visualisation: ${WAVE_LABELS[activeKind]}`}>
             <IconButton onClick={cycleWaveKind} aria-label="Cycle waveform visualisation">
               <GraphicEqIcon />
@@ -508,16 +537,6 @@ export function HomePage() {
           <Tooltip title={readAloud ? "Read aloud on" : "Read aloud off"}>
             <IconButton onClick={toggleReadAloud} aria-label="Toggle read aloud">
               {readAloud ? <VolumeUpIcon /> : <VolumeOffIcon />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Configure SMEs">
-            <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
-              <SettingsIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="MCP server topology">
-            <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
-              <HubIcon />
             </IconButton>
           </Tooltip>
         </AppHeader>
