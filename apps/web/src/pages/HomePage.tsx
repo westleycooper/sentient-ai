@@ -181,7 +181,7 @@ export function HomePage() {
     setIsStreaming(false);
     greetingPlayedRef.current = false;
 
-    const greetingText = `Hello, I'm Sentinel, your ${activeSme.name}. How can I help?`;
+    const greetingText = `Hello, I'm your ${activeSme.name}. How can I help?`;
 
     // Show text immediately
     setLocalMessages([{
