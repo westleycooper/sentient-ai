@@ -145,6 +145,11 @@ describe("AgentPage", () => {
     await waitFor(() => expect(screen.getByText("connected")).toBeInTheDocument());
   });
 
+  it("does not show the Sentinel wordmark in the header", async () => {
+    await renderPage();
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+  });
+
   it("hides the Code toggle when local features are disabled (production)", async () => {
     await renderPage({ mcpMounted: false });
     await waitFor(() =>

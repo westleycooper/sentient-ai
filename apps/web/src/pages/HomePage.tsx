@@ -512,6 +512,22 @@ export function HomePage() {
               </Select>
             ) : undefined
           }
+          leftContent={
+            <>
+              <Tooltip title="Configure SMEs">
+                <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
+                  <SettingsIcon />
+                </IconButton>
+              </Tooltip>
+              {localFeaturesEnabled && (
+                <Tooltip title="MCP server topology">
+                  <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+                    <HubIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+          }
         >
           <Tooltip title={`Visualisation: ${WAVE_LABELS[activeKind]}`}>
             <IconButton onClick={cycleWaveKind} aria-label="Cycle waveform visualisation">
@@ -523,18 +539,6 @@ export function HomePage() {
               {readAloud ? <VolumeUpIcon /> : <VolumeOffIcon />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Configure SMEs">
-            <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
-              <SettingsIcon />
-            </IconButton>
-          </Tooltip>
-          {localFeaturesEnabled && (
-            <Tooltip title="MCP server topology">
-              <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
-                <HubIcon />
-              </IconButton>
-            </Tooltip>
-          )}
         </AppHeader>
 
         {/* Waveform */}

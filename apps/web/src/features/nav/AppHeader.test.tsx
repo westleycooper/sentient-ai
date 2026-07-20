@@ -82,6 +82,28 @@ describe("AppHeader", () => {
     expect(screen.getByText("SME picker")).toBeInTheDocument();
   });
 
+  it("titleContent={null} renders nothing in the title slot", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="code" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={null} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+  });
+
+  it("renders leftContent between the mode toggle and the spacer/children", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} leftContent={<button>Settings</button>}>
+          <button>Read aloud</button>
+        </AppHeader>
+      </MemoryRouter>
+    );
+    const buttons = screen.getAllByRole("button").map((b) => b.textContent);
+    expect(buttons.indexOf("Settings")).toBeGreaterThan(buttons.indexOf("Voice"));
+    expect(buttons.indexOf("Settings")).toBeLessThan(buttons.indexOf("Read aloud"));
+  });
+
   it("renders mode-specific children between the spacer and chat icon", () => {
     render(
       <MemoryRouter>
