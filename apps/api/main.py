@@ -17,7 +17,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from infrastructure.observability.logging import configure_logging
 from infrastructure.observability.tracing import configure_tracing
 from interface.routers import agent as agent_router
-from interface.routers import agent_config, conversations, mcp_status, sme, stt, tts
+from interface.routers import agent_config, conversations, mcp_explorer, mcp_status, sme, stt, tts
 
 configure_logging()
 configure_tracing()
@@ -91,6 +91,10 @@ _sentinel_mcp = None
 if os.getenv("ENV", "local") != "production":
     from interface.mcp.server import mcp as _sentinel_mcp
     app.mount("/mcp", _sentinel_mcp.streamable_http_app())
+    # Interactive explorer (ADR-0004 addendum) — executes real actions
+    # (including the LangGraph reasoning graph), so it shares this gate
+    # rather than mcp_status.router's always-on one.
+    app.include_router(mcp_explorer.router)
 
 
 @app.get("/health", tags=["ops"], include_in_schema=False)

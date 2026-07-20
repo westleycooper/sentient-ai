@@ -86,6 +86,30 @@
         "operationId": "get_mcp_status",
         "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpStatusResponse" } } } } }
       }
+    },
+    "/mcp-status/resources/read": {
+      "post": {
+        "tags": ["mcp"],
+        "summary": "Read Resource",
+        "operationId": "read_resource",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpReadResourceRequest" } } } },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpInteractResponse" } } } },
+          "400": { "description": "Bad Request" }
+        }
+      }
+    },
+    "/mcp-status/tools/call": {
+      "post": {
+        "tags": ["mcp"],
+        "summary": "Call Tool",
+        "operationId": "call_tool",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpCallToolRequest" } } } },
+        "responses": {
+          "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpInteractResponse" } } } },
+          "400": { "description": "Bad Request" }
+        }
+      }
     }
   },
   "components": {
@@ -196,7 +220,8 @@
           "uri_template": { "type": "string" },
           "name": { "type": "string" },
           "description": { "type": "string" },
-          "wraps": { "type": "string" }
+          "wraps": { "type": "string" },
+          "params": { "type": "array", "items": { "type": "string" }, "default": [] }
         }
       },
       "McpToolInfo": {
@@ -205,7 +230,8 @@
         "properties": {
           "name": { "type": "string" },
           "description": { "type": "string" },
-          "wraps": { "type": "string" }
+          "wraps": { "type": "string" },
+          "input_schema": { "type": "object", "default": {} }
         }
       },
       "McpStatusResponse": {
@@ -219,6 +245,23 @@
           "sme_template_count": { "type": "integer" },
           "conversations_touched_count": { "type": "integer" }
         }
+      },
+      "McpReadResourceRequest": {
+        "type": "object",
+        "required": ["uri"],
+        "properties": { "uri": { "type": "string" } }
+      },
+      "McpCallToolRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "arguments": { "type": "object", "default": {} }
+        }
+      },
+      "McpInteractResponse": {
+        "type": "object",
+        "properties": { "content": {} }
       }
     }
   }
