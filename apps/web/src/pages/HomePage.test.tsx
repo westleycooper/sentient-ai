@@ -133,6 +133,17 @@ describe("HomePage", () => {
     expect(useUiStore.getState().readAloud).toBe(true);
   });
 
+  it("does not speak the greeting aloud when read-aloud is off (regression)", async () => {
+    renderPage([makeTemplate()]);
+    await screen.findByTestId("waveform");
+    expect(useUiStore.getState().readAloud).toBe(false);
+
+    // The greeting only plays on the user's first interaction (autoplay policy).
+    await userEvent.click(document.body);
+
+    expect(fetch).not.toHaveBeenCalledWith("/api/tts/speak", expect.anything());
+  });
+
   it("navigates to /config and /mcp from the header icons", async () => {
     renderPage([makeTemplate()]);
     await screen.findByTestId("waveform");

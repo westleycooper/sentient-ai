@@ -201,6 +201,7 @@ export function HomePage() {
     const speak = async () => {
       if (cancelled || greetingPlayedRef.current) return;
       greetingPlayedRef.current = true;
+      if (!readAloudRef.current) return;
       try {
         if (!ttsCtxRef.current || ttsCtxRef.current.state === "closed") {
           ttsCtxRef.current = new AudioContext();
@@ -489,22 +490,29 @@ export function HomePage() {
         }}
       >
         {/* Top bar */}
-        <AppHeader mode="voice" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} showCodeToggle={localFeaturesEnabled}>
-          {templates.length > 0 && (
-            <Select
-              size="small"
-              value={activeSmeId}
-              onChange={(e) => selectSme(e.target.value)}
-              sx={{ mr: 1, minWidth: 180 }}
-              aria-label="Select subject matter expert"
-            >
-              {templates.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.name}
-                </MenuItem>
-              ))}
-            </Select>
-          )}
+        <AppHeader
+          mode="voice"
+          drawerOpen={drawerOpen}
+          onToggleDrawer={toggleDrawer}
+          showCodeToggle={localFeaturesEnabled}
+          titleContent={
+            templates.length > 0 ? (
+              <Select
+                size="small"
+                value={activeSmeId}
+                onChange={(e) => selectSme(e.target.value)}
+                sx={{ minWidth: 180 }}
+                aria-label="Select subject matter expert"
+              >
+                {templates.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>
+                    {t.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : undefined
+          }
+        >
           <Tooltip title={`Visualisation: ${WAVE_LABELS[activeKind]}`}>
             <IconButton onClick={cycleWaveKind} aria-label="Cycle waveform visualisation">
               <GraphicEqIcon />

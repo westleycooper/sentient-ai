@@ -72,6 +72,16 @@ describe("AppHeader", () => {
     expect(screen.getByRole("button", { name: /voice agent/i })).toBeInTheDocument();
   });
 
+  it("replaces the Sentinel title with titleContent when provided", () => {
+    render(
+      <MemoryRouter>
+        <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={<span>SME picker</span>} />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText("Sentinel")).not.toBeInTheDocument();
+    expect(screen.getByText("SME picker")).toBeInTheDocument();
+  });
+
   it("renders mode-specific children between the spacer and chat icon", () => {
     render(
       <MemoryRouter>
