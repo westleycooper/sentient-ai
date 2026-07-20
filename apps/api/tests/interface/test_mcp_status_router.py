@@ -55,6 +55,18 @@ async def test_mcp_status_returns_counts_and_surface(monkeypatch):
     }
     assert {t["name"] for t in body["tools"]} == {"start_conversation", "send_conversation_turn"}
 
+    by_name = {r["name"]: r for r in body["resources"]}
+    assert by_name["list_sme_templates"]["params"] == []
+    assert by_name["get_sme_template"]["params"] == ["template_id"]
+    assert by_name["get_conversation"]["params"] == ["conversation_id"]
+
+    tools_by_name = {t["name"]: t for t in body["tools"]}
+    start_schema = tools_by_name["start_conversation"]["input_schema"]
+    assert start_schema["required"] == ["sme_id"]
+    assert "sme_id" in start_schema["properties"]
+    turn_schema = tools_by_name["send_conversation_turn"]["input_schema"]
+    assert set(turn_schema["required"]) == {"conversation_id", "user_text"}
+
 
 @pytest.mark.asyncio
 async def test_mcp_status_reports_not_mounted_in_production(monkeypatch):

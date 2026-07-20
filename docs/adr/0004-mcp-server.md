@@ -122,3 +122,39 @@ across MCP hosts yet to justify a second streaming code path.
 **Running the MCP server as a separate stdio-spawned process per client** —
 rejected; Sentinel is a persistent multi-user web service, not something
 spawned per-client.
+
+## Addendum (2026-07-20): interactive explorer
+
+The `/mcp` page's resource/tool cards were originally descriptive only —
+`sentinel://...` URIs aren't browser-fetchable (reading one requires a real
+MCP session: `initialize` + JSON-RPC `resources/read` over the Streamable
+HTTP transport, not a plain GET), so there was no way to try them from the
+page. Added a small GraphiQL-style explorer directly on those cards.
+
+**Decision**: two new POST endpoints, `POST /mcp-status/resources/read` and
+`POST /mcp-status/tools/call`, implemented in a new
+`interface/routers/mcp_explorer.py` (kept separate from `mcp_status.py`
+specifically so it can be gated differently). Both call the `mcp` SDK's own
+in-process dispatch methods — `mcp.read_resource(uri)` and
+`mcp.call_tool(name, arguments)` — rather than re-implementing
+resource/tool routing; these need no session/transport, they're just the
+same lookup the protocol layer itself uses. Tool parameter forms are
+schema-driven: `GET /mcp-status` now also calls `await mcp.list_tools()`
+and surfaces each tool's real Pydantic-generated JSON Schema
+(`McpToolInfo.input_schema`) so the frontend renders inputs generically
+rather than a hardcoded field list per tool. Resources get the same
+treatment as far as the protocol allows — MCP resource *templates* carry no
+formal per-param schema, only the `{param}` placeholders in the URI
+template, so `McpResourceInfo.params` is just that regex extraction; there
+is no richer schema to fetch.
+
+**Gating**: `mcp_explorer.router` is registered only inside the existing
+`ENV != production` block in `main.py`, alongside the raw `/mcp` mount —
+not unconditional like `mcp_status.router`. These two endpoints execute
+real actions, including running the LangGraph reasoning graph via
+`send_conversation_turn` (confirmed acceptable with the user: this surface
+is already local-only and behind the same no-auth-in-v1 caveat as the rest
+of ADR-0004, and being able to actually try a tool live is the point of an
+explorer). `conversations_touched_count` on `/mcp-status` reflects
+explorer-invoked conversations the same way it already did for MCP-client-
+invoked ones.
