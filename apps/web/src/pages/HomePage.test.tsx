@@ -52,6 +52,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     id: "ftse100-analyst", name: "FTSE 100 Analyst", soul: "s",
     steps: [], sources: [], rules: [], is_default: true,
     visualisation_kind: "wave", theme_id: "dark-teal",
+    lesson: { enabled: false, visual_verify: true, questions: [] },
     ...overrides,
   };
 }

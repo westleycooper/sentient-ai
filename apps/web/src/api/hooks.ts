@@ -33,6 +33,20 @@ export interface SmeRule {
   enabled: boolean;
 }
 
+export interface LessonQuestion {
+  id: string;
+  title: string;
+  question: string;
+  answer: string;
+  image_url: string | null;
+}
+
+export interface LessonConfig {
+  enabled: boolean;
+  visual_verify: boolean;
+  questions: LessonQuestion[];
+}
+
 export interface SmeTemplate {
   id: string;
   name: string;
@@ -43,6 +57,7 @@ export interface SmeTemplate {
   is_default: boolean;
   visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid";
   theme_id: string;
+  lesson: LessonConfig;
 }
 
 export interface Message {

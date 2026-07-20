@@ -15,6 +15,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     is_default: false,
     visualisation_kind: "wave",
     theme_id: "dark-teal",
+    lesson: { enabled: false, visual_verify: true, questions: [] },
     ...overrides,
   };
 }
@@ -31,6 +32,21 @@ describe("SmeEditor", () => {
     expect(screen.getByRole("tab", { name: "Steps (1)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Rules (0)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "RAG Sources (0)" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Lesson (0)" })).toBeInTheDocument();
+  });
+
+  it("switches to the Lesson tab and renders LessonEditor controls", async () => {
+    const template = makeTemplate({
+      lesson: {
+        enabled: true,
+        visual_verify: true,
+        questions: [{ id: "q1", title: "Whale", question: "Spell: whale", answer: "whale", image_url: null }],
+      },
+    });
+    render(<SmeEditor template={template} onSave={vi.fn()} isSaving={false} />);
+    await userEvent.click(screen.getByRole("tab", { name: "Lesson (1)" }));
+    expect(screen.getByText("Questions")).toBeInTheDocument();
+    expect(screen.getByLabelText("Question 1 title")).toHaveValue("Whale");
   });
 
   it("switches panels when a tab is clicked", async () => {

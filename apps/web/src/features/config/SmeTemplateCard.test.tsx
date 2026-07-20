@@ -15,6 +15,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     is_default: false,
     visualisation_kind: "wave",
     theme_id: "dark-teal",
+    lesson: { enabled: false, visual_verify: true, questions: [] },
     ...overrides,
   };
 }

@@ -146,6 +146,25 @@
           "enabled": { "type": "boolean", "default": true }
         }
       },
+      "LessonQuestion": {
+        "type": "object",
+        "required": ["id", "title", "question", "answer"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "question": { "type": "string" },
+          "answer": { "type": "string" },
+          "image_url": { "type": "string", "nullable": true }
+        }
+      },
+      "LessonConfig": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean", "default": false },
+          "visual_verify": { "type": "boolean", "default": true },
+          "questions": { "type": "array", "items": { "$ref": "#/components/schemas/LessonQuestion" } }
+        }
+      },
       "SmeTemplateResponse": {
         "type": "object",
         "required": ["id", "name", "soul", "steps", "sources", "rules", "is_default"],
@@ -156,7 +175,8 @@
           "steps": { "type": "array", "items": { "$ref": "#/components/schemas/ReasoningStep" } },
           "sources": { "type": "array", "items": { "$ref": "#/components/schemas/RetrievalSourceConfig" } },
           "rules": { "type": "array", "items": { "$ref": "#/components/schemas/SmeRule" } },
-          "is_default": { "type": "boolean" }
+          "is_default": { "type": "boolean" },
+          "lesson": { "$ref": "#/components/schemas/LessonConfig" }
         }
       },
       "SaveSmeTemplateRequest": {
@@ -169,7 +189,8 @@
           "steps": { "type": "array", "items": { "$ref": "#/components/schemas/ReasoningStep" } },
           "sources": { "type": "array", "items": { "$ref": "#/components/schemas/RetrievalSourceConfig" } },
           "rules": { "type": "array", "items": { "$ref": "#/components/schemas/SmeRule" } },
-          "is_default": { "type": "boolean", "default": false }
+          "is_default": { "type": "boolean", "default": false },
+          "lesson": { "$ref": "#/components/schemas/LessonConfig" }
         }
       },
       "StartConversationRequest": {
