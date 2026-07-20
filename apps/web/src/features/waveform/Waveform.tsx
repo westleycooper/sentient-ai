@@ -23,7 +23,10 @@ export interface WaveformProps {
   kind?: WaveformKind;
 }
 
-function hexToRgb(hex: string) {
+// Exported for unit testing — pure colour math with no canvas/WebGL dependency,
+// unlike the rest of this file (see Waveform.test.tsx for why that's tested
+// separately and pragmatically: jsdom has no canvas/WebGL implementation).
+export function hexToRgb(hex: string) {
   const n = parseInt(hex.replace("#", ""), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
@@ -39,7 +42,7 @@ const AMP_SCALE   = 4.0;
 const DEFAULT_BG  = "#0e1013";
 
 /** Perceived luminance 0–255; < 128 → dark background. */
-function bgLuminance(hex: string): number {
+export function bgLuminance(hex: string): number {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
   const g = parseInt(h.slice(2, 4), 16);
@@ -47,7 +50,7 @@ function bgLuminance(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b;
 }
 
-function hexToInt(hex: string): number {
+export function hexToInt(hex: string): number {
   return parseInt(hex.replace("#", ""), 16);
 }
 
