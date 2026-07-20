@@ -99,6 +99,7 @@ export function ConfigPage() {
       is_default: false,
       visualisation_kind: "wave",
       theme_id: "dark-teal",
+      lesson: { enabled: false, visual_verify: true, questions: [] },
     };
     setSelectedId(blank.id);
     saveMutation.mutate(blank);
