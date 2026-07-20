@@ -16,8 +16,8 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from infrastructure.observability.logging import configure_logging
 from infrastructure.observability.tracing import configure_tracing
-from interface.routers import agent_config, conversations, sme, tts, stt
 from interface.routers import agent as agent_router
+from interface.routers import agent_config, conversations, mcp_status, sme, stt, tts
 
 configure_logging()
 configure_tracing()
@@ -38,12 +38,21 @@ for _provider, _keys in [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
     from interface.dependencies import set_checkpointer
 
     async with AsyncPostgresSaver.from_conn_string(os.environ["DATABASE_URL"]) as cp:
         await cp.setup()
         set_checkpointer(cp)
-        yield
+        # _sentinel_mcp is assigned at module scope below, before this ever runs
+        # (lifespan only executes once the whole module has finished importing).
+        # Its session_manager is only valid after streamable_http_app() has been
+        # called, which the mount below does at import time — never call it here.
+        if _sentinel_mcp is not None:
+            async with _sentinel_mcp.session_manager.run():
+                yield
+        else:
+            yield
 
 
 app = FastAPI(
@@ -68,10 +77,20 @@ app.include_router(conversations.router)
 app.include_router(tts.router)
 app.include_router(stt.router)
 app.include_router(agent_config.router)
+app.include_router(mcp_status.router)  # always on — no PII, safe in prod
 
 # Coding agent — local-only feature (ADR-0003). Never mounted in production.
 if os.getenv("ENV", "local") != "production":
     app.include_router(agent_router.router)
+
+# MCP server — local-only feature (ADR-0004). Never mounted in production:
+# exposes conversation transcripts (PII, CLAUDE.md §9) with no auth in v1.
+# Mounted here (module scope, import time) rather than in lifespan, since
+# streamable_http_app() must be called before .session_manager becomes valid.
+_sentinel_mcp = None
+if os.getenv("ENV", "local") != "production":
+    from interface.mcp.server import mcp as _sentinel_mcp
+    app.mount("/mcp", _sentinel_mcp.streamable_http_app())
 
 
 @app.get("/health", tags=["ops"], include_in_schema=False)
