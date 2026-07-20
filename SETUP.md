@@ -25,7 +25,13 @@
 ```bash
 git clone <repo-url> && cd sentinel-ai
 cp .env.local.example .env.local
+git config core.hooksPath .githooks
 ```
+
+The last line enables the repo's tracked pre-commit hook (`.githooks/pre-commit`) —
+lint, tests, and a secret-literal scan on every commit, including ones made outside
+Claude Code. `core.hooksPath` is a local git setting, not committed, so it must be
+run once per clone.
 
 Open `.env.local` and set:
 
