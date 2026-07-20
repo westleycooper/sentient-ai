@@ -404,7 +404,20 @@ export function AgentPage() {
         }}
       >
         {/* Top bar */}
-        <AppHeader mode="code" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} showCodeToggle={localFeaturesEnabled}>
+        <AppHeader
+          mode="code"
+          drawerOpen={drawerOpen}
+          onToggleDrawer={toggleDrawer}
+          showCodeToggle={localFeaturesEnabled}
+          titleContent={null}
+          leftContent={
+            <Tooltip title="Code agent settings">
+              <IconButton onClick={() => navigate("/config?tab=1")} aria-label="Code agent settings">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          }
+        >
           <Chip
             label={connected ? "connected" : "connecting…"}
             color={connected ? "success" : "default"}
@@ -419,11 +432,6 @@ export function AgentPage() {
           <Tooltip title={readAloud ? "Read aloud on" : "Read aloud off"}>
             <IconButton onClick={toggleReadAloud} aria-label="Toggle read aloud">
               {readAloud ? <VolumeUpIcon /> : <VolumeOffIcon />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Code agent settings">
-            <IconButton onClick={() => navigate("/config?tab=1")} aria-label="Code agent settings">
-              <SettingsIcon />
             </IconButton>
           </Tooltip>
         </AppHeader>
