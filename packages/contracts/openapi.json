@@ -78,6 +78,14 @@
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TurnRequest" } } } },
         "responses": { "200": { "description": "text/event-stream", "content": { "text/event-stream": { "schema": { "type": "string" } } } } }
       }
+    },
+    "/mcp-status": {
+      "get": {
+        "tags": ["mcp"],
+        "summary": "Get Mcp Status",
+        "operationId": "get_mcp_status",
+        "responses": { "200": { "description": "Successful Response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/McpStatusResponse" } } } } }
+      }
     }
   },
   "components": {
@@ -180,6 +188,37 @@
         "type": "object",
         "required": ["user_text"],
         "properties": { "user_text": { "type": "string" } }
+      },
+      "McpResourceInfo": {
+        "type": "object",
+        "required": ["uri_template", "name", "description", "wraps"],
+        "properties": {
+          "uri_template": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "wraps": { "type": "string" }
+        }
+      },
+      "McpToolInfo": {
+        "type": "object",
+        "required": ["name", "description", "wraps"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "wraps": { "type": "string" }
+        }
+      },
+      "McpStatusResponse": {
+        "type": "object",
+        "required": ["mounted", "resources", "tools", "sme_template_count", "conversations_touched_count"],
+        "properties": {
+          "mounted": { "type": "boolean" },
+          "mount_path": { "type": "string", "default": "/mcp" },
+          "resources": { "type": "array", "items": { "$ref": "#/components/schemas/McpResourceInfo" } },
+          "tools": { "type": "array", "items": { "$ref": "#/components/schemas/McpToolInfo" } },
+          "sme_template_count": { "type": "integer" },
+          "conversations_touched_count": { "type": "integer" }
+        }
       }
     }
   }
