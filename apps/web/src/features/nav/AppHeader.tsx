@@ -3,8 +3,10 @@
  *
  * Layout: [Title] [Voice|Code toggle]  ...spacer...  [children]  [Chat icon]
  *
- * Callers pass mode-specific controls as children (SME selector, settings icon,
- * connected chip, etc.). The Voice/Code toggle and chat icon are always present.
+ * Callers pass mode-specific controls as children (settings icon, connected
+ * chip, etc.). The Voice/Code toggle and chat icon are always present. The
+ * title slot defaults to the "Sentinel" wordmark but callers can replace it
+ * (e.g. HomePage swaps it for the SME selector) via `titleContent`.
  */
 import { Box, AppBar, IconButton, Toolbar, Tooltip, Typography } from "@mui/material";
 import ToggleButton from "@mui/material/ToggleButton";
@@ -27,17 +29,23 @@ interface AppHeaderProps {
    * that one signal is reused here rather than adding a second status field.
    */
   showCodeToggle?: boolean;
+  /** Replaces the "Sentinel" title (e.g. HomePage's SME selector). */
+  titleContent?: React.ReactNode;
 }
 
-export function AppHeader({ mode, drawerOpen, onToggleDrawer, children, showCodeToggle = true }: AppHeaderProps) {
+export function AppHeader({ mode, drawerOpen, onToggleDrawer, children, showCodeToggle = true, titleContent }: AppHeaderProps) {
   const navigate = useNavigate();
 
   return (
     <AppBar position="static" color="transparent" elevation={0} sx={{ flexShrink: 0 }}>
       <Toolbar variant="dense" disableGutters>
-        <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: "-0.02em", mr: 3 }}>
-          Sentinel
-        </Typography>
+        <Box sx={{ mr: 3 }}>
+          {titleContent ?? (
+            <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+              Sentinel
+            </Typography>
+          )}
+        </Box>
 
         <ToggleButtonGroup
           value={mode}
