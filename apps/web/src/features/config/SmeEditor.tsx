@@ -18,13 +18,13 @@ import {
   Tab,
   Tabs,
   TextField,
-  Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
-import AddIcon from "@mui/icons-material/Add";
 import { StepEditor } from "./StepEditor";
 import { RagSourcesEditor } from "./RagSourcesEditor";
+import { RulesEditor } from "./RulesEditor";
 import type { SmeTemplate } from "../../api/hooks";
+import { THEMES } from "../../themes/index";
 
 interface SmeEditorProps {
   template: SmeTemplate;
@@ -65,12 +65,27 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
               labelId="vis-kind-label"
               label="Waveform"
               value={draft.visualisation_kind ?? "wave"}
-              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wave3d" | "wave3dgrid")}
+              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wavecircle" | "wave3d" | "wave3dgrid")}
               aria-label="Waveform visualisation"
             >
               <MenuItem value="wave">Sound Wave</MenuItem>
+              <MenuItem value="wavecircle">Circle Wave</MenuItem>
               <MenuItem value="wave3d">3D Wave</MenuItem>
               <MenuItem value="wave3dgrid">3D Grid</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 130 }}>
+            <InputLabel id="theme-label">Theme</InputLabel>
+            <Select
+              labelId="theme-label"
+              label="Theme"
+              value={draft.theme_id ?? "dark-teal"}
+              onChange={(e) => set("theme_id", e.target.value)}
+              aria-label="Theme"
+            >
+              {Object.values(THEMES).map((t) => (
+                <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>
+              ))}
             </Select>
           </FormControl>
           <FormControlLabel
@@ -145,67 +160,3 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
   );
 }
 
-function RulesEditor({
-  rules,
-  onChange,
-}: {
-  rules: SmeTemplate["rules"];
-  onChange: (r: SmeTemplate["rules"]) => void;
-}) {
-  const add = () =>
-    onChange([...rules, { id: `rule-${Date.now()}`, description: "", enabled: true }]);
-
-  const update = (idx: number, patch: Partial<SmeTemplate["rules"][number]>) =>
-    onChange(rules.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
-
-  const remove = (idx: number) => onChange(rules.filter((_, i) => i !== idx));
-
-  return (
-    <Stack spacing={2}>
-      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Stack spacing={0.25}>
-          <Typography variant="subtitle2">Rules</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Behavioural constraints enforced on every response.
-          </Typography>
-        </Stack>
-        <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined" aria-label="Add rule">
-          Add rule
-        </Button>
-      </Stack>
-
-      {rules.length === 0 && (
-        <Box sx={{ textAlign: "center", py: 4, border: "1px dashed", borderColor: "divider", borderRadius: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            No rules yet.
-          </Typography>
-          <Button size="small" startIcon={<AddIcon />} onClick={add} variant="outlined">
-            Add first rule
-          </Button>
-        </Box>
-      )}
-
-      {rules.map((rule, idx) => (
-        <Stack key={rule.id} direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <Switch
-            checked={rule.enabled}
-            onChange={(e) => update(idx, { enabled: e.target.checked })}
-            size="small"
-            slotProps={{ input: { "aria-label": `Enable rule ${idx + 1}` } }}
-          />
-          <TextField
-            value={rule.description}
-            onChange={(e) => update(idx, { description: e.target.value })}
-            size="small"
-            fullWidth
-            placeholder="e.g. Never discuss competitor products"
-            slotProps={{ htmlInput: { "aria-label": `Rule ${idx + 1} description` } }}
-          />
-          <Button size="small" color="error" onClick={() => remove(idx)} aria-label={`Remove rule ${idx + 1}`}>
-            Remove
-          </Button>
-        </Stack>
-      ))}
-    </Stack>
-  );
-}

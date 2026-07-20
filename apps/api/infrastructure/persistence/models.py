@@ -42,6 +42,22 @@ class MessageModel(Base):
     conversation: Mapped[ConversationModel] = relationship("ConversationModel", back_populates="messages")
 
 
+class AgentConfigModel(Base):
+    __tablename__ = "agent_config"
+
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    working_mode: Mapped[str] = mapped_column(String(50), nullable=False)
+    system_prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    auto_allow_tools: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    rules: Mapped[list] = mapped_column(JSON, nullable=False, default=list, server_default="[]")
+    sources: Mapped[list] = mapped_column(JSON, nullable=False, default=list, server_default="[]")
+    theme_id: Mapped[str] = mapped_column(String(100), nullable=False, server_default="dark-teal")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow
+    )
+
+
 class SmeTemplateModel(Base):
     __tablename__ = "sme_templates"
 
@@ -53,3 +69,4 @@ class SmeTemplateModel(Base):
     rules: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")
+    theme_id: Mapped[str] = mapped_column(String(100), nullable=False, server_default="dark-teal")

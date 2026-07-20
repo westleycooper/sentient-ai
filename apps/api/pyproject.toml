@@ -10,6 +10,7 @@ dependencies = [
   "langgraph-checkpoint-postgres>=0.1",
   "psycopg[binary]>=3.1",
   "langchain>=0.2",
+  "anthropic>=0.40",
   "langchain-anthropic>=0.1",
   "sqlalchemy[asyncio]>=2",
   "asyncpg>=0.29",
@@ -64,4 +65,5 @@ dev = [
     "pytest>=9.1.0",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
+    "ruff>=0.15",
 ]

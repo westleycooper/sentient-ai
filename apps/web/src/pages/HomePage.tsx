@@ -11,7 +11,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
-  AppBar,
   Box,
   Chip,
   Divider,
@@ -21,17 +20,20 @@ import {
   Select,
   Snackbar,
   Stack,
-  Toolbar,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import ChatIcon from "@mui/icons-material/Chat";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HistoryIcon from "@mui/icons-material/History";
 import SettingsIcon from "@mui/icons-material/Settings";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 
-import { Waveform } from "../features/waveform/Waveform";
+import { AppHeader } from "../features/nav/AppHeader";
+import { SentinelThemeProvider } from "../themes/SentinelThemeProvider";
+import { THEMES, DEFAULT_THEME_ID } from "../themes/index";
+import { Waveform, type WaveformKind } from "../features/waveform/Waveform";
 import { MicButton } from "../features/voice/MicButton";
 import { useVoiceRecorder } from "../features/voice/useVoiceRecorder";
 import { TranscriptDrawer } from "../features/transcript/TranscriptDrawer";
@@ -48,10 +50,12 @@ import { streamAudioTurn, streamEvents } from "../api/client";
 import type { TurnEvent, TranscriptEvent } from "../api/hooks";
 
 export function HomePage() {
-  const theme = useTheme();
   const navigate = useNavigate();
-  const { drawerOpen, toggleDrawer, selectedSmeId, defaultSmeId, selectSme, recording, setRecording } =
+  const { drawerOpen, toggleDrawer, selectedSmeId, defaultSmeId, selectSme, recording, setRecording, readAloud, toggleReadAloud } =
     useUiStore();
+
+  const readAloudRef = useRef(readAloud);
+  readAloudRef.current = readAloud;
 
   const [amplitude, setAmplitude] = useState<Float32Array>(new Float32Array(256));
   const [steps, setSteps] = useState<StepEvent[]>([]);
@@ -64,6 +68,14 @@ export function HomePage() {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isTtsPlaying, setIsTtsPlaying] = useState(false);
+
+  // Wave visualisation kind — starts from the active SME's setting, overridable per session.
+  const [waveKindOverride, setWaveKindOverride] = useState<WaveformKind | null>(null);
+  const prevSmeIdRef = useRef<string | null>(null);
+  const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid"];
+  const WAVE_LABELS: Record<WaveformKind, string> = {
+    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid",
+  };
 
   // Keep a ref so archive-on-clear in callbacks always sees fresh steps
   stepsRef.current = steps;
@@ -85,6 +97,25 @@ export function HomePage() {
 
   const activeSmeId = selectedSmeId ?? defaultSmeId ?? templates[0]?.id ?? "";
   const activeSme = templates.find((t) => t.id === activeSmeId) ?? templates[0] ?? null;
+  // Derive waveform colours directly from the theme tokens so they update without
+  // needing useTheme() (which only sees the outer ThemeProvider, not the per-SME one).
+  const activeTokens = THEMES[activeSme?.theme_id ?? DEFAULT_THEME_ID] ?? THEMES[DEFAULT_THEME_ID];
+  // On light themes, use the darkest accent for the wave base so it's visible on white;
+  // peak shifts to mid-accent (not the light lavender which disappears on white).
+  const waveColor = activeTokens.mode === "light" ? activeTokens.primaryDark : activeTokens.primary;
+  const wavePeakColor = activeTokens.mode === "light" ? activeTokens.primary : activeTokens.primaryLight;
+
+  // Reset wave override when the active SME changes
+  useEffect(() => {
+    if (activeSme?.id !== prevSmeIdRef.current) {
+      prevSmeIdRef.current = activeSme?.id ?? null;
+      setWaveKindOverride(null);
+    }
+  }, [activeSme?.id]);
+
+  const activeKind: WaveformKind = waveKindOverride ?? (activeSme?.visualisation_kind as WaveformKind) ?? "wave";
+  const cycleWaveKind = () =>
+    setWaveKindOverride(WAVE_CYCLE[(WAVE_CYCLE.indexOf(activeKind) + 1) % WAVE_CYCLE.length]);
 
   const handleAmplitudeChunk = useCallback((buf: Float32Array) => {
     setAmplitude(new Float32Array(buf));
@@ -144,7 +175,7 @@ export function HomePage() {
     setIsStreaming(false);
     greetingPlayedRef.current = false;
 
-    const greetingText = `Hello, I'm Westley, your ${activeSme.name}. How can I help?`;
+    const greetingText = `Hello, I'm Sentinel, your ${activeSme.name}. How can I help?`;
 
     // Show text immediately
     setLocalMessages([{
@@ -227,7 +258,10 @@ export function HomePage() {
 
   const playTts = useCallback(async (convId: string, text: string) => {
     cancelAnimationFrame(ttsAnimRef.current);
-    const ctx = ttsCtxRef.current!;
+    if (!ttsCtxRef.current || ttsCtxRef.current.state === "closed") {
+      ttsCtxRef.current = new AudioContext();
+    }
+    const ctx = ttsCtxRef.current;
     await ctx.resume();
 
     try {
@@ -337,7 +371,7 @@ export function HomePage() {
           };
           setLocalMessages((prev) => [...prev, assistantMsg]);
           setIsStreaming(false);
-          playTts(convId, ev.answer);
+          if (readAloudRef.current) playTts(convId, ev.answer);
         } else if (ev.type === "error") {
           setErrorMsg(`Agent error: ${(ev as { type: "error"; message: string }).message}`);
           setIsStreaming(false);
@@ -393,7 +427,7 @@ export function HomePage() {
           };
           setLocalMessages((prev) => [...prev, assistantMsg]);
           setIsStreaming(false);
-          playTts(convId, ev.answer);
+          if (readAloudRef.current) playTts(convId, ev.answer);
         } else if (ev.type === "error") {
           setErrorMsg(`Agent error: ${(ev as { type: "error"; message: string }).message}`);
           setIsStreaming(false);
@@ -427,6 +461,7 @@ export function HomePage() {
   const messages = localMessages.length > 0 ? localMessages : (conversation?.messages ?? []);
 
   return (
+    <SentinelThemeProvider themeId={activeSme?.theme_id}>
     <Box
       sx={{
         height: "100dvh",
@@ -448,45 +483,38 @@ export function HomePage() {
         }}
       >
         {/* Top bar */}
-        <AppBar
-          position="static"
-          color="transparent"
-          elevation={0}
-          sx={{ flexShrink: 0 }}
-        >
-          <Toolbar variant="dense" disableGutters sx={{ pl: "10px" }}>
-            <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Westley
-            </Typography>
-
-            {templates.length > 0 && (
-              <Select
-                size="small"
-                value={activeSmeId}
-                onChange={(e) => selectSme(e.target.value)}
-                sx={{ mr: 1, minWidth: 180 }}
-                aria-label="Select subject matter expert"
-              >
-                {templates.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>
-                    {t.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-
-            <Tooltip title={drawerOpen ? "Hide transcript" : "Show transcript"}>
-              <IconButton onClick={toggleDrawer} aria-label="Toggle transcript drawer">
-                <ChatIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Configure SMEs">
-              <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-          </Toolbar>
-        </AppBar>
+        <AppHeader mode="voice" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer}>
+          {templates.length > 0 && (
+            <Select
+              size="small"
+              value={activeSmeId}
+              onChange={(e) => selectSme(e.target.value)}
+              sx={{ mr: 1, minWidth: 180 }}
+              aria-label="Select subject matter expert"
+            >
+              {templates.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  {t.name}
+                </MenuItem>
+              ))}
+            </Select>
+          )}
+          <Tooltip title={`Visualisation: ${WAVE_LABELS[activeKind]}`}>
+            <IconButton onClick={cycleWaveKind} aria-label="Cycle waveform visualisation">
+              <GraphicEqIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={readAloud ? "Read aloud on" : "Read aloud off"}>
+            <IconButton onClick={toggleReadAloud} aria-label="Toggle read aloud">
+              {readAloud ? <VolumeUpIcon /> : <VolumeOffIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Configure SMEs">
+            <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
+        </AppHeader>
 
         {/* Waveform */}
         <Box
@@ -496,7 +524,7 @@ export function HomePage() {
             borderRadius: 3,
             overflow: "hidden",
             bgcolor: "background.paper",
-            ...(activeSme?.visualisation_kind !== "wave3d" && {
+            ...(activeKind === "wave" && {
               border: "1px solid",
               borderColor: "divider",
             }),
@@ -505,9 +533,10 @@ export function HomePage() {
           <Waveform
             amplitude={amplitude}
             active={recording || isTtsPlaying}
-            color={theme.palette.primary.main}
-            peakColor={theme.palette.secondary.light}
-            kind={activeSme?.visualisation_kind ?? "wave"}
+            color={waveColor}
+            peakColor={wavePeakColor}
+            bgColor={activeTokens.bgPaper}
+            kind={activeKind}
           />
 
           {/* Reasoning steps overlay — most recent run only */}
@@ -629,6 +658,11 @@ export function HomePage() {
         stepsByMsgId={stepsByMsgId}
         onSendText={handleSendText}
         isStreaming={isStreaming}
+        onPlayMessage={
+          !readAloud && conversationId
+            ? (text) => playTts(conversationId, text)
+            : undefined
+        }
       />
 
       {/* Error toast */}
@@ -643,5 +677,6 @@ export function HomePage() {
         </Alert>
       </Snackbar>
     </Box>
+    </SentinelThemeProvider>
   );
 }

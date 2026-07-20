@@ -3,6 +3,7 @@
  * Stable prop contract — callers unchanged when swapped for the 3D AI head.
  *
  * kind="wave"       — classic 2D oscilloscope line with hill-shaped opacity fade
+ * kind="wavecircle" — 2D polar waveform: concentric ring history, newest outermost
  * kind="wave3d"     — Three.js WebGL: dot-cloud waterfall along the Z axis
  * kind="wave3dgrid" — Three.js WebGL: polygon terrain mesh where amplitude
  *                     raises vertices, with additive wireframe overlay
@@ -10,12 +11,14 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export type WaveformKind = "wave" | "wave3d" | "wave3dgrid";
+export type WaveformKind = "wave" | "wavecircle" | "wave3d" | "wave3dgrid";
 
 export interface WaveformProps {
   amplitude: Float32Array;
   color?: string;
   peakColor?: string;
+  /** Background colour for 3D views (and the outer div). Defaults to #0e1013. */
+  bgColor?: string;
   active?: boolean;
   kind?: WaveformKind;
 }
@@ -33,7 +36,20 @@ const TOTAL_DEPTH = N_ROWS * Z_SPACING;
 const SCROLL_SPEED = 0.105;
 const X_HALF      = 14;
 const AMP_SCALE   = 4.0;
-const BG          = 0x0e1013;
+const DEFAULT_BG  = "#0e1013";
+
+/** Perceived luminance 0–255; < 128 → dark background. */
+function bgLuminance(hex: string): number {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+function hexToInt(hex: string): number {
+  return parseInt(hex.replace("#", ""), 16);
+}
 
 // ── wave3dgrid (static square-cell mesh) constants ───────────────────────────
 const G_X      = 28;    // vertex columns across X  (~half original cell count)
@@ -44,15 +60,18 @@ const G_AMP    = 6.75;  // amplitude → Y displacement
 
 export function Waveform({
   amplitude,
-  color    = "#4f9cff",
+  color     = "#4f9cff",
   peakColor = "#c084fc",
-  active   = true,
-  kind     = "wave",
+  bgColor   = DEFAULT_BG,
+  active    = true,
+  kind      = "wave",
 }: WaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ampRef       = useRef(amplitude);
   const activeRef    = useRef(active);
   const historyRef   = useRef<Float32Array[]>([]);
+  const { r: _cr, g: _cg, b: _cb } = hexToRgb(color);
+  const c1Rgb = `${_cr},${_cg},${_cb}`;
 
   ampRef.current    = amplitude;
   activeRef.current = active;
@@ -65,6 +84,15 @@ export function Waveform({
 
     const c1 = hexToRgb(color);
     const c2 = hexToRgb(peakColor);
+    const bg = bgColor || DEFAULT_BG;
+    const bgInt = hexToInt(bg);
+    const isDarkBg = bgLuminance(bg) < 128;
+    // Fade target: dark bg uses black (additive blend adds 0) ; light bg uses the
+    // bg colour (normal blend paints the bg colour = invisible against itself).
+    const bgRaw = hexToRgb(bg);
+    const bgN = isDarkBg
+      ? { r: 0, g: 0, b: 0 }
+      : { r: bgRaw.r / 255, g: bgRaw.g / 255, b: bgRaw.b / 255 };
     let raf = 0;
 
     // ════════════════════════════════════════ THREE.JS 3D WAVE ══════════════
@@ -86,7 +114,7 @@ export function Waveform({
 
       // Gradient overlay — fades the front rows into the background colour
       const gradEl = document.createElement("div");
-      gradEl.style.cssText = "position:absolute;bottom:10%;left:0;right:0;height:22%;background:linear-gradient(to top,#0e1013 0%,transparent 100%);pointer-events:none;z-index:1;";
+      gradEl.style.cssText = `position:absolute;bottom:10%;left:0;right:0;height:22%;background:linear-gradient(to top,${bg} 0%,transparent 100%);pointer-events:none;z-index:1;`;
       container.appendChild(gradEl);
 
       // Scene — no background; canvas corners are transparent
@@ -126,7 +154,7 @@ export function Waveform({
         map: squareTex,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
+        blending: isDarkBg ? THREE.AdditiveBlending : THREE.NormalBlending,
       });
 
       const dotCloud = new THREE.Points(geo, mat);
@@ -164,7 +192,10 @@ export function Waveform({
         for (let row = 0; row < L; row++) {
           const frame     = hist[row];
           const srcLen    = frame.length || N_COLS;
-          const dimFactor = Math.max(0, 1 - (row * Z_SPACING) / TOTAL_DEPTH);
+          const rawDim    = Math.max(0, 1 - (row * Z_SPACING) / TOTAL_DEPTH);
+          // On light bg keep a high floor so the dot cloud stays dark across all depths;
+          // only the horizontal hill (h) provides the edge fade to bg colour.
+          const dimFactor = isDarkBg ? rawDim : Math.max(0.7, rawDim);
 
           for (let col = 0; col < N_COLS; col++) {
             const si = Math.min(srcLen - 1, Math.floor((col / (N_COLS - 1)) * (srcLen - 1)));
@@ -177,9 +208,13 @@ export function Waveform({
 
             const t = Math.min(1, Math.abs(a) * 4.5);
             const f = dimFactor * h;
-            colors[vi * 3]     = (c1n.r + (c2n.r - c1n.r) * t) * f;
-            colors[vi * 3 + 1] = (c1n.g + (c2n.g - c1n.g) * t) * f;
-            colors[vi * 3 + 2] = (c1n.b + (c2n.b - c1n.b) * t) * f;
+            // lerp from bg colour → primary colour: dim particles match bg = invisible
+            const pr = c1n.r + (c2n.r - c1n.r) * t;
+            const pg = c1n.g + (c2n.g - c1n.g) * t;
+            const pb = c1n.b + (c2n.b - c1n.b) * t;
+            colors[vi * 3]     = bgN.r + (pr - bgN.r) * f;
+            colors[vi * 3 + 1] = bgN.g + (pg - bgN.g) * f;
+            colors[vi * 3 + 2] = bgN.b + (pb - bgN.b) * f;
             vi++;
           }
         }
@@ -238,12 +273,12 @@ export function Waveform({
       const renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(W, H);
-      renderer.setClearColor(BG, 1);
+      renderer.setClearColor(bgInt, 1);
       renderer.domElement.style.cssText = "display:block;width:100%;height:100%;";
       container.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(BG);
+      scene.background = new THREE.Color(bgInt);
 
       const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 80);
       camera.position.set(0, 7, 12);
@@ -298,7 +333,7 @@ export function Waveform({
       const lineMat = new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true,
-        blending: THREE.AdditiveBlending,
+        blending: isDarkBg ? THREE.AdditiveBlending : THREE.NormalBlending,
         depthWrite: false,
       });
       scene.add(new THREE.LineSegments(geo, lineMat));
@@ -328,11 +363,22 @@ export function Waveform({
 
             positions[vi * 3 + 1] = a * G_AMP * env;
 
-            // peak brightness scales with amplitude * dome; floor glow at rest
-            const f = dim * (t * env + 0.15 * env);
-            colors[vi * 3]     = (c1n.r + (c2n.r - c1n.r) * t) * f;
-            colors[vi * 3 + 1] = (c1n.g + (c2n.g - c1n.g) * t) * f;
-            colors[vi * 3 + 2] = (c1n.b + (c2n.b - c1n.b) * t) * f;
+            // peak brightness scales with amplitude * dome; floor glow at rest.
+            // Dark bg: low floor (0.15) — subtle additive glow looks good.
+            // Light bg: high floor (0.90) — grid shows dark purple at rest; only
+            //   geometric edges (env→0) fade to white. Clamp to 1 so f never
+            //   overshoots primary and produces inverted colours via the lerp.
+            const floorGlow = isDarkBg ? 0.15 : 0.90;
+            const f = isDarkBg
+              ? dim * (t * env + floorGlow * env)
+              : Math.min(1, dim * (t * env + floorGlow * env));
+            // lerp from bg colour → primary colour so dim lines fade to invisible
+            const pr = c1n.r + (c2n.r - c1n.r) * t;
+            const pg = c1n.g + (c2n.g - c1n.g) * t;
+            const pb = c1n.b + (c2n.b - c1n.b) * t;
+            colors[vi * 3]     = bgN.r + (pr - bgN.r) * f;
+            colors[vi * 3 + 1] = bgN.g + (pg - bgN.g) * f;
+            colors[vi * 3 + 2] = bgN.b + (pb - bgN.b) * f;
             vi++;
           }
         }
@@ -360,6 +406,128 @@ export function Waveform({
         geo.dispose();
         lineMat.dispose();
         renderer.dispose();
+      };
+    }
+
+    // ═══════════════════════════════════════ CIRCLE WAVE (2D polar) ════════
+    if (kind === "wavecircle") {
+      const canvas = document.createElement("canvas");
+      canvas.style.cssText = "display:block;width:100%;height:100%;";
+      container.appendChild(canvas);
+      const ctx = canvas.getContext("2d")!;
+
+      const resize = () => {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width  = (container.clientWidth  || canvas.offsetWidth)  * dpr;
+        canvas.height = (container.clientHeight || canvas.offsetHeight) * dpr;
+      };
+      resize();
+
+      const N_RINGS_C = 8;
+      const PUSH_EVERY = 2; // push a snapshot every 2 rAF frames (~30 Hz at 60 fps)
+      let frameCount = 0;
+      for (let i = 0; i < N_RINGS_C; i++) historyRef.current.push(new Float32Array(256));
+
+      const renderCircle = () => {
+        frameCount++;
+        if (frameCount % PUSH_EVERY === 0) {
+          historyRef.current.unshift(new Float32Array(ampRef.current));
+          if (historyRef.current.length > N_RINGS_C) historyRef.current.pop();
+        }
+
+        const { width, height } = canvas;
+        const dpr = window.devicePixelRatio || 1;
+        ctx.clearRect(0, 0, width, height);
+
+        const cx       = width  / 2;
+        const cy       = height / 2;
+        const maxR     = Math.min(cx, cy) * 0.92;
+        const innerR   = maxR * 0.20;
+        const outerR   = maxR * 0.78;
+        const ampScale = maxR * 0.18;
+
+        const hist   = historyRef.current;
+        const nRings = Math.min(hist.length, N_RINGS_C);
+
+        if (!activeRef.current) {
+          // Idle: plain concentric circles fading inward
+          for (let i = 0; i < N_RINGS_C; i++) {
+            const frac    = i / (N_RINGS_C - 1);
+            const r       = innerR + (outerR - innerR) * (1 - frac);
+            const opacity = 0.05 + (1 - frac) * 0.35;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${c1.r},${c1.g},${c1.b},${opacity})`;
+            ctx.lineWidth   = 1.5 * dpr;
+            ctx.stroke();
+          }
+          raf = requestAnimationFrame(renderCircle);
+          return;
+        }
+
+        // Draw innermost (oldest) first so outermost (newest) paints on top
+        for (let ri = nRings - 1; ri >= 0; ri--) {
+          const frame = hist[ri];
+          const N     = frame.length || 256;
+          // ri=0 → outermost / newest; ri=nRings-1 → innermost / oldest
+          const frac    = ri / (N_RINGS_C - 1);
+          const baseR   = outerR - (outerR - innerR) * frac;
+          const opacity = 1 - frac * 0.85;
+
+          if (ri === 0) {
+            // Newest ring: per-segment colour gradient matching the 2D wave style
+            const lw = 2.5 * dpr;
+            for (let i = 1; i <= N; i++) {
+              const angle0 = ((i - 1) / N) * Math.PI * 2 - Math.PI / 2;
+              const angle1 = (i       / N) * Math.PI * 2 - Math.PI / 2;
+              const a0 = frame[(i - 1) % N] || 0;
+              const a1 = frame[i       % N] || 0;
+              const r0 = Math.max(0, baseR + a0 * ampScale);
+              const r1 = Math.max(0, baseR + a1 * ampScale);
+
+              const t  = Math.min(1, Math.abs(a1) * 3.0);
+              const cr = Math.round(c1.r + (c2.r - c1.r) * t);
+              const cg = Math.round(c1.g + (c2.g - c1.g) * t);
+              const cb = Math.round(c1.b + (c2.b - c1.b) * t);
+
+              ctx.globalAlpha  = opacity;
+              ctx.beginPath();
+              ctx.strokeStyle  = `rgb(${cr},${cg},${cb})`;
+              ctx.lineWidth    = lw;
+              ctx.moveTo(cx + Math.cos(angle0) * r0, cy + Math.sin(angle0) * r0);
+              ctx.lineTo(cx + Math.cos(angle1) * r1, cy + Math.sin(angle1) * r1);
+              ctx.stroke();
+            }
+          } else {
+            // Older rings: single closed path for performance
+            ctx.beginPath();
+            ctx.globalAlpha  = opacity;
+            ctx.strokeStyle  = `rgb(${c1.r},${c1.g},${c1.b})`;
+            ctx.lineWidth    = 1.5 * dpr;
+            for (let i = 0; i <= N; i++) {
+              const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+              const a     = frame[i % N] || 0;
+              const r     = Math.max(0, baseR + a * ampScale);
+              const x     = cx + Math.cos(angle) * r;
+              const y     = cy + Math.sin(angle) * r;
+              if (i === 0) ctx.moveTo(x, y);
+              else         ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+
+        ctx.globalAlpha = 1;
+        raf = requestAnimationFrame(renderCircle);
+      };
+      renderCircle();
+
+      const ro = new ResizeObserver(resize);
+      ro.observe(container);
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
       };
     }
 
@@ -441,7 +609,7 @@ export function Waveform({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [color, peakColor, kind]);
+  }, [color, peakColor, bgColor, kind]);
 
   return (
     <div
@@ -451,7 +619,7 @@ export function Waveform({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: kind === "wave3d" ? "#0e1013" : undefined,
+        background: (kind === "wave3d" || kind === "wave3dgrid") ? bgColor : undefined,
       }}
       aria-hidden
     >
@@ -462,7 +630,7 @@ export function Waveform({
             flexShrink: 0,
             borderRadius: "50%",
             overflow: "hidden",
-            border: "1px solid rgba(0,180,200,0.25)",
+            border: `1px solid rgba(${c1Rgb},0.30)`,
             position: "relative",
           } : {
             width: "100%",

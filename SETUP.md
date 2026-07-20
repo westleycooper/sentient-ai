@@ -23,9 +23,15 @@
 ### 1. Clone and configure
 
 ```bash
-git clone <repo-url> && cd sentient-ai
+git clone <repo-url> && cd sentinel-ai
 cp .env.local.example .env.local
+git config core.hooksPath .githooks
 ```
+
+The last line enables the repo's tracked pre-commit hook (`.githooks/pre-commit`) —
+lint, tests, and a secret-literal scan on every commit, including ones made outside
+Claude Code. `core.hooksPath` is a local git setting, not committed, so it must be
+run once per clone.
 
 Open `.env.local` and set:
 
@@ -194,7 +200,7 @@ Download [Docker Desktop for Windows](https://www.docker.com/products/docker-des
 
 Open your Ubuntu terminal and follow the [macOS / Linux with Docker](#macos--linux-with-docker) steps — all commands are identical inside WSL 2.
 
-> **Tip:** Clone the repo inside WSL (`~/projects/sentient-ai`), not on the Windows filesystem (`/mnt/c/...`). Cross-boundary filesystem performance is significantly slower.
+> **Tip:** Clone the repo inside WSL (`~/projects/sentinel-ai`), not on the Windows filesystem (`/mnt/c/...`). Cross-boundary filesystem performance is significantly slower.
 
 ---
 
@@ -314,7 +320,7 @@ git config --global core.eol lf
 
 ```powershell
 git clone <repo-url>
-cd sentient-ai
+cd sentinel-ai
 Copy-Item .env.local.example .env.local
 ```
 
