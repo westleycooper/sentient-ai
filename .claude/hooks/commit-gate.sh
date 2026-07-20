@@ -36,13 +36,20 @@ if [ -n "$API_PY_FILES" ]; then
   if ! (cd apps/api && printf '%s\n' "$RELATIVE_FILES" | xargs uv run ruff check); then
     FAILURES+=("apps/api: ruff check failed on staged files.")
   fi
-  if ! (cd apps/api && uv run pytest); then
-    FAILURES+=("apps/api: pytest failed.")
+  # --cov enforces pyproject.toml's fail_under=90 on domain+application
+  # (CLAUDE.md §11). Repo-wide, not staged-scoped: coverage is cumulative,
+  # so "only check what changed" doesn't make sense the way it does for lint.
+  if ! (cd apps/api && uv run pytest --cov); then
+    FAILURES+=("apps/api: pytest failed, or domain+application coverage dropped below 90% (CLAUDE.md §11).")
   fi
 fi
 
 if printf '%s\n' "$STAGED_FILES" | grep -qE '^apps/web/.*\.(ts|tsx|js|jsx)$'; then
   echo "-- apps/web changed: running eslint + tsc + vitest --" >&2
+  # Not running `pnpm test:coverage` here (unlike apps/api's --cov above):
+  # most of the pre-existing frontend is untested, so enforcing the 80%
+  # threshold (CLAUDE.md §11) would block on debt, not regressions. Revisit
+  # once that debt is paid down.
   if ! (cd apps/web && pnpm lint); then
     FAILURES+=("apps/web: eslint failed.")
   fi
