@@ -1,5 +1,6 @@
 """RetrievalSourcePort — both HTTP-API and JSON-set sources implement this."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Protocol
 

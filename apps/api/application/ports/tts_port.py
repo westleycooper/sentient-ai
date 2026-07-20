@@ -1,6 +1,8 @@
 """TtsPort — text-to-speech. Adapters: Azure Speech, ElevenLabs, stub."""
 from __future__ import annotations
-from typing import AsyncIterator, Protocol
+
+from collections.abc import AsyncIterator
+from typing import Protocol
 
 
 class TtsPort(Protocol):

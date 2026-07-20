@@ -202,3 +202,35 @@ export function useStartConversation() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["conversations"] }),
   });
 }
+
+// --- MCP status (ADR-0004) ---
+
+export interface McpResourceInfo {
+  uri_template: string;
+  name: string;
+  description: string;
+  wraps: string;
+}
+
+export interface McpToolInfo {
+  name: string;
+  description: string;
+  wraps: string;
+}
+
+export interface McpStatus {
+  mounted: boolean;
+  mount_path: string;
+  resources: McpResourceInfo[];
+  tools: McpToolInfo[];
+  sme_template_count: number;
+  conversations_touched_count: number;
+}
+
+export function useMcpStatus() {
+  return useQuery<McpStatus>({
+    queryKey: ["mcp", "status"],
+    queryFn: () => api.get<McpStatus>("/mcp-status"),
+    refetchInterval: 15000,
+  });
+}

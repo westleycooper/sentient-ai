@@ -37,7 +37,7 @@ class AgentConfigResponse(BaseModel):
     theme_id: str = "dark-teal"
 
     @classmethod
-    def from_domain(cls, c: AgentConfig) -> "AgentConfigResponse":
+    def from_domain(cls, c: AgentConfig) -> AgentConfigResponse:
         return cls(
             model=c.model,
             working_mode=c.working_mode,
