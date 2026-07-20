@@ -45,6 +45,7 @@ async def save_sme_template(
         rules=[SmeRule(**r) for r in body.rules],
         is_default=body.is_default,
         visualisation_kind=body.visualisation_kind,
+        theme_id=body.theme_id,
     )
     saved = await uc.execute(template)
     return SmeTemplateResponse.from_domain(saved)
