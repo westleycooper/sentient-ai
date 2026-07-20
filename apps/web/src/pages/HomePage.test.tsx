@@ -58,9 +58,15 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
 
 const INITIAL_UI_STATE = useUiStore.getState();
 
-function renderPage(templates: SmeTemplate[]) {
+function renderPage(templates: SmeTemplate[], { mcpMounted = true }: { mcpMounted?: boolean } = {}) {
   vi.mocked(api.get).mockImplementation((path: string) => {
     if (path === "/sme") return Promise.resolve(templates);
+    if (path === "/mcp-status") {
+      return Promise.resolve({
+        mounted: mcpMounted, mount_path: "/mcp", resources: [], tools: [],
+        sme_template_count: templates.length, conversations_touched_count: 0,
+      });
+    }
     return Promise.reject(new Error(`unexpected GET ${path}`));
   });
 
@@ -96,7 +102,7 @@ describe("HomePage", () => {
 
   it("greets the user with the active (default) SME's name once templates load", async () => {
     renderPage([makeTemplate({ name: "FTSE 100 Analyst" })]);
-    expect(await screen.findByText(/Hello, I'm Sentinel, your FTSE 100 Analyst/)).toBeInTheDocument();
+    expect(await screen.findByText(/Hello, I'm your FTSE 100 Analyst/)).toBeInTheDocument();
   });
 
   it("shows the SME selector only when templates exist, and switching SME re-greets", async () => {
@@ -127,14 +133,34 @@ describe("HomePage", () => {
     expect(useUiStore.getState().readAloud).toBe(true);
   });
 
+  it("does not speak the greeting aloud when read-aloud is off (regression)", async () => {
+    renderPage([makeTemplate()]);
+    await screen.findByTestId("waveform");
+    expect(useUiStore.getState().readAloud).toBe(false);
+
+    // The greeting only plays on the user's first interaction (autoplay policy).
+    await userEvent.click(document.body);
+
+    expect(fetch).not.toHaveBeenCalledWith("/api/tts/speak", expect.anything());
+  });
+
   it("navigates to /config and /mcp from the header icons", async () => {
     renderPage([makeTemplate()]);
     await screen.findByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Go to configuration" }));
     expect(navigateMock).toHaveBeenCalledWith("/config");
 
-    await userEvent.click(screen.getByRole("button", { name: "View MCP server topology" }));
+    await userEvent.click(await screen.findByRole("button", { name: "View MCP server topology" }));
     expect(navigateMock).toHaveBeenCalledWith("/mcp");
+  });
+
+  it("hides the Code toggle and MCP topology icon when local features are disabled (production)", async () => {
+    renderPage([makeTemplate()], { mcpMounted: false });
+    await screen.findByTestId("waveform");
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument()
+    );
+    expect(screen.queryByRole("button", { name: "View MCP server topology" })).not.toBeInTheDocument();
   });
 
   it("starting and stopping the mic starts a conversation and streams an audio turn", async () => {

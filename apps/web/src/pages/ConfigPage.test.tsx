@@ -41,11 +41,17 @@ const AGENT_CONFIG: AgentConfig = {
 };
 const AGENT_MODELS: AgentModel[] = [{ id: "claude-sonnet-5", label: "Sonnet 5", description: "Balanced" }];
 
-function mockGet(templates: SmeTemplate[]) {
+function mockGet(templates: SmeTemplate[], { mcpMounted = true }: { mcpMounted?: boolean } = {}) {
   vi.mocked(api.get).mockImplementation((path: string) => {
     if (path === "/sme") return Promise.resolve(templates);
     if (path === "/agent/config") return Promise.resolve(AGENT_CONFIG);
     if (path === "/agent/models") return Promise.resolve(AGENT_MODELS);
+    if (path === "/mcp-status") {
+      return Promise.resolve({
+        mounted: mcpMounted, mount_path: "/mcp", resources: [], tools: [],
+        sme_template_count: templates.length, conversations_touched_count: 0,
+      });
+    }
     return Promise.reject(new Error(`unexpected path ${path}`));
   });
 }
@@ -194,5 +200,13 @@ describe("ConfigPage", () => {
     await waitFor(() => screen.getByRole("tab", { name: "Code Agent" }));
     await userEvent.click(screen.getByRole("tab", { name: "Code Agent" }));
     await waitFor(() => expect(screen.getByText("Model")).toBeInTheDocument());
+  });
+
+  it("hides the Code Agent tab and MCP icon when local features are disabled (production)", async () => {
+    mockGet([makeTemplate()], { mcpMounted: false });
+    renderPage();
+    await waitFor(() => screen.getByText("Templates (1)"));
+    expect(screen.queryByRole("tab", { name: "Code Agent" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("View MCP server topology")).not.toBeInTheDocument();
   });
 });
