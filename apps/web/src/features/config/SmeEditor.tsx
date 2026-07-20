@@ -40,6 +40,9 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
   useEffect(() => {
     setDraft(template);
     setTab(0);
+    // Intentionally reset only when the selected template changes, not on
+    // every `template` prop update — that would wipe in-progress edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template.id]);
 
   const set = <K extends keyof SmeTemplate>(key: K, value: SmeTemplate[K]) =>

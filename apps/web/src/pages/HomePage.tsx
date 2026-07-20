@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HistoryIcon from "@mui/icons-material/History";
+import HubIcon from "@mui/icons-material/Hub";
 import SettingsIcon from "@mui/icons-material/Settings";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
@@ -512,6 +513,11 @@ export function HomePage() {
           <Tooltip title="Configure SMEs">
             <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
               <SettingsIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="MCP server topology">
+            <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+              <HubIcon />
             </IconButton>
           </Tooltip>
         </AppHeader>

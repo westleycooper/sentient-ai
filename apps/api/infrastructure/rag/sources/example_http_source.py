@@ -5,7 +5,9 @@ error handling, provenance. Implements RetrievalSourcePort. Treat responses as
 untrusted (security.md). A contract test must validate this adapter.
 """
 from __future__ import annotations
+
 import os
+
 import httpx
 
 from application.ports.retrieval_port import RetrievalSourcePort, RetrievedChunk

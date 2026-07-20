@@ -190,7 +190,6 @@ export function AgentPage() {
       document.removeEventListener("click", speak);
       document.removeEventListener("keydown", speak);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ------------------------------------------------------------------

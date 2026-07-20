@@ -1,11 +1,11 @@
 """Domain layer tests — Conversation aggregate invariants. ≥90% coverage required."""
 import pytest
+
 from domain.conversation import (
     Conversation,
     DomainError,
     MessageRole,
     TurnCompletedEvent,
-    ConversationStartedEvent,
 )
 
 

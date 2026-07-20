@@ -28,6 +28,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import HubIcon from "@mui/icons-material/Hub";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 
@@ -118,6 +119,11 @@ export function ConfigPage() {
           <Typography variant="h6" sx={{ flex: 1 }}>
             Configure
           </Typography>
+          <Tooltip title="MCP server topology">
+            <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+              <HubIcon />
+            </IconButton>
+          </Tooltip>
         </Toolbar>
         <Tabs value={tab} onChange={(_, v: number) => setTab(v)} sx={{ px: 2 }}>
           <Tab label="Voice SMEs" id="tab-sme" aria-controls="panel-sme" />

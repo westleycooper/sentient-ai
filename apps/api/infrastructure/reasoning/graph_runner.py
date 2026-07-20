@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from sentinel_domain.sme import SmeTemplate
 
 from application.ports.llm_port import LLMPort
 from infrastructure.reasoning.graph import build_graph
 from infrastructure.reasoning.state import ConversationState
-from sentinel_domain.sme import SmeTemplate
 
 logger = logging.getLogger(__name__)
 
