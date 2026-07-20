@@ -1,6 +1,6 @@
 """Tests for SaveSmeTemplateUseCase and DeleteSmeTemplateUseCase."""
 import pytest
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentinel_domain.sme import LessonConfig, LessonQuestion, ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
 from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
@@ -46,6 +46,27 @@ async def test_save_updates_existing():
     stored = await repo.get_template("my-sme")
     assert stored is not None
     assert stored.name == "Updated"
+
+
+@pytest.mark.asyncio
+async def test_save_persists_lesson_config():
+    repo = FakeSmeRepo()
+    uc = SaveSmeTemplateUseCase(repo)
+    t = SmeTemplate(
+        id="my-sme", name="My SME", soul="Soul",
+        steps=[ReasoningStep(id="r", name="R", kind=StepKind.REASON)],
+        lesson=LessonConfig(
+            enabled=True,
+            visual_verify=False,
+            questions=[LessonQuestion(id="q1", title="Whale", question="Spell: whale", answer="whale")],
+        ),
+    )
+    await uc.execute(t)
+    stored = await repo.get_template("my-sme")
+    assert stored is not None
+    assert stored.lesson.enabled is True
+    assert stored.lesson.visual_verify is False
+    assert stored.lesson.questions[0].answer == "whale"
 
 
 @pytest.mark.asyncio

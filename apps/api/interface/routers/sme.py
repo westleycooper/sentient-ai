@@ -2,7 +2,13 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
+from sentinel_domain.sme import (
+    LessonConfig,
+    ReasoningStep,
+    RetrievalSourceConfig,
+    SmeRule,
+    SmeTemplate,
+)
 
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
@@ -46,6 +52,7 @@ async def save_sme_template(
         is_default=body.is_default,
         visualisation_kind=body.visualisation_kind,
         theme_id=body.theme_id,
+        lesson=LessonConfig(**body.lesson) if body.lesson else LessonConfig(),
     )
     saved = await uc.execute(template)
     return SmeTemplateResponse.from_domain(saved)

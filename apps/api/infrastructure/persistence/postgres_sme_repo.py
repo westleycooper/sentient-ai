@@ -1,7 +1,13 @@
 """Postgres adapter for SmeRepositoryPort."""
 from __future__ import annotations
 
-from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
+from sentinel_domain.sme import (
+    LessonConfig,
+    ReasoningStep,
+    RetrievalSourceConfig,
+    SmeRule,
+    SmeTemplate,
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +39,7 @@ class PostgresSmeRepository:
         row.is_default = template.is_default
         row.visualisation_kind = template.visualisation_kind
         row.theme_id = template.theme_id
+        row.lesson = template.lesson.model_dump()
         await self._session.commit()
 
     async def delete_template(self, template_id: str) -> None:
@@ -53,4 +60,5 @@ class PostgresSmeRepository:
             is_default=row.is_default,
             visualisation_kind=row.visualisation_kind or "wave",
             theme_id=row.theme_id or "dark-teal",
+            lesson=LessonConfig(**(row.lesson or {})),
         )

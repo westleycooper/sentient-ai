@@ -29,6 +29,7 @@ def _row(t) -> dict:
         "sources": json.dumps([s.model_dump() for s in t.sources]),
         "rules": json.dumps([r.model_dump() for r in t.rules]),
         "is_default": t.is_default,
+        "lesson": json.dumps(t.lesson.model_dump()),
     }
 
 
@@ -43,15 +44,16 @@ def main() -> None:
                 row = _row(t)
                 cur.execute(
                     """
-                    INSERT INTO sme_templates (id, name, soul, steps, sources, rules, is_default)
-                    VALUES (%(id)s, %(name)s, %(soul)s, %(steps)s::jsonb, %(sources)s::jsonb, %(rules)s::jsonb, %(is_default)s)
+                    INSERT INTO sme_templates (id, name, soul, steps, sources, rules, is_default, lesson)
+                    VALUES (%(id)s, %(name)s, %(soul)s, %(steps)s::jsonb, %(sources)s::jsonb, %(rules)s::jsonb, %(is_default)s, %(lesson)s::jsonb)
                     ON CONFLICT (id) DO UPDATE SET
                         name       = EXCLUDED.name,
                         soul       = EXCLUDED.soul,
                         steps      = EXCLUDED.steps,
                         sources    = EXCLUDED.sources,
                         rules      = EXCLUDED.rules,
-                        is_default = EXCLUDED.is_default
+                        is_default = EXCLUDED.is_default,
+                        lesson     = EXCLUDED.lesson
                     """,
                     row,
                 )

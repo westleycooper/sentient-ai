@@ -19,6 +19,7 @@ class SmeTemplateResponse(BaseModel):
     is_default: bool
     visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
+    lesson: dict = Field(default_factory=dict)
 
     @classmethod
     def from_domain(cls, t: SmeTemplate) -> SmeTemplateResponse:
@@ -32,6 +33,7 @@ class SmeTemplateResponse(BaseModel):
             is_default=t.is_default,
             visualisation_kind=t.visualisation_kind,
             theme_id=t.theme_id,
+            lesson=t.lesson.model_dump(),
         )
 
 
@@ -45,6 +47,7 @@ class SaveSmeTemplateRequest(BaseModel):
     is_default: bool = False
     visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
+    lesson: dict = Field(default_factory=dict)
 
 
 # --- Conversations ---
