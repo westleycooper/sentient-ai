@@ -1,12 +1,11 @@
 """Tests for the sentinel_domain SME models."""
 from sentinel_domain.sme import (
     DEFAULT_TEMPLATES,
-    StepKind,
-    SmeTemplate,
     ReasoningStep,
+    SmeTemplate,
+    StepKind,
     ftse100_default,
     mental_health_default,
-    recruitment_default,
 )
 
 

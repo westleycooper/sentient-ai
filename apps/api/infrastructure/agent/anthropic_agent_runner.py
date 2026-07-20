@@ -15,16 +15,16 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
-from typing import AsyncIterator
-
-import anthropic
+from collections.abc import AsyncIterator
 from pathlib import Path
 
+import anthropic
+
 from application.ports.agent_runner_port import (
-    AgentRunnerPort,
     AgentCompleteEvent,
     AgentErrorEvent,
     AgentEvent,
+    AgentRunnerPort,
     TextDeltaEvent,
     ToolPermissionEvent,
     ToolResultEvent,

@@ -1,12 +1,10 @@
 """Postgres adapter for SmeRepositoryPort."""
 from __future__ import annotations
 
-import json
-
+from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
 from infrastructure.persistence.models import SmeTemplateModel
 
 

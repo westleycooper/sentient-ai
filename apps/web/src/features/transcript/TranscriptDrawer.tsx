@@ -278,8 +278,8 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
           disabled={isStreaming}
-          aria-label="Type a message"
           slotProps={{
+            htmlInput: { "aria-label": "Type a message" },
             input: {
               endAdornment: (
                 <InputAdornment position="end">

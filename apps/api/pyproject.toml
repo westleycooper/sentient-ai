@@ -26,6 +26,7 @@ dependencies = [
   "deepgram-sdk>=7.3.1",
   "elevenlabs>=2.53.0",
   "openai>=2.42.0",
+  "mcp[cli]>=1.28,<2",
 ]
 
 [tool.uv.sources]
@@ -39,6 +40,15 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# main.py must call load_dotenv() before importing modules that read env vars
+# at import time (STT/TTS key validation, MCP mount gating) — imports can't
+# move above that call, so E402 here is intentional, not debt.
+"main.py" = ["E402"]
+# Same load-env-before-import pattern as main.py.
+"alembic/env.py" = ["E402"]
+"scripts/seed_defaults.py" = ["E402"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

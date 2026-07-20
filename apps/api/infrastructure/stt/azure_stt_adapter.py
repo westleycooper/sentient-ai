@@ -10,8 +10,10 @@ class AzureSttAdapter:
         self._region = os.environ.get("AZURE_SPEECH_REGION", "uksouth")
 
     async def transcribe(self, *, audio_bytes: bytes, mime_type: str = "audio/webm") -> str:
+        import asyncio
+        import tempfile
+
         import azure.cognitiveservices.speech as speechsdk
-        import tempfile, asyncio
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
             f.write(audio_bytes)

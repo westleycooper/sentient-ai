@@ -6,13 +6,12 @@ router can stream them to the frontend without buffering.
 from __future__ import annotations
 
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from sentinel_domain.sme import SmeTemplate
 
 from application.ports.conversation_repository import ConversationRepositoryPort
 from application.ports.sme_repository import SmeRepositoryPort
-from domain.conversation import Conversation
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class ProcessTurnUseCase:
         *,
         conversation_repo: ConversationRepositoryPort,
         sme_repo: SmeRepositoryPort,
-        graph_runner: "GraphRunnerPort",
+        graph_runner: GraphRunnerPort,
     ) -> None:
         self._conv_repo = conversation_repo
         self._sme_repo = sme_repo

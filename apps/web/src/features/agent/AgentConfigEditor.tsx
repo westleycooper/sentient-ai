@@ -98,7 +98,13 @@ export function AgentConfigEditor() {
   };
 
   const handleSave = async () => {
-    await updateMutation.mutateAsync(draft);
+    // Error state is already surfaced via updateMutation.isError/error below —
+    // catch here only to stop the rejection from mutateAsync() going unhandled.
+    try {
+      await updateMutation.mutateAsync(draft);
+    } catch {
+      /* handled via updateMutation.isError */
+    }
   };
 
   return (

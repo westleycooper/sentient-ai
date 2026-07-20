@@ -1,7 +1,8 @@
 """Tests for GetSmeTemplatesUseCase."""
 import pytest
+from sentinel_domain.sme import DEFAULT_TEMPLATES, ReasoningStep, SmeTemplate, StepKind
+
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
-from sentinel_domain.sme import DEFAULT_TEMPLATES, SmeTemplate, StepKind, ReasoningStep
 
 
 class FakeSmeRepo:

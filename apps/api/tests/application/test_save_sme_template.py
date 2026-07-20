@@ -1,8 +1,9 @@
 """Tests for SaveSmeTemplateUseCase and DeleteSmeTemplateUseCase."""
 import pytest
-from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
+from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
-from sentinel_domain.sme import SmeTemplate, ReasoningStep, StepKind
+from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
 
 
 class FakeSmeRepo:
