@@ -35,6 +35,11 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],
+    // Default (5000ms) is too tight for AgentPage/HomePage-style tests that
+    // chain several real Promise microtasks (fetch, decodeAudioData) once the
+    // full suite runs under real parallel load — they pass reliably in
+    // isolation but occasionally miss 5s under contention from ~20 files.
+    testTimeout: 15000,
     // Force @mui/material's .mjs files through Vite's own transform/resolve
     // pipeline (where the react-transition-group alias above applies)
     // instead of Node's native ESM loader, which fails on MUI's extensionless
