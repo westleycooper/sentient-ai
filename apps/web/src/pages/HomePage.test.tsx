@@ -102,7 +102,7 @@ describe("HomePage", () => {
 
   it("greets the user with the active (default) SME's name once templates load", async () => {
     renderPage([makeTemplate({ name: "FTSE 100 Analyst" })]);
-    expect(await screen.findByText(/Hello, I'm Sentinel, your FTSE 100 Analyst/)).toBeInTheDocument();
+    expect(await screen.findByText(/Hello, I'm your FTSE 100 Analyst/)).toBeInTheDocument();
   });
 
   it("shows the SME selector only when templates exist, and switching SME re-greets", async () => {
