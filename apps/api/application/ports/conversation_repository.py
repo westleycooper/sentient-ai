@@ -1,5 +1,6 @@
 """ConversationRepositoryPort — one repository for the Conversation aggregate."""
 from __future__ import annotations
+
 from typing import Protocol
 
 from domain.conversation import Conversation

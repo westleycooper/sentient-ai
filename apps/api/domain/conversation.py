@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
@@ -25,7 +25,7 @@ class MessageRole(StrEnum):
 
 @dataclass
 class DomainEvent:
-    occurred_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -64,7 +64,7 @@ class Conversation:
     ) -> None:
         self.id: str = id or str(uuid.uuid4())
         self.sme_id = sme_id
-        self.created_at: datetime = created_at or datetime.now(timezone.utc)
+        self.created_at: datetime = created_at or datetime.now(UTC)
         self._messages: list[Message] = []
         self._events: list[DomainEvent] = []
 
@@ -76,7 +76,7 @@ class Conversation:
             id=str(uuid.uuid4()),
             role=MessageRole.USER,
             content=text,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         self._messages.append(msg)
         return msg
@@ -89,7 +89,7 @@ class Conversation:
             id=str(uuid.uuid4()),
             role=MessageRole.ASSISTANT,
             content=text,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             token_count=token_count,
             citations=citations or [],
         )
