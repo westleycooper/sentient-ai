@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 
 class AzureTtsAdapter:
@@ -13,8 +13,9 @@ class AzureTtsAdapter:
         self._voice = os.environ.get("TTS_AZURE_VOICE", "en-GB-SoniaNeural")
 
     async def synthesise(self, *, text: str, voice: str | None = None) -> AsyncIterator[bytes]:
-        import azure.cognitiveservices.speech as speechsdk
         import io
+
+        import azure.cognitiveservices.speech as speechsdk
 
         cfg = speechsdk.SpeechConfig(subscription=self._key, region=self._region)
         cfg.speech_synthesis_voice_name = voice or self._voice

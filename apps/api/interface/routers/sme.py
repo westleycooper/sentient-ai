@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
 
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
 from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
 from interface.dependencies import get_delete_sme_uc, get_get_sme_uc, get_save_sme_uc
 from interface.dto import SaveSmeTemplateRequest, SmeTemplateResponse
-from sentinel_domain.sme import ReasoningStep, RetrievalSourceConfig, SmeRule, SmeTemplate
 
 router = APIRouter(prefix="/sme", tags=["sme"])
 

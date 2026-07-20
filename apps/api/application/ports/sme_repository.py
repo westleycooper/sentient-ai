@@ -1,5 +1,6 @@
 """SmeRepositoryPort — persists and retrieves SmeTemplate config."""
 from __future__ import annotations
+
 from typing import Protocol
 
 from sentinel_domain.sme import SmeTemplate

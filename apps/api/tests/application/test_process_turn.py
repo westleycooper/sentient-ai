@@ -1,11 +1,11 @@
 """Tests for ProcessTurnUseCase. Uses fakes for all ports."""
+from collections.abc import AsyncIterator
+
 import pytest
-from typing import AsyncIterator
+from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.process_turn import ProcessTurnUseCase
 from domain.conversation import Conversation
-from sentinel_domain.sme import SmeTemplate, ReasoningStep, StepKind
-
 
 _SME = SmeTemplate(
     id="test-sme",

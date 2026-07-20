@@ -5,9 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 from sentinel_domain.sme import SmeTemplate
-
 
 # --- SME ---
 
@@ -23,7 +21,7 @@ class SmeTemplateResponse(BaseModel):
     theme_id: str = "dark-teal"
 
     @classmethod
-    def from_domain(cls, t: SmeTemplate) -> "SmeTemplateResponse":
+    def from_domain(cls, t: SmeTemplate) -> SmeTemplateResponse:
         return cls(
             id=t.id,
             name=t.name,
@@ -114,3 +112,27 @@ class TurnErrorEventResponse(BaseModel):
 
 class TranscribeResponse(BaseModel):
     transcript: str
+
+
+# --- MCP status (ADR-0004) ---
+
+class McpResourceInfo(BaseModel):
+    uri_template: str
+    name: str
+    description: str
+    wraps: str  # underlying application-layer use case / port this resource reads from
+
+
+class McpToolInfo(BaseModel):
+    name: str
+    description: str
+    wraps: str
+
+
+class McpStatusResponse(BaseModel):
+    mounted: bool
+    mount_path: str = "/mcp"
+    resources: list[McpResourceInfo]
+    tools: list[McpToolInfo]
+    sme_template_count: int
+    conversations_touched_count: int
