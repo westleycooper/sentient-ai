@@ -58,9 +58,15 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
 
 const INITIAL_UI_STATE = useUiStore.getState();
 
-function renderPage(templates: SmeTemplate[]) {
+function renderPage(templates: SmeTemplate[], { mcpMounted = true }: { mcpMounted?: boolean } = {}) {
   vi.mocked(api.get).mockImplementation((path: string) => {
     if (path === "/sme") return Promise.resolve(templates);
+    if (path === "/mcp-status") {
+      return Promise.resolve({
+        mounted: mcpMounted, mount_path: "/mcp", resources: [], tools: [],
+        sme_template_count: templates.length, conversations_touched_count: 0,
+      });
+    }
     return Promise.reject(new Error(`unexpected GET ${path}`));
   });
 
@@ -133,8 +139,17 @@ describe("HomePage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Go to configuration" }));
     expect(navigateMock).toHaveBeenCalledWith("/config");
 
-    await userEvent.click(screen.getByRole("button", { name: "View MCP server topology" }));
+    await userEvent.click(await screen.findByRole("button", { name: "View MCP server topology" }));
     expect(navigateMock).toHaveBeenCalledWith("/mcp");
+  });
+
+  it("hides the Code toggle and MCP topology icon when local features are disabled (production)", async () => {
+    renderPage([makeTemplate()], { mcpMounted: false });
+    await screen.findByTestId("waveform");
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument()
+    );
+    expect(screen.queryByRole("button", { name: "View MCP server topology" })).not.toBeInTheDocument();
   });
 
   it("starting and stopping the mic starts a conversation and streams an audio turn", async () => {

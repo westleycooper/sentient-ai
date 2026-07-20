@@ -35,7 +35,7 @@ import { TranscriptDrawer } from "../features/transcript/TranscriptDrawer";
 import { PermissionCard } from "../features/agent/PermissionCard";
 import { useAgentSession, type AgentMessage } from "../features/agent/useAgentSession";
 import { useUiStore } from "../store/uiStore";
-import { useAgentConfig, useAgentModels, type Message } from "../api/hooks";
+import { useAgentConfig, useAgentModels, useMcpStatus, type Message } from "../api/hooks";
 import type { WaveformKind } from "../features/waveform/Waveform";
 
 const WAVE_LABELS: Record<WaveformKind, string> = {
@@ -82,6 +82,10 @@ export function AgentPage() {
 
   const { data: agentConfig } = useAgentConfig();
   const { data: agentModels = [] } = useAgentModels();
+  // Coding agent (ADR-0003) and MCP server (ADR-0004) share the ENV != production
+  // gate in main.py — reuse this one signal to hide both nav entry points in prod.
+  const { data: mcpStatus } = useMcpStatus();
+  const localFeaturesEnabled = mcpStatus?.mounted ?? false;
   const activeTokens = THEMES[agentConfig?.theme_id ?? DEFAULT_THEME_ID] ?? THEMES[DEFAULT_THEME_ID];
   const waveColor = activeTokens.mode === "light" ? activeTokens.primaryDark : activeTokens.primary;
   const wavePeakColor = activeTokens.mode === "light" ? activeTokens.primary : activeTokens.primaryLight;
@@ -400,7 +404,7 @@ export function AgentPage() {
         }}
       >
         {/* Top bar */}
-        <AppHeader mode="code" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer}>
+        <AppHeader mode="code" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} showCodeToggle={localFeaturesEnabled}>
           <Chip
             label={connected ? "connected" : "connecting…"}
             color={connected ? "success" : "default"}

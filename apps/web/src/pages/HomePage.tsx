@@ -44,6 +44,7 @@ import {
   useSmeTemplates,
   useStartConversation,
   useConversation,
+  useMcpStatus,
   type StepEvent,
   type Message,
 } from "../api/hooks";
@@ -94,6 +95,10 @@ export function HomePage() {
 
   const { data: templates = [] } = useSmeTemplates();
   const { data: conversation } = useConversation(conversationId);
+  // Coding agent (ADR-0003) and MCP server (ADR-0004) share the ENV != production
+  // gate in main.py — reuse this one signal to hide both nav entry points in prod.
+  const { data: mcpStatus } = useMcpStatus();
+  const localFeaturesEnabled = mcpStatus?.mounted ?? false;
   const startConvMutation = useStartConversation();
 
   const activeSmeId = selectedSmeId ?? defaultSmeId ?? templates[0]?.id ?? "";
@@ -484,7 +489,7 @@ export function HomePage() {
         }}
       >
         {/* Top bar */}
-        <AppHeader mode="voice" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer}>
+        <AppHeader mode="voice" drawerOpen={drawerOpen} onToggleDrawer={toggleDrawer} showCodeToggle={localFeaturesEnabled}>
           {templates.length > 0 && (
             <Select
               size="small"
@@ -515,11 +520,13 @@ export function HomePage() {
               <SettingsIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="MCP server topology">
-            <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
-              <HubIcon />
-            </IconButton>
-          </Tooltip>
+          {localFeaturesEnabled && (
+            <Tooltip title="MCP server topology">
+              <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
+                <HubIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </AppHeader>
 
         {/* Waveform */}
