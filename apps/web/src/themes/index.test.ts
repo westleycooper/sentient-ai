@@ -45,4 +45,10 @@ describe("createSentinelTheme", () => {
     expect(theme.palette.success.main).toBe(THEMES["dark-teal"].primary);
     expect(theme.palette.info.main).toBe(THEMES["dark-teal"].primary);
   });
+
+  it("bumps the root font size so all rem-based text scales up", () => {
+    const theme = createSentinelTheme(THEMES["dark-teal"]);
+    const html = (theme.components?.MuiCssBaseline?.styleOverrides as { html?: { fontSize?: string } })?.html;
+    expect(html?.fontSize).toBe("18px");
+  });
 });

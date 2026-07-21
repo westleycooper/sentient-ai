@@ -60,6 +60,12 @@ export function createSentinelTheme(t: SentinelThemeTokens): Theme {
     },
     shape: { borderRadius: 6 },
     components: {
+      // Bumps the root font size 16px -> 18px, which scales every rem-based
+      // size in the app (MUI's own typography variants and our own literal
+      // rem values in sx) proportionally rather than just body text.
+      MuiCssBaseline: {
+        styleOverrides: { html: { fontSize: "18px" } },
+      },
       MuiButton: {
         styleOverrides: { root: { textTransform: "none", fontWeight: 600 } },
       },
