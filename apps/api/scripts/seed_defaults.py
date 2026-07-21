@@ -30,6 +30,8 @@ def _row(t) -> dict:
         "rules": json.dumps([r.model_dump() for r in t.rules]),
         "is_default": t.is_default,
         "lesson": json.dumps(t.lesson.model_dump()),
+        "visualisation_kind": t.visualisation_kind,
+        "theme_id": t.theme_id,
     }
 
 
@@ -44,16 +46,21 @@ def main() -> None:
                 row = _row(t)
                 cur.execute(
                     """
-                    INSERT INTO sme_templates (id, name, soul, steps, sources, rules, is_default, lesson)
-                    VALUES (%(id)s, %(name)s, %(soul)s, %(steps)s::jsonb, %(sources)s::jsonb, %(rules)s::jsonb, %(is_default)s, %(lesson)s::jsonb)
+                    INSERT INTO sme_templates
+                        (id, name, soul, steps, sources, rules, is_default, lesson, visualisation_kind, theme_id)
+                    VALUES
+                        (%(id)s, %(name)s, %(soul)s, %(steps)s::jsonb, %(sources)s::jsonb, %(rules)s::jsonb,
+                         %(is_default)s, %(lesson)s::jsonb, %(visualisation_kind)s, %(theme_id)s)
                     ON CONFLICT (id) DO UPDATE SET
-                        name       = EXCLUDED.name,
-                        soul       = EXCLUDED.soul,
-                        steps      = EXCLUDED.steps,
-                        sources    = EXCLUDED.sources,
-                        rules      = EXCLUDED.rules,
-                        is_default = EXCLUDED.is_default,
-                        lesson     = EXCLUDED.lesson
+                        name               = EXCLUDED.name,
+                        soul               = EXCLUDED.soul,
+                        steps              = EXCLUDED.steps,
+                        sources            = EXCLUDED.sources,
+                        rules              = EXCLUDED.rules,
+                        is_default         = EXCLUDED.is_default,
+                        lesson             = EXCLUDED.lesson,
+                        visualisation_kind = EXCLUDED.visualisation_kind,
+                        theme_id           = EXCLUDED.theme_id
                     """,
                     row,
                 )
