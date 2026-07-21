@@ -398,6 +398,11 @@ function MessageBubble({ message, onPlay }: { message: Message; onPlay?: () => v
         sx={{
           flex: 1,
           bgcolor: isUser ? "primary.dark" : "background.default",
+          // primary.dark is always a saturated, fairly dark accent in both
+          // themes — white text reads reliably against it. (MUI's automatic
+          // primary.contrastText is derived from primary.main, not .dark, so
+          // it doesn't apply cleanly here.)
+          color: isUser ? "#fff" : "text.primary",
           borderRadius: 2,
           p: 1.5,
           minWidth: 0,
