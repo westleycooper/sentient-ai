@@ -66,7 +66,6 @@ def _make_reason_node(step: ReasoningStep, llm: LLMPort):
         )
         soul = state.get("soul", "")
         system = (f"{soul}\n\n" if soul else "") + (
-            "You are called Sentinel. If asked who or what you are, say you are Sentinel. "
             "Give short, direct answers — 1-3 sentences maximum unless the question genuinely requires more. "
             "No preamble, no sign-off, no filler phrases like 'Certainly!' or 'Great question!'. "
             "Plain prose only — no markdown, no bullet points, no headers — the response will be read aloud. "
