@@ -23,11 +23,11 @@ a slide-out chat transcript.
     <td width="50%"><img src="docs/screenshots/mcp-server.png" alt="MCP server explorer" /></td>
   </tr>
   <tr>
-    <td width="33%"><img src="docs/screenshots/sme-config-steps.png" alt="SME config — reasoning steps" /></td>
-    <td width="33%"><img src="docs/screenshots/sme-config-rules.png" alt="SME config — rules" /></td>
-    <td width="33%"><img src="docs/screenshots/sme-config-rag.png" alt="SME config — RAG sources" /></td>
+    <td width="50%"><img src="docs/screenshots/sme-config-steps.png" alt="SME config — reasoning steps" /></td>
+    <td width="50%"><img src="docs/screenshots/sme-config-rules.png" alt="SME config — rules" /></td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/sme-config-rag.png" alt="SME config — RAG sources" /></td>
     <td width="50%"><img src="docs/screenshots/sme-ui-blocks.png" alt="English Blocks Tutor SME — voice UI" /></td>
   </tr>
 </table>
