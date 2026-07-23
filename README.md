@@ -6,6 +6,32 @@ subject-matter expertise (SME) are user-configurable from one page; domain drive
 generated frontend types + hooks. Minimal UI: Three.js waveform + mic button, with
 a slide-out chat transcript.
 
+- **DDD-modelled personas.** Each SME (FTSE 100 Analyst, Mental Health Support,
+  Recruitment Agent, ...) is a bounded context with its own reasoning steps,
+  rules, and RAG sources — no shared entities, translated at the boundary.
+  `packages/domain` is the source of truth: it drives the generated OpenAPI
+  contract and the frontend's TypeScript types + TanStack Query hooks.
+- **Self-hosted MCP server.** Sentinel also exposes its SME templates and live
+  conversation state as an MCP (Model Context Protocol) server, so external
+  clients like Claude Desktop can query into the platform directly, not just
+  through its own UI. See the in-product `/mcp` explorer and
+  `docs/adr/0004-mcp-server.md`.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/sme-ui-ftse.png" alt="FTSE 100 Analyst SME — voice UI" /></td>
+    <td width="50%"><img src="docs/screenshots/mcp-server.png" alt="MCP server explorer" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/sme-config-steps.png" alt="SME config — reasoning steps" /></td>
+    <td width="50%"><img src="docs/screenshots/sme-config-rules.png" alt="SME config — rules" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/sme-config-rag.png" alt="SME config — RAG sources" /></td>
+    <td width="50%"><img src="docs/screenshots/sme-ui-blocks.png" alt="English Blocks Tutor SME — voice UI" /></td>
+  </tr>
+</table>
+
 ---
 
 ## Quick start (already set up)
