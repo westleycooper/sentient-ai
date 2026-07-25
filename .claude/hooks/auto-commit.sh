@@ -47,7 +47,7 @@ if git diff --cached --quiet; then
 fi
 
 N_FILES="$(git diff --cached --name-only | wc -l | tr -d ' ')"
-SUMMARY="$(git diff --cached --name-only | head -3 | xargs -n1 basename 2>/dev/null | paste -sd ', ' -)"
+SUMMARY="$(git diff --cached --name-only | head -3 | xargs -n1 basename 2>/dev/null | paste -sd, - | sed 's/,/, /g')"
 [ "$N_FILES" -gt 3 ] && SUMMARY="$SUMMARY, +$((N_FILES - 3)) more"
 
 # Commit through the real gate (.githooks/pre-commit). Capture output so a

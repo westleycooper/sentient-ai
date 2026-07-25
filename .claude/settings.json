@@ -1,6 +1,18 @@
 {
-  "autoCommit": true,
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/auto-commit.sh",
+            "timeout": 600,
+            "async": true,
+            "statusMessage": "Auto-committing (runs the full commit gate)…"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
