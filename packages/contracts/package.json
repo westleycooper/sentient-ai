@@ -1,7 +1,7 @@
 {
   "name": "@sentient/contracts",
   "version": "0.1.0",
-  "description": "Generated types and TanStack Query hooks from the Sentient OpenAPI schema.",
+  "description": "Generated types and TanStack Query hooks from the Sentient AI OpenAPI schema.",
   "main": "src/index.ts",
   "scripts": {
     "generate": "openapi-typescript openapi.json --output src/generated/types.ts"

@@ -19,7 +19,7 @@ describe("AppHeader", () => {
         <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={onToggleDrawer} />
       </MemoryRouter>
     );
-    expect(screen.getByText("Sentient")).toBeInTheDocument();
+    expect(screen.getByText("Sentient AI")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Toggle transcript drawer" }));
     expect(onToggleDrawer).toHaveBeenCalledOnce();
   });
@@ -72,13 +72,13 @@ describe("AppHeader", () => {
     expect(screen.getByRole("button", { name: /voice agent/i })).toBeInTheDocument();
   });
 
-  it("replaces the Sentient title with titleContent when provided", () => {
+  it("replaces the Sentient AI title with titleContent when provided", () => {
     render(
       <MemoryRouter>
         <AppHeader mode="voice" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={<span>SME picker</span>} />
       </MemoryRouter>
     );
-    expect(screen.queryByText("Sentient")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sentient AI")).not.toBeInTheDocument();
     expect(screen.getByText("SME picker")).toBeInTheDocument();
   });
 
@@ -88,7 +88,7 @@ describe("AppHeader", () => {
         <AppHeader mode="code" drawerOpen={true} onToggleDrawer={vi.fn()} titleContent={null} />
       </MemoryRouter>
     );
-    expect(screen.queryByText("Sentient")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sentient AI")).not.toBeInTheDocument();
   });
 
   it("renders leftContent between the mode toggle and the spacer/children", () => {

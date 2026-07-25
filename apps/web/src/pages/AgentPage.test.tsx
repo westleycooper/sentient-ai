@@ -145,9 +145,9 @@ describe("AgentPage", () => {
     await waitFor(() => expect(screen.getByText("connected")).toBeInTheDocument());
   });
 
-  it("does not show the Sentient wordmark in the header", async () => {
+  it("does not show the Sentient AI wordmark in the header", async () => {
     await renderPage();
-    expect(screen.queryByText("Sentient")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sentient AI")).not.toBeInTheDocument();
   });
 
   it("hides the Code toggle when local features are disabled (production)", async () => {

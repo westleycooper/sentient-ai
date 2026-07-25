@@ -1,5 +1,5 @@
 /**
- * ShowcasePage — the public pitch for Sentient at /showcase.
+ * ShowcasePage — the public pitch for Sentient AI at /showcase.
  *
  * A marketing/overview page rendered inside the app itself (same router, same
  * theme registry) so the showcase always reflects the product as-built:
@@ -33,9 +33,15 @@ import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import InsightsIcon from "@mui/icons-material/Insights";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import RuleOutlinedIcon from "@mui/icons-material/RuleOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import TuneIcon from "@mui/icons-material/Tune";
 
 import { SentientThemeProvider } from "../themes/SentientThemeProvider";
@@ -89,6 +95,53 @@ const FEATURES = [
     title: "Costs you can see",
     body:
       "Token usage and estimated cost are first-class: recorded per step, per conversation, and per expert — logged, traced, and surfaced right in the UI.",
+  },
+];
+
+/** Enterprise configuration powers — all wired from the UI, zero code. */
+const POWER_CARDS = [
+  {
+    icon: <StorageOutlinedIcon />,
+    title: "Your knowledge, plugged in",
+    body:
+      "Point an expert at any HTTP/JSON API or upload a document set — retrieval sources are configured per expert from the UI. Ingest, chunk, embed, hybrid-retrieve, rerank: the whole pipeline comes with it.",
+    chips: ["HTTP APIs", "Document sets", "pgvector", "Hybrid search"],
+  },
+  {
+    icon: <SecurityOutlinedIcon />,
+    title: "Guardrails as workflow steps",
+    body:
+      "Drop a guardrail-check step anywhere in an expert's reasoning workflow. Retrieved content and tool output are treated as untrusted — validated before any action, never allowed to override instructions.",
+    chips: ["Pre-action checks", "Prompt-injection defence", "Auditable"],
+  },
+  {
+    icon: <RuleOutlinedIcon />,
+    title: "Rules your compliance team can read",
+    body:
+      "Behavioural rules are plain-language policies attached to each expert — toggleable, versioned in Postgres, enforced on every turn. \"Never give personalised financial advice\" is a row, not a redeploy.",
+    chips: ["Per-expert", "Toggleable", "No redeploy"],
+  },
+];
+
+/** AI-native capabilities — the platform is built BY AI tooling, FOR AI operations. */
+const AI_NATIVE_CARDS = [
+  {
+    icon: <TerminalIcon />,
+    title: "Claude Code, embedded",
+    body:
+      "A voice-driven Claude Code agent ships inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
+  },
+  {
+    icon: <HubOutlinedIcon />,
+    title: "MCP server built in",
+    body:
+      "Your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
+  },
+  {
+    icon: <SmartToyOutlinedIcon />,
+    title: "AI-native architecture",
+    body:
+      "Born in the agentic era: LangGraph reasoning workflows, model-agnostic LLM ports (Claude 5-ready), token accounting in every trace, and a codebase authored with AI pair-engineering from the first commit.",
   },
 ];
 
@@ -151,7 +204,7 @@ export function ShowcasePage() {
         <Container maxWidth="lg" sx={{ py: 2 }}>
           <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
             <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Sentient
+              Sentient AI
             </Typography>
             <Chip size="small" variant="outlined" color="primary" label="open source" />
             <Box sx={{ flex: 1 }} />
@@ -169,7 +222,7 @@ export function ShowcasePage() {
         <Container maxWidth="lg" sx={{ pt: { xs: 6, md: 10 }, pb: 4, textAlign: "center" }}>
           <Chip
             icon={<AutoAwesomeIcon />}
-            label="Free for personal use — built to be put to work"
+            label="AI-native · open source · free for personal use"
             color="primary"
             variant="outlined"
             sx={{ mb: 3 }}
@@ -177,10 +230,10 @@ export function ShowcasePage() {
           <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: "-0.03em", mb: 2 }}>
             Voice agents with visible minds
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 760, mx: "auto", fontWeight: 400 }}>
-            Sentient is a configurable voice-agent platform: speak, watch a multi-step reasoning
-            workflow think in real time, and hear the answer back. New expertise is configuration —
-            not code.
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 800, mx: "auto", fontWeight: 400 }}>
+            Sentient AI is the AI-native voice-agent platform: speak, watch a multi-step reasoning
+            workflow think in real time, and hear the answer back. Wire in your company's knowledge,
+            guardrails, and rules from one screen — new expertise is configuration, not code.
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mt: 4, justifyContent: "center" }}>
             <Button size="large" variant="contained" startIcon={<RocketLaunchIcon />} onClick={() => navigate("/")}>
@@ -217,6 +270,69 @@ export function ShowcasePage() {
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       {f.body}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        {/* ── Enterprise power: RAG / guardrails / rules ──────────────── */}
+        <Box sx={{ bgcolor: "background.paper", borderTop: 1, borderBottom: 1, borderColor: "divider" }}>
+          <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
+              Point it at your business
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center", maxWidth: 760, mx: "auto" }}>
+              This is where the power is: an expert wired to your data, fenced by your guardrails,
+              governed by your rules — all from one configuration screen, by whoever owns the domain.
+            </Typography>
+            <Grid container spacing={3}>
+              {POWER_CARDS.map((c) => (
+                <Grid key={c.title} size={{ xs: 12, md: 4 }}>
+                  <Card variant="outlined" sx={{ height: "100%" }}>
+                    <CardContent>
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5, color: "primary.main" }}>
+                        {c.icon}
+                        <Typography variant="h6">{c.title}</Typography>
+                      </Stack>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        {c.body}
+                      </Typography>
+                      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                        {c.chips.map((chip) => (
+                          <Chip key={chip} size="small" variant="outlined" color="primary" label={chip} />
+                        ))}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Container>
+        </Box>
+
+        {/* ── AI-native: Claude Code + MCP ────────────────────────────── */}
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
+            AI-native to the core
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center", maxWidth: 760, mx: "auto" }}>
+            Not a chatbot bolted onto old software — a platform built by AI tooling, for the agentic
+            era, that other AI systems can plug straight into.
+          </Typography>
+          <Grid container spacing={3}>
+            {AI_NATIVE_CARDS.map((c) => (
+              <Grid key={c.title} size={{ xs: 12, md: 4 }}>
+                <Card variant="outlined" sx={{ height: "100%" }}>
+                  <CardContent>
+                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5, color: "primary.main" }}>
+                      {c.icon}
+                      <Typography variant="h6">{c.title}</Typography>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                      {c.body}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -325,7 +441,7 @@ export function ShowcasePage() {
                 Free for personal use. Built for business.
               </Typography>
               <Typography color="text.secondary" sx={{ mb: 2 }}>
-                Sentient is open source and free for personal projects, learning, and research —
+                Sentient AI is open source and free for personal projects, learning, and research —
                 forever. And if it can make your business money, even better: that's what it's for.
                 Self-host it on your cloud, white-label the UI with your theme, wire in your own
                 retrieval sources, and keep every token accounted for.
@@ -333,6 +449,7 @@ export function ShowcasePage() {
               <Stack spacing={1} sx={{ mb: 3 }}>
                 {[
                   "Stand up a new domain expert in an afternoon — it's configuration, not a project.",
+                  "Guardrails, rules, and retrieval sources are config — governance changes ship without a release cycle.",
                   "Your data stays on your infrastructure; the core never phones home.",
                   "Per-conversation cost visibility from day one — finance will thank you.",
                   "Swap any provider (LLM, speech, embeddings, storage) behind a port. No lock-in.",
@@ -349,7 +466,7 @@ export function ShowcasePage() {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Personal, educational, and research use is free. Commercial use is welcome and
-                actively encouraged — we'd love to see Sentient put to work. See the repository for
+                actively encouraged — we'd love to see Sentient AI put to work. See the repository for
                 the full licence text.
               </Typography>
               <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
@@ -369,7 +486,7 @@ export function ShowcasePage() {
         <Container maxWidth="lg" sx={{ py: 3 }}>
           <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Sentient — the open-source voice agent platform with a visible mind.
+              Sentient AI — the open-source voice agent platform with a visible mind.
             </Typography>
             <Box sx={{ flex: 1 }} />
             <Link href={GITHUB_URL} target="_blank" rel="noopener noreferrer" color="text.secondary" variant="body2">

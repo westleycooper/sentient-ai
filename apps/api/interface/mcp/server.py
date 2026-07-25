@@ -1,4 +1,4 @@
-"""Sentient's MCP server (ADR-0004) — exposes SME templates and conversation
+"""Sentient AI's MCP server (ADR-0004) — exposes SME templates and conversation
 state to external MCP clients. Local-development only: mounted in main.py
 only when ENV != production, since the conversation resource returns PII
 (transcripts, CLAUDE.md §9) with no auth on the MCP transport in v1.
@@ -22,9 +22,9 @@ from interface.mcp.dependencies import (
 )
 
 mcp = FastMCP(
-    "Sentient",
+    "Sentient AI",
     instructions=(
-        "Exposes Sentient's SME reasoning templates and live conversation "
+        "Exposes Sentient AI's SME reasoning templates and live conversation "
         "transcripts. Conversation resources may contain user-identifying "
         "data (PII) — treat responses accordingly. Local-development only "
         "in v1 (ADR-0004)."
@@ -104,7 +104,7 @@ async def get_conversation(conversation_id: str) -> str:
 
 @mcp.tool()
 async def start_conversation(sme_id: str) -> dict:
-    """Start a new Sentient conversation against the given SME template id."""
+    """Start a new Sentient AI conversation against the given SME template id."""
     async with start_conversation_uc() as uc:
         try:
             conv = await uc.execute(sme_id=sme_id)

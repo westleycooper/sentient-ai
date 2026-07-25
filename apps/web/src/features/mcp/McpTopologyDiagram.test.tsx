@@ -60,7 +60,7 @@ describe("McpTopologyDiagram", () => {
 
   it("renders the server card with mount path and mounted state", () => {
     renderDiagram();
-    expect(screen.getByText("Sentient MCP Server")).toBeInTheDocument();
+    expect(screen.getByText("Sentient AI MCP Server")).toBeInTheDocument();
     expect(screen.getByText(/\/mcp — mounted, local only/)).toBeInTheDocument();
   });
 

@@ -36,6 +36,27 @@ describe("ShowcasePage", () => {
     expect(screen.getByText(/Commercial use is welcome/)).toBeInTheDocument();
   });
 
+  it("renders the enterprise-power section: RAG sources, guardrails, rules", () => {
+    renderPage();
+    expect(screen.getByText("Point it at your business")).toBeInTheDocument();
+    expect(screen.getByText("Your knowledge, plugged in")).toBeInTheDocument();
+    expect(screen.getByText("Guardrails as workflow steps")).toBeInTheDocument();
+    expect(screen.getByText("Rules your compliance team can read")).toBeInTheDocument();
+  });
+
+  it("renders the AI-native section including the embedded Claude Code agent", () => {
+    renderPage();
+    expect(screen.getByText("AI-native to the core")).toBeInTheDocument();
+    expect(screen.getByText("Claude Code, embedded")).toBeInTheDocument();
+    expect(screen.getByText("MCP server built in")).toBeInTheDocument();
+    expect(screen.getByText("AI-native architecture")).toBeInTheDocument();
+  });
+
+  it("brands the page as Sentient AI", () => {
+    renderPage();
+    expect(screen.getAllByText("Sentient AI").length).toBeGreaterThan(0);
+  });
+
   it("renders all six feature cards", () => {
     renderPage();
     for (const title of [

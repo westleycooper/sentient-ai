@@ -1,4 +1,4 @@
-# ADR-0004: Sentient as an MCP server
+# ADR-0004: Sentient AI as an MCP server
 
 - Status: Accepted
 - Date: 2026-07-20
@@ -6,18 +6,18 @@
 
 ## Context
 
-Sentient's SME domain (bounded contexts, reasoning steps, retrieval sources)
+Sentient AI's SME domain (bounded contexts, reasoning steps, retrieval sources)
 is already well-modelled via DDD, and its conversation/reasoning state is
 live, structured data. External MCP (Model Context Protocol) clients —
-Claude Desktop, other agents — would benefit from querying into Sentient
+Claude Desktop, other agents — would benefit from querying into Sentient AI
 directly rather than the platform staying a closed system reachable only
 through its own web UI.
 
-Two directions were possible: Sentient as an MCP *client* (reasoning steps
-calling out to external MCP servers for data) or Sentient as an MCP
+Two directions were possible: Sentient AI as an MCP *client* (reasoning steps
+calling out to external MCP servers for data) or Sentient AI as an MCP
 *server* (exposing its own data to external clients). This ADR covers the
 latter, which was the explicit choice: give external tools access to
-Sentient's "clean, well-modelled, real-time data" — the SME templates and
+Sentient AI's "clean, well-modelled, real-time data" — the SME templates and
 conversation state — reusing the DDD investment already made rather than
 adding a new consumption path.
 
@@ -31,7 +31,7 @@ legible, not just present.
 
 Use the official `mcp` Python SDK (`mcp[cli]>=1.28,<2` — the SDK's own
 README caps below `2.x` while that line is pre-release), via `FastMCP` with
-`stateless_http=True, json_response=True`, since Sentient is a persistent
+`stateless_http=True, json_response=True`, since Sentient AI is a persistent
 multi-user web service rather than a per-client stdio process. The server
 is mounted as a plain ASGI sub-app inside the existing FastAPI app:
 `app.mount("/mcp", mcp.streamable_http_app())`, with
@@ -109,7 +109,7 @@ out of those layers.
 
 ## Alternatives considered
 
-**Sentient as an MCP client** (reasoning steps calling out to external MCP
+**Sentient AI as an MCP client** (reasoning steps calling out to external MCP
 servers for data) — a legitimate direction for a future ADR, but a
 different feature: it would extend the RAG/tool-call reasoning-step
 pattern, not the DDD-domain-exposure goal this ADR addresses.
@@ -120,7 +120,7 @@ need, and client-side progress-notification support isn't reliable enough
 across MCP hosts yet to justify a second streaming code path.
 
 **Running the MCP server as a separate stdio-spawned process per client** —
-rejected; Sentient is a persistent multi-user web service, not something
+rejected; Sentient AI is a persistent multi-user web service, not something
 spawned per-client.
 
 ## Addendum (2026-07-20): interactive explorer

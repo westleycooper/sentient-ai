@@ -1,7 +1,7 @@
 /**
  * McpTopologyDiagram — architecture view of the MCP server (ADR-0004) that
  * doubles as a small interactive explorer (ADR-0004 addendum): a
- * "Sentient MCP Server" card, with "Resources" and "Tools" columns below it.
+ * "Sentient AI MCP Server" card, with "Resources" and "Tools" columns below it.
  * Each card is rendered entirely from backend-provided fields (`wraps`,
  * `params`, `input_schema`) so the diagram never hardcodes a frontend-side
  * mapping that can drift from the backend's actual resource/tool registration.
@@ -202,7 +202,7 @@ export function McpTopologyDiagram({ status }: { status: McpStatus }) {
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
           <HubIcon color="primary" />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Sentient MCP Server
+            Sentient AI MCP Server
           </Typography>
         </Stack>
         <Typography variant="caption" color="text.disabled">

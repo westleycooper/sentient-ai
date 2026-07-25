@@ -1,5 +1,5 @@
 /**
- * McpPage — MCP server topology view (ADR-0004). Shows what Sentient exposes
+ * McpPage — MCP server topology view (ADR-0004). Shows what Sentient AI exposes
  * to external MCP clients and live counts, pulled from GET /mcp-status.
  * Not the MCP protocol endpoint itself (that's /mcp, local-only) — this page
  * always renders, including in production, showing an honest "not mounted"
