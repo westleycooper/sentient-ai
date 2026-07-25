@@ -191,10 +191,24 @@ function LiveWaveform({ kind, height }: { kind: WaveformKind; height: number | s
   );
 }
 
-export function ShowcasePage() {
+interface ShowcasePageProps {
+  /**
+   * Static-hosting mode (GitHub Pages build — see vite.showcase.config.ts).
+   * There is no app or backend behind the page, so every "launch the app"
+   * CTA becomes a link to the repo's Quick start instead of an in-app route.
+   */
+  standalone?: boolean;
+}
+
+export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
   const navigate = useNavigate();
   const [themeId, setThemeId] = useState(DEFAULT_THEME_ID);
   const [demoKind, setDemoKind] = useState<WaveformKind>("wave3dgrid");
+
+  const launchLabel = standalone ? "Run it locally" : "Launch the app";
+  const launchProps = standalone
+    ? { href: `${GITHUB_URL}#quick-start-already-set-up`, target: "_blank", rel: "noopener noreferrer" }
+    : { onClick: () => navigate("/") };
 
   return (
     <SentientThemeProvider themeId={themeId}>
@@ -210,8 +224,8 @@ export function ShowcasePage() {
             <Button startIcon={<GitHubIcon />} href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
               GitHub
             </Button>
-            <Button variant="contained" startIcon={<RocketLaunchIcon />} onClick={() => navigate("/")}>
-              Launch the app
+            <Button variant="contained" startIcon={<RocketLaunchIcon />} {...launchProps}>
+              {launchLabel}
             </Button>
           </Stack>
         </Container>
@@ -235,8 +249,8 @@ export function ShowcasePage() {
             guardrails, and rules from one screen — new expertise is configuration, not code.
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mt: 4, justifyContent: "center" }}>
-            <Button size="large" variant="contained" startIcon={<RocketLaunchIcon />} onClick={() => navigate("/")}>
-              Try it now
+            <Button size="large" variant="contained" startIcon={<RocketLaunchIcon />} {...launchProps}>
+              {standalone ? "Run it locally" : "Try it now"}
             </Button>
             <Button size="large" variant="outlined" startIcon={<GitHubIcon />} href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
               Star on GitHub
@@ -472,8 +486,8 @@ export function ShowcasePage() {
                 <Button variant="contained" startIcon={<GitHubIcon />} href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                   Get the source
                 </Button>
-                <Button variant="outlined" onClick={() => navigate("/")}>
-                  Open the live app
+                <Button variant="outlined" {...launchProps}>
+                  {standalone ? "Run the app locally" : "Open the live app"}
                 </Button>
               </Stack>
             </CardContent>
@@ -491,9 +505,15 @@ export function ShowcasePage() {
             <Link href={GITHUB_URL} target="_blank" rel="noopener noreferrer" color="text.secondary" variant="body2">
               GitHub
             </Link>
-            <Link component="button" onClick={() => navigate("/")} color="text.secondary" variant="body2">
-              App
-            </Link>
+            {standalone ? (
+              <Link href={GITHUB_URL} target="_blank" rel="noopener noreferrer" color="text.secondary" variant="body2">
+                Source
+              </Link>
+            ) : (
+              <Link component="button" onClick={() => navigate("/")} color="text.secondary" variant="body2">
+                App
+              </Link>
+            )}
           </Stack>
         </Container>
       </Box>

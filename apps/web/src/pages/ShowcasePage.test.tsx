@@ -102,6 +102,21 @@ describe("ShowcasePage", () => {
     expect(screen.getByText("voice home")).toBeInTheDocument();
   });
 
+  it("standalone mode (GitHub Pages build) links launch CTAs to the repo instead of app routes", () => {
+    render(
+      <MemoryRouter>
+        <ShowcasePage standalone />
+      </MemoryRouter>
+    );
+    const runLocally = screen.getAllByRole("link", { name: /Run it locally/ });
+    expect(runLocally.length).toBeGreaterThan(0);
+    for (const link of runLocally) {
+      expect(link).toHaveAttribute("href", expect.stringContaining("github.com/westleycooper/sentient-ai"));
+    }
+    // No in-app navigation buttons in standalone mode
+    expect(screen.queryByRole("button", { name: /Try it now/ })).not.toBeInTheDocument();
+  });
+
   it("shows the mocked live reasoning steps with token costs", () => {
     renderPage();
     const feed = screen.getByText("Reasoning steps, live").closest(".MuiCardContent-root")!;
