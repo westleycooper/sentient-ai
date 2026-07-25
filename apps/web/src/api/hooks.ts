@@ -55,7 +55,7 @@ export interface SmeTemplate {
   sources: RetrievalSource[];
   rules: SmeRule[];
   is_default: boolean;
-  visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid";
+  visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead";
   theme_id: string;
   lesson: LessonConfig;
 }

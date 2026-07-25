@@ -23,6 +23,10 @@ cd apps/web && pnpm dev
 
 Then open **http://localhost:5173**.
 
+Port already taken by another Vite app? Override it: `pnpm dev --port 5174` (the
+`/api` and `/ws` dev proxies to the backend are unaffected — only the frontend's
+own port changes, so update the URL above accordingly).
+
 ---
 
 ## Getting started
