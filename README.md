@@ -6,6 +6,12 @@ subject-matter expertise (SME) are user-configurable from one page; domain drive
 generated frontend types + hooks. Minimal UI: Three.js waveform + mic button, with
 a slide-out chat transcript.
 
+> 🌐 **[View the showcase site ↗](https://westleycooper.github.io/sentient-ai/showcase/)** —
+> features, live Three.js demos, themes, and licensing, served straight from this
+> repo via GitHub Pages. (One-time setup: repo **Settings → Pages → Deploy from a
+> branch**, pick the branch and the **`/docs`** folder, save. Regenerate the static
+> bundle after showcase changes with `pnpm --filter sentient-web build:showcase`.)
+
 ---
 
 ## Quick start (already set up)

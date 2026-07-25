@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:showcase": "vite build --config vite.showcase.config.ts && mv ../../docs/showcase/showcase.html ../../docs/showcase/index.html",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
