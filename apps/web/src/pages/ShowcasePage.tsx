@@ -129,13 +129,13 @@ const AI_NATIVE_CARDS = [
     icon: <TerminalIcon />,
     title: "Claude Code, embedded",
     body:
-      "A voice-driven Claude Code agent ships inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
+      "The developer edition ships with a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
   },
   {
     icon: <HubOutlinedIcon />,
     title: "MCP server built in",
     body:
-      "Your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
+      "In the developer edition, your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
   },
   {
     icon: <SmartToyOutlinedIcon />,
