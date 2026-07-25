@@ -55,10 +55,10 @@ describe("useUiStore", () => {
 
   it("cycleCodeWaveKind cycles through all kinds and wraps around", () => {
     const seen: string[] = [useUiStore.getState().codeWaveKind];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       useUiStore.getState().cycleCodeWaveKind();
       seen.push(useUiStore.getState().codeWaveKind);
     }
-    expect(seen).toEqual(["wave", "wavecircle", "wave3d", "wave3dgrid", "wave"]);
+    expect(seen).toEqual(["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead", "wave"]);
   });
 });

@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { WaveformKind } from "../features/waveform/Waveform";
 
-const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid"];
+const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"];
 
 interface UiState {
   drawerOpen: boolean;

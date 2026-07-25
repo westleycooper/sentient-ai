@@ -7,11 +7,15 @@
  * kind="wave3d"     — Three.js WebGL: dot-cloud waterfall along the Z axis
  * kind="wave3dgrid" — Three.js WebGL: polygon terrain mesh where amplitude
  *                     raises vertices, with additive wireframe overlay
+ * kind="wavehead"    — Three.js WebGL: face-on low-poly cel-shaded head built
+ *                     from silhouette/depth profile curves (Dreamscape-poster
+ *                     face, Virtua Fighter 1 faceting + painted features),
+ *                     jaw opens with speech loudness via lips + black cavity
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export type WaveformKind = "wave" | "wavecircle" | "wave3d" | "wave3dgrid";
+export type WaveformKind = "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead";
 
 export interface WaveformProps {
   amplitude: Float32Array;
@@ -60,6 +64,121 @@ const G_Z      = 20;    // vertex rows along Z
 const G_XHALF  = 8;     // half-width (world units) — cell width = 16/27 ≈ 0.593
 const G_ZSPACE = 0.60;  // row spacing ≈ cell width → square cells
 const G_AMP    = 6.75;  // amplitude → Y displacement
+
+// ── wavehead (face-on low-poly cel-shaded head, Dreamscape poster × VF1) ─────
+// The head is NOT a sphere with bumps: it's built from two piecewise-linear
+// profile curves sampled per row (silhouette half-width and skull half-depth,
+// crown→chin), with facial features added as centreline displacements. The
+// piecewise-linear kinks are deliberate — they're what gives the angular,
+// faceted Virtua Fighter 1 silhouette under flat shading.
+const GH_X         = 40;   // vertex columns across the face width
+const GH_Z         = 36;   // vertex rows from crown to under-chin
+const GH_THETA_MAX = 1.35; // rad — horizontal wrap half-angle (past ±90° = sides turn away)
+const GH_HEAD_TOP  = 4.2, GH_HEAD_BOT = -4.4; // world y at crown / chin tip
+
+// Head silhouette half-width by v (crown→chin): rounded cranium, temples,
+// widest at the cheekbones, tapering jaw, narrow rounded chin.
+const WIDTH_PROFILE: [number, number][] = [
+  [0.00, 1.30], [0.08, 2.50], [0.22, 3.25], [0.45, 3.50],
+  [0.62, 3.05], [0.80, 2.35], [0.93, 1.55], [1.00, 0.85],
+];
+// Skull half-depth by v — the base forward projection the features sit on.
+// Dips slightly across the eye band (sockets) and again below the mouth.
+const DEPTH_PROFILE: [number, number][] = [
+  [0.00, 1.50], [0.10, 2.60], [0.30, 3.15], [0.40, 3.20], [0.46, 2.95],
+  [0.55, 3.00], [0.66, 2.90], [0.72, 2.80], [0.82, 2.75], [0.92, 2.85], [1.00, 1.80],
+];
+
+// Akira-style painted-face palette (VF1). Every region is a SOLID colour cell
+// with a hard edge — colours are assigned per TRIANGLE (at its centroid), not
+// blended per vertex, which is what gives the authentic texture-less VF1 look.
+// Skin is a fixed warm tone; the hair takes a heavily-darkened version of the
+// theme `color` prop (near-black with a tint) so the SME identity survives.
+const SKIN_COLOR    = { r: 0.89, g: 0.66, b: 0.50 };
+const HEADBAND_COLOR = { r: 0.93, g: 0.93, b: 0.94 }; // Akira's white headband
+const BROW_COLOR    = { r: 0.08, g: 0.06, b: 0.05 };
+const EYE_WHITE     = { r: 0.96, g: 0.96, b: 0.97 };
+const PUPIL_COLOR   = { r: 0.10, g: 0.07, b: 0.06 };
+const LIP_COLOR     = { r: 0.72, g: 0.42, b: 0.36 };
+const CAVITY_COLOR  = { r: 0.02, g: 0.02, b: 0.02 }; // solid black mouth interior
+
+// Hair: everything above the headband, plus side panels down past the temples,
+// plus a zigzag spike displacement at the crown (alternate columns push up).
+const BAND_V0 = 0.155, BAND_V1 = 0.235, BAND_EXTRUDE = 0.10; // white headband wrap
+const HAIR_SIDE_V1 = 0.34, HAIR_SIDE_THETA = 1.08;           // side hair above the ears
+const SPIKE_V_END = 0.12, SPIKE_AMP = 0.55;                  // crown spikes
+
+// Facial features: v ∈ [0,1] crown→chin, theta in radians (0 = centreline).
+// Eyes at the vertical midpoint of the head, per the classic proportion rule.
+const BROW_V0 = 0.345, BROW_V1 = 0.425, BROW_AMP = 0.25, BROW_W = 0.75; // ridge (geometry)
+// Painted brows: hard bars, slanted stern — inner ends sit LOWER (toward the
+// nose) by BROW_TILT × how far inboard of the eye centre the sample is.
+const BROWP_V0 = 0.385, BROWP_V1 = 0.43, BROWP_HW = 0.21, BROW_TILT = 0.22;
+
+const EYE_THETA = 0.42;                                    // eye centres at ±this angle
+const SOCKET_V0 = 0.42, SOCKET_V1 = 0.53, SOCKET_W = 0.20, SOCKET_DEPTH = 0.22;
+const EYEW_V0 = 0.445, EYEW_V1 = 0.515, EYEW_HW = 0.155;   // narrow VF1 eye, hard rect
+const PUPIL_V0 = 0.45, PUPIL_V1 = 0.51, PUPIL_HW = 0.05;   // dark centre cell
+
+const CHEEK_V0 = 0.44, CHEEK_V1 = 0.60, CHEEK_THETA = 0.62, CHEEK_W = 0.25, CHEEK_AMP = 0.18;
+
+const NOSE_V0 = 0.43, NOSE_V1 = 0.65;                      // bridge → tip
+const NOSE_AMP_TOP = 0.30, NOSE_AMP_TIP = 1.10;
+const NOSE_W_TOP = 0.10, NOSE_W_TIP = 0.20;
+const NOSTRIL_V0 = 0.60, NOSTRIL_V1 = 0.67, NOSTRIL_THETA = 0.17, NOSTRIL_W = 0.06, NOSTRIL_AMP = 0.15;
+const PHIL_V0 = 0.65, PHIL_V1 = 0.69, PHIL_W = 0.18, PHIL_DEPTH = 0.12; // philtrum dip
+
+// Mouth: static upper lip / thin black cavity that stretches open / lower lip
+// riding the jaw. The cavity stretching is the visible "mouth opening".
+const MOUTH_THETA_W = 0.42;
+const LIP_V0 = 0.685, LIP_V1 = 0.74, LIP_AMP = 0.30;
+const CAVITY_V0 = 0.74, CAVITY_V1 = 0.77;
+const LOWER_LIP_V0 = 0.77, LOWER_LIP_V1 = 0.82, LOWER_LIP_AMP = 0.26;
+
+const CHIN_V0 = 0.87, CHIN_V1 = 0.97, CHIN_W = 0.30, CHIN_AMP = 0.28;
+
+// Jaw: a real hinge ROTATION about an axis at ear level, not a translation —
+// the chin swings down and back along an arc while points near the pivot
+// barely move, which is what makes the movement read as anatomical. The
+// whole lower face rotates (full width): the black cavity opens as a mouth
+// where it's painted, and the flesh beyond the mouth corners stretches like
+// cheeks. Inside the mouth the static→moving transition is one thin band
+// (sharp opening edge); outside it's feathered wide (gradual cheek stretch).
+const JAW_PIVOT_Y = -0.3, JAW_PIVOT_Z = 0.0;  // hinge axis (x-axis) at ear level
+const JAW_MAX_ANGLE = 0.24;                   // rad — full-open rotation
+const JAW_CHEEK_FEATHER = 0.12;               // v-feather of the hinge line outside the mouth
+const JAW_GAIN   = 7.0;  // RMS amplitude → openness gain
+const JAW_SMOOTH = 0.25; // per-frame low-pass factor (higher = snappier)
+
+/** Smooth 0→1→0 bump over [v0, v1]; 0 outside the band. */
+function bellV(v: number, v0: number, v1: number): number {
+  if (v < v0 || v > v1) return 0;
+  return Math.sin(Math.PI * ((v - v0) / (v1 - v0)));
+}
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+/** Flat-top band over [lo, hi] with feathered (smoothstep) edges of width `feather`. */
+function flatBand(x: number, lo: number, hi: number, feather: number): number {
+  const rise = smoothstep(lo, lo + feather, x);
+  const fall = 1 - smoothstep(hi - feather, hi, x);
+  return Math.min(rise, fall);
+}
+
+/** Sample a piecewise-linear profile: pts = [[v, value], …] sorted by v. */
+function sampleProfile(pts: [number, number][], v: number): number {
+  if (v <= pts[0][0]) return pts[0][1];
+  for (let i = 1; i < pts.length; i++) {
+    if (v <= pts[i][0]) {
+      const t = (v - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]);
+      return pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t;
+    }
+  }
+  return pts[pts.length - 1][1];
+}
 
 export function Waveform({
   amplitude,
@@ -412,6 +531,237 @@ export function Waveform({
       };
     }
 
+    // ═══════════════════════════════ WAVEHEAD (face-on wireframe head) ══════
+    if (kind === "wavehead") {
+      const W = container.clientWidth  || 800;
+      const H = container.clientHeight || 400;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(W, H);
+      renderer.setClearColor(bgInt, 1);
+      renderer.domElement.style.cssText = "display:block;width:100%;height:100%;";
+      container.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(bgInt);
+
+      // Face-on: looking straight down Z, no top-down tilt (unlike wave3d/wave3dgrid).
+      const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 80);
+      camera.position.set(0, 0, 13);
+      camera.lookAt(0, 0, 0);
+
+      // Single hard key light + ambient fill — flat/faceted Lambert shading
+      // under one directional light is the classic early-3D "arcade fighter"
+      // look (Virtua Fighter 1). Ambient is high enough that the painted
+      // colours (eye whites, lips) stay readable on the shadowed side.
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
+      keyLight.position.set(-5, 6, 9);
+      scene.add(keyLight);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+      const c1n = { r: c1.r / 255, g: c1.g / 255, b: c1.b / 255 };
+      // Hair: theme colour crushed nearly to black — reads as dark hair with a tint.
+      const hairColor = { r: 0.05 + c1n.r * 0.22, g: 0.05 + c1n.g * 0.22, b: 0.05 + c1n.b * 0.22 };
+
+      // ── Pass 1: sculpt the vertex grid (positions + jaw weights) ─────────
+      const gridN  = GH_X * GH_Z;
+      const gX = new Float32Array(gridN), gY = new Float32Array(gridN), gZ = new Float32Array(gridN);
+      const gJaw = new Float32Array(gridN);
+      const gV = new Float32Array(gridN), gTheta = new Float32Array(gridN);
+      {
+        let gi = 0;
+        for (let row = 0; row < GH_Z; row++) {
+          const v     = row / (GH_Z - 1);
+          const halfW = sampleProfile(WIDTH_PROFILE, v);
+          const halfD = sampleProfile(DEPTH_PROFILE, v);
+          let   y     = GH_HEAD_TOP + (GH_HEAD_BOT - GH_HEAD_TOP) * v;
+
+          for (let col = 0; col < GH_X; col++) {
+            const u     = col / (GH_X - 1);
+            const theta = (u - 0.5) * 2 * GH_THETA_MAX;
+
+            // Elliptical cross-section per row: silhouette width from one
+            // profile, forward depth from the other. The headband band gets a
+            // slight radial extrude so it wraps proud of the head.
+            const bandBump = 1 + BAND_EXTRUDE * flatBand(v, BAND_V0, BAND_V1, 0.02);
+            const x = halfW * Math.sin(theta) * bandBump;
+            let z = halfD * Math.cos(theta) * bandBump;
+
+            // Crown spikes: alternate columns push straight up, fading out by
+            // SPIKE_V_END — Akira's zigzag hair silhouette.
+            if (v < SPIKE_V_END) {
+              const spike = (col % 2 === 0 ? 1 : 0.15) * (1 - v / SPIKE_V_END);
+              y += SPIKE_AMP * spike;
+            }
+
+            // Brow ridge: forward shelf across the face above the eyes.
+            z += BROW_AMP * bellV(v, BROW_V0, BROW_V1) * Math.exp(-((theta / BROW_W) ** 2));
+
+            // Eye sockets: recesses at ±EYE_THETA (whites/pupils painted there).
+            const sockL = Math.exp(-(((theta - EYE_THETA) / SOCKET_W) ** 2));
+            const sockR = Math.exp(-(((theta + EYE_THETA) / SOCKET_W) ** 2));
+            z -= SOCKET_DEPTH * bellV(v, SOCKET_V0, SOCKET_V1) * (sockL + sockR);
+
+            // Cheekbones: forward bumps outboard of the eyes.
+            const cheekL = Math.exp(-(((theta - CHEEK_THETA) / CHEEK_W) ** 2));
+            const cheekR = Math.exp(-(((theta + CHEEK_THETA) / CHEEK_W) ** 2));
+            z += CHEEK_AMP * bellV(v, CHEEK_V0, CHEEK_V1) * (cheekL + cheekR);
+
+            // Nose: narrow bridge widening into a broader angular tip, plus
+            // nostril wings, then a philtrum dip back under the tip.
+            const noseBell = bellV(v, NOSE_V0, NOSE_V1);
+            if (noseBell > 0) {
+              const nt    = (v - NOSE_V0) / (NOSE_V1 - NOSE_V0);
+              const noseW = NOSE_W_TOP + (NOSE_W_TIP - NOSE_W_TOP) * nt;
+              const noseA = NOSE_AMP_TOP + (NOSE_AMP_TIP - NOSE_AMP_TOP) * nt;
+              z += noseA * noseBell * Math.exp(-((theta / noseW) ** 2));
+            }
+            const nostrilBell = bellV(v, NOSTRIL_V0, NOSTRIL_V1);
+            if (nostrilBell > 0) {
+              const nosL = Math.exp(-(((theta - NOSTRIL_THETA) / NOSTRIL_W) ** 2));
+              const nosR = Math.exp(-(((theta + NOSTRIL_THETA) / NOSTRIL_W) ** 2));
+              z += NOSTRIL_AMP * nostrilBell * (nosL + nosR);
+            }
+            z -= PHIL_DEPTH * bellV(v, PHIL_V0, PHIL_V1) * Math.exp(-((theta / PHIL_W) ** 2));
+
+            // Mouth: lip ridges gated to mouth width.
+            const mouthGate = flatBand(theta, -MOUTH_THETA_W, MOUTH_THETA_W, 0.10);
+            z += LIP_AMP * bellV(v, LIP_V0, LIP_V1) * mouthGate;               // static
+            z += LOWER_LIP_AMP * bellV(v, LOWER_LIP_V0, LOWER_LIP_V1) * mouthGate; // rides the jaw
+
+            // Chin: forward bump at the centre-bottom (moves with the jaw).
+            z += CHIN_AMP * bellV(v, CHIN_V0, CHIN_V1) * Math.exp(-((theta / CHIN_W) ** 2));
+
+            // Jaw hinge weight: full width (a real jaw spans the face), 0
+            // above the cavity, 1 below. The transition is one thin band
+            // inside the mouth (sharp opening edge) but feathered wide out
+            // at the cheeks so flesh beyond the mouth corners stretches
+            // gradually instead of creasing along one row.
+            const inMouth = Math.abs(theta) < MOUTH_THETA_W;
+            const rampW   = inMouth ? (CAVITY_V1 - CAVITY_V0) : JAW_CHEEK_FEATHER;
+            gJaw[gi] = Math.min(1, Math.max(0, (v - CAVITY_V0) / rampW));
+
+            gX[gi] = x; gY[gi] = y; gZ[gi] = z;
+            gV[gi] = v; gTheta[gi] = theta;
+            gi++;
+          }
+        }
+      }
+
+      // ── Solid-cell colour lookup (hard edges, VF1) ───────────────────────
+      // Evaluated once per TRIANGLE at its centroid — every facet is exactly
+      // one colour, no vertex blending. Priority: mouth > eyes > brows >
+      // headband > hair > skin.
+      const colourAt = (v: number, theta: number) => {
+        const at = Math.abs(theta);
+        const dEye = Math.min(Math.abs(theta - EYE_THETA), Math.abs(theta + EYE_THETA));
+        if (v >= CAVITY_V0 && v <= CAVITY_V1 && at < MOUTH_THETA_W) return CAVITY_COLOR;
+        if (((v >= LIP_V0 && v <= LIP_V1) || (v >= LOWER_LIP_V0 && v <= LOWER_LIP_V1)) && at < MOUTH_THETA_W) return LIP_COLOR;
+        if (v >= PUPIL_V0 && v <= PUPIL_V1 && dEye < PUPIL_HW) return PUPIL_COLOR;
+        if (v >= EYEW_V0 && v <= EYEW_V1 && dEye < EYEW_HW) return EYE_WHITE;
+        const bv = v - BROW_TILT * Math.max(0, EYE_THETA - at); // stern slant
+        if (bv >= BROWP_V0 && bv <= BROWP_V1 && dEye < BROWP_HW) return BROW_COLOR;
+        if (v >= BAND_V0 && v <= BAND_V1) return HEADBAND_COLOR;
+        if (v < BAND_V0 || (v < HAIR_SIDE_V1 && at > HAIR_SIDE_THETA)) return hairColor;
+        return SKIN_COLOR;
+      };
+
+      // ── Pass 2: expand to non-indexed triangles, one solid colour each ───
+      const nTris  = (GH_X - 1) * (GH_Z - 1) * 2;
+      const nVerts = nTris * 3;
+      const positions  = new Float32Array(nVerts * 3);
+      const fillColors = new Float32Array(nVerts * 3);
+      const restX = new Float32Array(nVerts), restY = new Float32Array(nVerts), restZ = new Float32Array(nVerts);
+      const jawWeight = new Float32Array(nVerts);
+      {
+        let vo = 0;
+        for (let row = 0; row < GH_Z - 1; row++)
+          for (let col = 0; col < GH_X - 1; col++) {
+            const a = row * GH_X + col, b = a + 1, c = a + GH_X, d = c + 1;
+            for (const tri of [[a, b, c], [b, d, c]]) {
+              const cv = (gV[tri[0]] + gV[tri[1]] + gV[tri[2]]) / 3;
+              const ct = (gTheta[tri[0]] + gTheta[tri[1]] + gTheta[tri[2]]) / 3;
+              const colr = colourAt(cv, ct);
+              for (const gi of tri) {
+                restX[vo] = gX[gi]; restY[vo] = gY[gi]; restZ[vo] = gZ[gi];
+                jawWeight[vo] = gJaw[gi];
+                fillColors[vo * 3] = colr.r; fillColors[vo * 3 + 1] = colr.g; fillColors[vo * 3 + 2] = colr.b;
+                vo++;
+              }
+            }
+          }
+      }
+
+      const posAttr = new THREE.BufferAttribute(positions, 3);
+      const geoFill = new THREE.BufferGeometry();
+      geoFill.setAttribute("position", posAttr);
+      geoFill.setAttribute("color", new THREE.BufferAttribute(fillColors, 3));
+
+      // Solid fill only, flat-shaded under the key light for the faceted
+      // "early-3D fighter" look — no wireframe/outline overlay.
+      geoFill.computeVertexNormals();
+      const fillMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, flatShading: true });
+      scene.add(new THREE.Mesh(geoFill, fillMat));
+
+      let jawOpen = 0; // low-passed RMS-driven openness, 0..1
+
+      const renderHead = () => {
+        const amp    = ampRef.current;
+        const N      = amp.length || 256;
+        const active = activeRef.current;
+
+        let sum = 0;
+        for (let i = 0; i < N; i++) sum += amp[i] * amp[i];
+        const rms    = Math.sqrt(sum / N);
+        const target = active ? Math.min(1, rms * JAW_GAIN) : 0;
+        jawOpen += (target - jawOpen) * JAW_SMOOTH;
+
+        // Hinge rotation about the x-axis at ear level: chin swings down and
+        // back along an arc; vertices near the pivot barely move. Per-vertex
+        // weight scales the angle so the static→moving transition is smooth.
+        for (let i = 0; i < nVerts; i++) {
+          positions[i * 3] = restX[i];
+          const w = jawWeight[i];
+          if (w > 0 && jawOpen > 0.001) {
+            const ang = w * jawOpen * JAW_MAX_ANGLE;
+            const cA = Math.cos(ang), sA = Math.sin(ang);
+            const sy = restY[i] - JAW_PIVOT_Y, sz = restZ[i] - JAW_PIVOT_Z;
+            positions[i * 3 + 1] = JAW_PIVOT_Y + sy * cA - sz * sA;
+            positions[i * 3 + 2] = JAW_PIVOT_Z + sy * sA + sz * cA;
+          } else {
+            positions[i * 3 + 1] = restY[i];
+            positions[i * 3 + 2] = restZ[i];
+          }
+        }
+
+        posAttr.needsUpdate = true;
+        geoFill.computeVertexNormals(); // jaw movement changes local face normals each frame
+        geoFill.attributes.normal.needsUpdate = true;
+        renderer.render(scene, camera);
+        raf = requestAnimationFrame(renderHead);
+      };
+      renderHead();
+
+      const ro = new ResizeObserver(() => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        if (!w || !h) return;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      });
+      ro.observe(container);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+        geoFill.dispose();
+        fillMat.dispose();
+        renderer.dispose();
+      };
+    }
+
     // ═══════════════════════════════════════ CIRCLE WAVE (2D polar) ════════
     if (kind === "wavecircle") {
       const canvas = document.createElement("canvas");
@@ -622,7 +972,7 @@ export function Waveform({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: (kind === "wave3d" || kind === "wave3dgrid") ? bgColor : undefined,
+        background: (kind === "wave3d" || kind === "wave3dgrid" || kind === "wavehead") ? bgColor : undefined,
       }}
       aria-hidden
     >

@@ -78,9 +78,9 @@ export function HomePage() {
   // Wave visualisation kind — starts from the active SME's setting, overridable per session.
   const [waveKindOverride, setWaveKindOverride] = useState<WaveformKind | null>(null);
   const prevSmeIdRef = useRef<string | null>(null);
-  const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid"];
+  const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"];
   const WAVE_LABELS: Record<WaveformKind, string> = {
-    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid",
+    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid", wavehead: "Talking head",
   };
 
   // Keep a ref so archive-on-clear in callbacks always sees fresh steps
