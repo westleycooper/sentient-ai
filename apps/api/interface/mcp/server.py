@@ -1,4 +1,4 @@
-"""Sentinel's MCP server (ADR-0004) — exposes SME templates and conversation
+"""Sentient's MCP server (ADR-0004) — exposes SME templates and conversation
 state to external MCP clients. Local-development only: mounted in main.py
 only when ENV != production, since the conversation resource returns PII
 (transcripts, CLAUDE.md §9) with no auth on the MCP transport in v1.
@@ -22,9 +22,9 @@ from interface.mcp.dependencies import (
 )
 
 mcp = FastMCP(
-    "Sentinel",
+    "Sentient",
     instructions=(
-        "Exposes Sentinel's SME reasoning templates and live conversation "
+        "Exposes Sentient's SME reasoning templates and live conversation "
         "transcripts. Conversation resources may contain user-identifying "
         "data (PII) — treat responses accordingly. Local-development only "
         "in v1 (ADR-0004)."
@@ -37,7 +37,7 @@ mcp = FastMCP(
 mcp.settings.streamable_http_path = "/"
 
 
-@mcp.resource("sentinel://sme-templates")
+@mcp.resource("sentient://sme-templates")
 async def list_sme_templates() -> str:
     """All SME templates (defaults + user-created) — summary fields only."""
     async with sme_templates_uc() as uc:
@@ -55,7 +55,7 @@ async def list_sme_templates() -> str:
     ])
 
 
-@mcp.resource("sentinel://sme-templates/{template_id}")
+@mcp.resource("sentient://sme-templates/{template_id}")
 async def get_sme_template(template_id: str) -> str:
     """Full SME template: soul, reasoning steps, retrieval sources, rules."""
     async with sme_templates_uc() as uc:
@@ -76,7 +76,7 @@ async def get_sme_template(template_id: str) -> str:
     })
 
 
-@mcp.resource("sentinel://conversations/{conversation_id}")
+@mcp.resource("sentient://conversations/{conversation_id}")
 async def get_conversation(conversation_id: str) -> str:
     """Conversation transcript (messages, token counts, citations). Contains PII."""
     async with conversation_repo() as repo:
@@ -104,7 +104,7 @@ async def get_conversation(conversation_id: str) -> str:
 
 @mcp.tool()
 async def start_conversation(sme_id: str) -> dict:
-    """Start a new Sentinel conversation against the given SME template id."""
+    """Start a new Sentient conversation against the given SME template id."""
     async with start_conversation_uc() as uc:
         try:
             conv = await uc.execute(sme_id=sme_id)

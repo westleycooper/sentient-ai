@@ -2137,7 +2137,7 @@ wheels = [
 ]
 
 [[package]]
-name = "sentinel-api"
+name = "sentient-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -2161,7 +2161,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
-    { name = "sentinel-domain" },
+    { name = "sentient-domain" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "sse-starlette" },
     { name = "uvicorn", extra = ["standard"] },
@@ -2197,7 +2197,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "python-multipart", specifier = ">=0.0.9" },
-    { name = "sentinel-domain", editable = "../../packages/domain" },
+    { name = "sentient-domain", editable = "../../packages/domain" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2" },
     { name = "sse-starlette", specifier = ">=2.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
@@ -2212,7 +2212,7 @@ dev = [
 ]
 
 [[package]]
-name = "sentinel-domain"
+name = "sentient-domain"
 version = "0.1.0"
 source = { editable = "../../packages/domain" }
 dependencies = [

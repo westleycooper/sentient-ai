@@ -1,4 +1,4 @@
-# CLAUDE.md — Sentinel Platform
+# CLAUDE.md — Sentient Platform
 
 > This file is the single source of truth for how we build on this repo. Claude Code (and humans) should read it before any task. If a request conflicts with this document, surface the conflict rather than silently deviating. Keep it current: when an architectural decision changes, update this file **and** add an ADR under `docs/adr/`.
 
@@ -6,7 +6,7 @@
 
 ## 1. What we are building
 
-**Sentinel** is a configurable, multi-reasoning voice agent platform. A user speaks; the platform transcribes (STT), runs a **multi-step LangGraph reasoning workflow** over the request with persistent context, and reads the answer back (TTS). The defining feature is that the *reasoning workflow itself* — its steps and its "subject-matter expertise" (SME) — is **user-configurable**, selectable from defaults (e.g. "FTSE 100 Analyst", "Mental Health Support", "Recruitment Agent") and editable/extensible from a single configuration page.
+**Sentient** is a configurable, multi-reasoning voice agent platform. A user speaks; the platform transcribes (STT), runs a **multi-step LangGraph reasoning workflow** over the request with persistent context, and reads the answer back (TTS). The defining feature is that the *reasoning workflow itself* — its steps and its "subject-matter expertise" (SME) — is **user-configurable**, selectable from defaults (e.g. "FTSE 100 Analyst", "Mental Health Support", "Recruitment Agent") and editable/extensible from a single configuration page.
 
 Each SME is modelled as a loose **bounded context** (DDD). The domain definition for an SME is the source of truth from which we generate TypeScript types and TanStack Query hooks — domain drives code, never the reverse.
 
@@ -23,7 +23,7 @@ The primary UI is deliberately minimal: a **Three.js sound-wave visualisation** 
 ## 2. Repository layout (monorepo)
 
 ```
-sentinel/
+sentient/
   CLAUDE.md                 # this file
   REVIEW.md                 # the review rubric Claude/humans apply to PRs
   docs/
@@ -114,8 +114,8 @@ Full detail in `docs/standards/azure.md`. Highlights:
 - **Design cloud-agnostic.** Bicep is the deployment target, but application config is injected via environment variables / standard interfaces so the same image runs on any cloud or locally via docker-compose.
 - **Services to use:** Azure Container Apps (API + web), Azure Database for PostgreSQL Flexible Server (with `pgvector`), Azure Key Vault (all secrets), Azure Container Registry, Azure Application Insights + Log Analytics (observability), Azure Storage (blob, for audio/uploads), Managed Identity for service-to-service auth.
 - **Services to avoid unless justified by ADR:** anything that hard-couples the app to Azure-only APIs in the application layer (e.g. calling Azure OpenAI via Azure-specific SDK from a node — wrap it in `LLMPort` instead).
-- **Naming convention:** `{org}-{system}-{env}-{resourceTypeAbbrev}-{instance}`, lower-kebab, e.g. `sentinel-prod-ca-api-01`. Abbreviations table in `docs/standards/azure.md`.
-- **Tagging policy (mandatory on every resource):** `system=sentinel`, `env`, `owner`, `costCenter`, `managedBy=bicep`, `dataClassification`.
+- **Naming convention:** `{org}-{system}-{env}-{resourceTypeAbbrev}-{instance}`, lower-kebab, e.g. `sentient-prod-ca-api-01`. Abbreviations table in `docs/standards/azure.md`.
+- **Tagging policy (mandatory on every resource):** `system=sentient`, `env`, `owner`, `costCenter`, `managedBy=bicep`, `dataClassification`.
 - **Region strategy:** primary `uksouth`, failover `ukwest`; region is a parameter, never hardcoded.
 - **Secrets:** never in code, env files committed, or logs. All secrets resolve from Key Vault via Managed Identity at runtime. Generated code must follow this — a literal secret in a PR is a blocking failure.
 

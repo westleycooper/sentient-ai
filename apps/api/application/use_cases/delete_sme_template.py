@@ -1,7 +1,7 @@
 """Use case: delete a user-created SME template. Defaults are protected."""
 from __future__ import annotations
 
-from sentinel_domain.sme import DEFAULT_TEMPLATES
+from sentient_domain.sme import DEFAULT_TEMPLATES
 
 from application.ports.sme_repository import SmeRepositoryPort
 

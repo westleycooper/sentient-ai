@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Sentinel API",
+    "title": "Sentient API",
     "version": "0.1.0",
     "description": "Multi-reasoning voice agent platform. Generated from FastAPI — do not hand-edit. Regenerate with /regen-contracts."
   },

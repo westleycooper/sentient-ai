@@ -25,7 +25,7 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 
 import { AppHeader } from "../features/nav/AppHeader";
-import { SentinelThemeProvider } from "../themes/SentinelThemeProvider";
+import { SentientThemeProvider } from "../themes/SentientThemeProvider";
 import { THEMES, DEFAULT_THEME_ID } from "../themes/index";
 
 import { Waveform } from "../features/waveform/Waveform";
@@ -382,7 +382,7 @@ export function AgentPage() {
   // ------------------------------------------------------------------
 
   return (
-    <SentinelThemeProvider themeId={agentConfig?.theme_id}>
+    <SentientThemeProvider themeId={agentConfig?.theme_id}>
     <Box
       sx={{
         height: "100dvh",
@@ -517,6 +517,6 @@ export function AgentPage() {
         </Alert>
       </Snackbar>
     </Box>
-    </SentinelThemeProvider>
+    </SentientThemeProvider>
   );
 }

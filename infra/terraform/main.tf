@@ -1,4 +1,4 @@
-# Sentinel — root Terraform deployment. Mirrors infra/bicep/main.bicep exactly.
+# Sentient — root Terraform deployment. Mirrors infra/bicep/main.bicep exactly.
 # Pure IaC (CLAUDE.md §8). Cloud-agnostic app config injected via env vars.
 
 data "azurerm_resource_group" "rg" {
@@ -8,7 +8,7 @@ data "azurerm_resource_group" "rg" {
 locals {
   prefix = "${var.org}-${var.env}"
   tags = {
-    system             = "sentinel"
+    system             = "sentient"
     env                = var.env
     owner              = var.owner
     costCenter         = var.cost_center

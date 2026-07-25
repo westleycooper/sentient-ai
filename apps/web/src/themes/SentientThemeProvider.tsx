@@ -1,8 +1,8 @@
 import { useMemo, type ReactNode } from "react";
 import { ThemeProvider, GlobalStyles } from "@mui/material";
-import { THEMES, DEFAULT_THEME_ID, createSentinelTheme } from "./index";
+import { THEMES, DEFAULT_THEME_ID, createSentientTheme } from "./index";
 
-interface SentinelThemeProviderProps {
+interface SentientThemeProviderProps {
   themeId?: string | null;
   children: ReactNode;
 }
@@ -12,10 +12,10 @@ interface SentinelThemeProviderProps {
  * Falls back to "dark-teal" for unknown or missing IDs.
  * Also sets body { background-color } so the OS scroll-overscroll area matches.
  */
-export function SentinelThemeProvider({ themeId, children }: SentinelThemeProviderProps) {
+export function SentientThemeProvider({ themeId, children }: SentientThemeProviderProps) {
   const theme = useMemo(() => {
     const tokens = THEMES[themeId ?? DEFAULT_THEME_ID] ?? THEMES[DEFAULT_THEME_ID];
-    return createSentinelTheme(tokens);
+    return createSentientTheme(tokens);
   }, [themeId]);
 
   return (

@@ -34,7 +34,7 @@ AVAILABLE_MODELS: list[dict] = [
 DEFAULT_MODEL = "claude-sonnet-5"
 
 DEFAULT_SYSTEM_PROMPT = """\
-You are Sentinel, an AI coding assistant embedded in the Sentinel voice agent platform. \
+You are Sentient, an AI coding assistant embedded in the Sentient voice agent platform. \
 You have direct access to the project source code and can read, edit, and run it.
 
 Project root: {project_dir}

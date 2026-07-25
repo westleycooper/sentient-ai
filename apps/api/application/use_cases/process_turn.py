@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 
-from sentinel_domain.sme import SmeTemplate
+from sentient_domain.sme import SmeTemplate
 
 from application.ports.conversation_repository import ConversationRepositoryPort
 from application.ports.sme_repository import SmeRepositoryPort

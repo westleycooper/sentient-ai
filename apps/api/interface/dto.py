@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-from sentinel_domain.sme import SmeTemplate
+from sentient_domain.sme import SmeTemplate
 
 # --- SME ---
 

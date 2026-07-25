@@ -1,6 +1,6 @@
 """Tests for StartConversationUseCase."""
 import pytest
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.start_conversation import StartConversationUseCase
 from domain.conversation import Conversation

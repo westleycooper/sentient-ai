@@ -5,7 +5,7 @@ import logging
 from collections.abc import AsyncIterator
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from sentinel_domain.sme import SmeTemplate
+from sentient_domain.sme import SmeTemplate
 
 from application.ports.llm_port import LLMPort
 from infrastructure.reasoning.graph import build_graph

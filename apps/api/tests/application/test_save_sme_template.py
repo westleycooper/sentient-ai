@@ -1,6 +1,6 @@
 """Tests for SaveSmeTemplateUseCase and DeleteSmeTemplateUseCase."""
 import pytest
-from sentinel_domain.sme import LessonConfig, LessonQuestion, ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import LessonConfig, LessonQuestion, ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
 from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
