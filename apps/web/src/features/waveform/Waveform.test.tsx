@@ -6,9 +6,9 @@
  *   - mount/unmount for the two 2D-canvas kinds (wave, wavecircle) behind a
  *     minimal fake CanvasRenderingContext2D — enough to prove the component
  *     doesn't crash and respects its prop contract, not pixel-perfect output.
- * wave3d/wave3dgrid (real Three.js WebGLRenderer) are out of scope here —
- * mocking the WebGL pipeline for uncertain value isn't worth it; this file
- * will sit well under the 80% coverage line by design.
+ * wave3d/wave3dgrid/wavehead (real Three.js WebGLRenderer) are out of scope
+ * here — mocking the WebGL pipeline for uncertain value isn't worth it; this
+ * file will sit well under the 80% coverage line by design.
  */
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

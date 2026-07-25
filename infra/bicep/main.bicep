@@ -1,17 +1,17 @@
-// Sentinel — root deployment. Pure IaC (CLAUDE.md §8). Cloud-agnostic app config injected via env.
+// Sentient — root deployment. Pure IaC (CLAUDE.md §8). Cloud-agnostic app config injected via env.
 targetScope = 'resourceGroup'
 
 @description('Environment: dev | test | prod')
 param env string
 @description('Primary region (parameterised, never hardcoded)')
 param location string = 'uksouth'
-param org string = 'sentinel'
+param org string = 'sentient'
 param owner string
 param costCenter string
 param dataClassification string = 'confidential'
 
 var tags = {
-  system: 'sentinel'
+  system: 'sentient'
   env: env
   owner: owner
   costCenter: costCenter

@@ -23,6 +23,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { StepEditor } from "./StepEditor";
 import { RagSourcesEditor } from "./RagSourcesEditor";
 import { RulesEditor } from "./RulesEditor";
+import { LessonEditor } from "./LessonEditor";
 import type { SmeTemplate } from "../../api/hooks";
 import { THEMES } from "../../themes/index";
 
@@ -68,13 +69,14 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
               labelId="vis-kind-label"
               label="Waveform"
               value={draft.visualisation_kind ?? "wave"}
-              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wavecircle" | "wave3d" | "wave3dgrid")}
+              onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead")}
               aria-label="Waveform visualisation"
             >
               <MenuItem value="wave">Sound Wave</MenuItem>
               <MenuItem value="wavecircle">Circle Wave</MenuItem>
               <MenuItem value="wave3d">3D Wave</MenuItem>
               <MenuItem value="wave3dgrid">3D Grid</MenuItem>
+              <MenuItem value="wavehead">Talking Head</MenuItem>
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 130 }}>
@@ -108,6 +110,7 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
           <Tab label={`Steps (${draft.steps.length})`} id="tab-steps" aria-controls="tabpanel-steps" />
           <Tab label={`Rules (${draft.rules.length})`} id="tab-rules" aria-controls="tabpanel-rules" />
           <Tab label={`RAG Sources (${draft.sources.length})`} id="tab-sources" aria-controls="tabpanel-sources" />
+          <Tab label={`Lesson (${draft.lesson.questions.length})`} id="tab-lesson" aria-controls="tabpanel-lesson" />
         </Tabs>
 
         <Divider />
@@ -142,6 +145,12 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
         {tab === 3 && (
           <Box role="tabpanel" id="tabpanel-sources" aria-labelledby="tab-sources">
             <RagSourcesEditor sources={draft.sources} onChange={(s) => set("sources", s)} />
+          </Box>
+        )}
+
+        {tab === 4 && (
+          <Box role="tabpanel" id="tabpanel-lesson" aria-labelledby="tab-lesson">
+            <LessonEditor value={draft.lesson} onChange={(l) => set("lesson", l)} />
           </Box>
         )}
 

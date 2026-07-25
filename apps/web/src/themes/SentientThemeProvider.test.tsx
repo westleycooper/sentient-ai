@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { useTheme } from "@mui/material";
-import { SentinelThemeProvider } from "./SentinelThemeProvider";
+import { SentientThemeProvider } from "./SentientThemeProvider";
 import { THEMES } from "./index";
 
 function Probe() {
@@ -9,39 +9,39 @@ function Probe() {
   return <div data-testid="mode">{theme.palette.mode}</div>;
 }
 
-describe("SentinelThemeProvider", () => {
+describe("SentientThemeProvider", () => {
   it("renders children", () => {
     render(
-      <SentinelThemeProvider themeId="dark-teal">
+      <SentientThemeProvider themeId="dark-teal">
         <span>content</span>
-      </SentinelThemeProvider>
+      </SentientThemeProvider>
     );
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 
   it("applies the theme matching the given themeId", () => {
     render(
-      <SentinelThemeProvider themeId="light">
+      <SentientThemeProvider themeId="light">
         <Probe />
-      </SentinelThemeProvider>
+      </SentientThemeProvider>
     );
     expect(screen.getByTestId("mode")).toHaveTextContent("light");
   });
 
   it("falls back to the default theme for an unknown themeId", () => {
     render(
-      <SentinelThemeProvider themeId="does-not-exist">
+      <SentientThemeProvider themeId="does-not-exist">
         <Probe />
-      </SentinelThemeProvider>
+      </SentientThemeProvider>
     );
     expect(screen.getByTestId("mode")).toHaveTextContent(THEMES["dark-teal"].mode);
   });
 
   it("falls back to the default theme when themeId is undefined", () => {
     render(
-      <SentinelThemeProvider>
+      <SentientThemeProvider>
         <Probe />
-      </SentinelThemeProvider>
+      </SentientThemeProvider>
     );
     expect(screen.getByTestId("mode")).toHaveTextContent(THEMES["dark-teal"].mode);
   });

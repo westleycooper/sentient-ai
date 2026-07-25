@@ -1,13 +1,13 @@
 /**
  * McpTopologyDiagram — architecture view of the MCP server (ADR-0004) that
  * doubles as a small interactive explorer (ADR-0004 addendum): a
- * "Sentinel MCP Server" card, with "Resources" and "Tools" columns below it.
+ * "Sentient AI MCP Server" card, with "Resources" and "Tools" columns below it.
  * Each card is rendered entirely from backend-provided fields (`wraps`,
  * `params`, `input_schema`) so the diagram never hardcodes a frontend-side
  * mapping that can drift from the backend's actual resource/tool registration.
  *
  * Resources/tools with no params/required fields can be run immediately;
- * MCP resource URIs (`sentinel://...`) aren't browser-fetchable on their own
+ * MCP resource URIs (`sentient://...`) aren't browser-fetchable on their own
  * (reading one is a real MCP protocol call — initialize + JSON-RPC
  * resources/read over Streamable HTTP), so these buttons go through the
  * plain-REST explorer endpoints (POST /mcp-status/resources/read,
@@ -202,7 +202,7 @@ export function McpTopologyDiagram({ status }: { status: McpStatus }) {
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "center" }}>
           <HubIcon color="primary" />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Sentinel MCP Server
+            Sentient AI MCP Server
           </Typography>
         </Stack>
         <Typography variant="caption" color="text.disabled">

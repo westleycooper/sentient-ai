@@ -6,13 +6,14 @@
  * Callers pass mode-specific controls as children (right side, e.g. read-aloud
  * toggle) or leftContent (left side, next to the mode toggle — e.g. settings,
  * MCP topology). The Voice/Code toggle and chat icon are always present. The
- * title slot defaults to the "Sentinel" wordmark; pass `titleContent` to
+ * title slot defaults to the "Sentient AI" wordmark; pass `titleContent` to
  * replace it (e.g. HomePage's SME selector), or `null` to show nothing.
  */
 import { Box, AppBar, IconButton, Toolbar, Tooltip, Typography } from "@mui/material";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { useNavigate } from "react-router-dom";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ChatIcon from "@mui/icons-material/Chat";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import TerminalIcon from "@mui/icons-material/Terminal";
@@ -31,7 +32,7 @@ interface AppHeaderProps {
    */
   showCodeToggle?: boolean;
   /**
-   * Replaces the "Sentinel" title (e.g. HomePage's SME selector). Pass
+   * Replaces the "Sentient AI" title (e.g. HomePage's SME selector). Pass
    * `null` to render nothing there; omit to keep the default wordmark.
    */
   titleContent?: React.ReactNode;
@@ -48,7 +49,7 @@ export function AppHeader({ mode, drawerOpen, onToggleDrawer, children, showCode
         <Box sx={{ mr: 3 }}>
           {titleContent !== undefined ? titleContent : (
             <Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Sentinel
+              Sentient AI
             </Typography>
           )}
         </Box>
@@ -80,6 +81,12 @@ export function AppHeader({ mode, drawerOpen, onToggleDrawer, children, showCode
         <Box sx={{ flex: 1 }} />
 
         {children}
+
+        <Tooltip title="Why Sentient AI — features, themes, and licence">
+          <IconButton onClick={() => navigate("/showcase")} aria-label="About Sentient AI">
+            <AutoAwesomeIcon />
+          </IconButton>
+        </Tooltip>
 
         <Tooltip title={drawerOpen ? "Hide transcript" : "Show transcript"}>
           <IconButton onClick={onToggleDrawer} aria-label="Toggle transcript drawer">

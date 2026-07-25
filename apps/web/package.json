@@ -1,11 +1,12 @@
 {
-  "name": "sentinel-web",
+  "name": "sentient-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:showcase": "vite build --config vite.showcase.config.ts && mv ../../docs/showcase/showcase.html ../../docs/showcase/index.html",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
@@ -24,6 +25,7 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.0",
+    "tesseract.js": "^7.0.0",
     "three": "^0.168.0",
     "zustand": "^5.0.0"
   },

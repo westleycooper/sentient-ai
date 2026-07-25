@@ -1,4 +1,4 @@
-# REVIEW.md — Review rubric for Sentinel
+# REVIEW.md — Review rubric for Sentient AI
 
 This is the checklist a reviewer (human or Claude) applies to every PR. Claude should use this verbatim when asked to review, and reference the specific failing item. Items map to `CLAUDE.md`. Mark each ✅ / ❌ / N/A with a one-line reason.
 

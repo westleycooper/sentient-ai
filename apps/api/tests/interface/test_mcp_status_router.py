@@ -7,7 +7,7 @@ from __future__ import annotations
 import httpx
 import pytest
 from fastapi import FastAPI
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from interface.dependencies import get_get_sme_uc
 from interface.mcp import counters

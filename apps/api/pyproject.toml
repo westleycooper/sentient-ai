@@ -1,5 +1,5 @@
 [project]
-name = "sentinel-api"
+name = "sentient-api"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
@@ -21,7 +21,7 @@ dependencies = [
   "azure-monitor-opentelemetry>=1.6",
   "python-multipart>=0.0.9",
   "sse-starlette>=2.1",
-  "sentinel-domain",
+  "sentient-domain",
   "python-dotenv>=1.2.2",
   "deepgram-sdk>=7.3.1",
   "elevenlabs>=2.53.0",
@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-sentinel-domain = { path = "../../packages/domain", editable = true }
+sentient-domain = { path = "../../packages/domain", editable = true }
 
 
 [tool.ruff]

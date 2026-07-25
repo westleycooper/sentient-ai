@@ -25,6 +25,14 @@ vi.mock("../features/waveform/Waveform", () => ({
   Waveform: (props: { kind: string }) => <div data-testid="waveform" data-kind={props.kind} />,
 }));
 
+vi.mock("../features/lesson/LessonPanel", () => ({
+  LessonPanel: (props: { onFinish: () => void }) => (
+    <div data-testid="lesson-panel">
+      <button onClick={props.onFinish}>Mock Finish Lesson</button>
+    </div>
+  ),
+}));
+
 const mockStartRec = vi.fn().mockResolvedValue(undefined);
 const mockStopRec = vi.fn().mockResolvedValue(new Blob());
 vi.mock("../features/voice/useVoiceRecorder", () => ({
@@ -52,6 +60,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     id: "ftse100-analyst", name: "FTSE 100 Analyst", soul: "s",
     steps: [], sources: [], rules: [], is_default: true,
     visualisation_kind: "wave", theme_id: "dark-teal",
+    lesson: { enabled: false, visual_verify: true, questions: [] },
     ...overrides,
   };
 }
@@ -259,5 +268,50 @@ describe("HomePage", () => {
     // "Reason" legitimately also appears in the transcript's own inline steps
     // block for the completed message — just confirm the archived step shows up.
     expect(screen.getAllByText("Reason").length).toBeGreaterThan(0);
+  });
+
+  it("does not show a Start Lesson button when the active SME's lesson is disabled", async () => {
+    renderPage([makeTemplate()]);
+    await screen.findByText(/Hello, I'm your FTSE 100 Analyst/);
+    expect(screen.queryByRole("button", { name: "Start Lesson" })).not.toBeInTheDocument();
+  });
+
+  it("shows a Start Lesson button when the active SME's lesson is enabled", async () => {
+    renderPage([makeTemplate({ lesson: { enabled: true, visual_verify: true, questions: [] } })]);
+    expect(await screen.findByRole("button", { name: "Start Lesson" })).toBeInTheDocument();
+  });
+
+  it("starting a Lesson swaps the main area to LessonPanel and shrinks the waveform to a corner element", async () => {
+    renderPage([makeTemplate({ lesson: { enabled: true, visual_verify: true, questions: [] } })]);
+    await userEvent.click(await screen.findByRole("button", { name: "Start Lesson" }));
+
+    expect(screen.getByTestId("lesson-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("waveform")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start Lesson" })).not.toBeInTheDocument();
+  });
+
+  it("finishing a Lesson returns to the normal waveform view", async () => {
+    renderPage([makeTemplate({ lesson: { enabled: true, visual_verify: true, questions: [] } })]);
+    await userEvent.click(await screen.findByRole("button", { name: "Start Lesson" }));
+    await screen.findByTestId("lesson-panel");
+
+    await userEvent.click(screen.getByRole("button", { name: "Mock Finish Lesson" }));
+
+    expect(screen.queryByTestId("lesson-panel")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start Lesson" })).toBeInTheDocument();
+  });
+
+  it("switching SME exits an in-progress Lesson", async () => {
+    renderPage([
+      makeTemplate({ id: "a", name: "Tutor", lesson: { enabled: true, visual_verify: true, questions: [] } }),
+      makeTemplate({ id: "b", name: "FTSE 100 Analyst", is_default: false }),
+    ]);
+    await userEvent.click(await screen.findByRole("button", { name: "Start Lesson" }));
+    await screen.findByTestId("lesson-panel");
+
+    await userEvent.click(screen.getByLabelText("Select subject matter expert"));
+    await userEvent.click(await screen.findByRole("option", { name: "FTSE 100 Analyst" }));
+
+    expect(screen.queryByTestId("lesson-panel")).not.toBeInTheDocument();
   });
 });

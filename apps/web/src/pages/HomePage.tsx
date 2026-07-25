@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Box,
+  Button,
   Chip,
   Divider,
   IconButton,
@@ -26,19 +27,21 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HistoryIcon from "@mui/icons-material/History";
 import HubIcon from "@mui/icons-material/Hub";
+import SchoolIcon from "@mui/icons-material/School";
 import SettingsIcon from "@mui/icons-material/Settings";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 
 import { AppHeader } from "../features/nav/AppHeader";
-import { SentinelThemeProvider } from "../themes/SentinelThemeProvider";
+import { SentientThemeProvider } from "../themes/SentientThemeProvider";
 import { THEMES, DEFAULT_THEME_ID } from "../themes/index";
 import { Waveform, type WaveformKind } from "../features/waveform/Waveform";
 import { MicButton } from "../features/voice/MicButton";
 import { useVoiceRecorder } from "../features/voice/useVoiceRecorder";
 import { TranscriptDrawer } from "../features/transcript/TranscriptDrawer";
 import { ReasoningSteps } from "../features/reasoning/ReasoningSteps";
+import { LessonPanel } from "../features/lesson/LessonPanel";
 import { useUiStore } from "../store/uiStore";
 import {
   useSmeTemplates,
@@ -70,13 +73,14 @@ export function HomePage() {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isTtsPlaying, setIsTtsPlaying] = useState(false);
+  const [lessonRunning, setLessonRunning] = useState(false);
 
   // Wave visualisation kind — starts from the active SME's setting, overridable per session.
   const [waveKindOverride, setWaveKindOverride] = useState<WaveformKind | null>(null);
   const prevSmeIdRef = useRef<string | null>(null);
-  const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid"];
+  const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"];
   const WAVE_LABELS: Record<WaveformKind, string> = {
-    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid",
+    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid", wavehead: "Talking head",
   };
 
   // Keep a ref so archive-on-clear in callbacks always sees fresh steps
@@ -179,6 +183,7 @@ export function HomePage() {
     setStepHistory([]);
     setStepsByMsgId({});
     setIsStreaming(false);
+    setLessonRunning(false);
     greetingPlayedRef.current = false;
 
     const greetingText = `Hello, I'm your ${activeSme.name}. How can I help?`;
@@ -468,7 +473,7 @@ export function HomePage() {
   const messages = localMessages.length > 0 ? localMessages : (conversation?.messages ?? []);
 
   return (
-    <SentinelThemeProvider themeId={activeSme?.theme_id}>
+    <SentientThemeProvider themeId={activeSme?.theme_id}>
     <Box
       sx={{
         height: "100dvh",
@@ -541,7 +546,7 @@ export function HomePage() {
           </Tooltip>
         </AppHeader>
 
-        {/* Waveform */}
+        {/* Waveform / Lesson */}
         <Box
           sx={{
             flex: 1,
@@ -549,53 +554,86 @@ export function HomePage() {
             borderRadius: 3,
             overflow: "hidden",
             bgcolor: "background.paper",
-            ...(activeKind === "wave" && {
+            ...(activeKind === "wave" && !lessonRunning && {
               border: "1px solid",
               borderColor: "divider",
             }),
           }}
         >
-          <Waveform
-            amplitude={amplitude}
-            active={recording || isTtsPlaying}
-            color={waveColor}
-            peakColor={wavePeakColor}
-            bgColor={activeTokens.bgPaper}
-            kind={activeKind}
-          />
+          {lessonRunning && activeSme ? (
+            <>
+              <Box sx={{ position: "absolute", top: 16, right: 16, width: 120, height: 80, zIndex: 10, borderRadius: 1, overflow: "hidden" }}>
+                <Waveform
+                  amplitude={amplitude}
+                  active={recording || isTtsPlaying}
+                  color={waveColor}
+                  peakColor={wavePeakColor}
+                  bgColor={activeTokens.bgPaper}
+                  kind={activeKind}
+                />
+              </Box>
+              <Box sx={{ height: "100%", overflowY: "auto" }}>
+                <LessonPanel lesson={activeSme.lesson} onFinish={() => setLessonRunning(false)} />
+              </Box>
+            </>
+          ) : (
+            <>
+              <Waveform
+                amplitude={amplitude}
+                active={recording || isTtsPlaying}
+                color={waveColor}
+                peakColor={wavePeakColor}
+                bgColor={activeTokens.bgPaper}
+                kind={activeKind}
+              />
 
-          {/* Reasoning steps overlay — most recent run only */}
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 24,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 10,
-            }}
-          >
-            <ReasoningSteps steps={steps} isStreaming={isStreaming} />
-          </Box>
+              {activeSme?.lesson.enabled && (
+                <Box sx={{ position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 10 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SchoolIcon />}
+                    onClick={() => setLessonRunning(true)}
+                    aria-label="Start Lesson"
+                  >
+                    Start Lesson
+                  </Button>
+                </Box>
+              )}
 
-          {/* Step history button — bottom-left */}
-          {stepHistory.length > 0 && (
-            <Box sx={{ position: "absolute", bottom: 16, left: 16, zIndex: 10 }}>
-              <Tooltip title="Step history">
-                <IconButton
-                  size="small"
-                  onClick={(e) => setHistoryAnchor(e.currentTarget)}
-                  aria-label="Show step history"
-                  sx={{
-                    bgcolor: "background.paper",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    "&:hover": { bgcolor: "action.hover" },
-                  }}
-                >
-                  <HistoryIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </Tooltip>
-            </Box>
+              {/* Reasoning steps overlay — most recent run only */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 24,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 10,
+                }}
+              >
+                <ReasoningSteps steps={steps} isStreaming={isStreaming} />
+              </Box>
+
+              {/* Step history button — bottom-left */}
+              {stepHistory.length > 0 && (
+                <Box sx={{ position: "absolute", bottom: 16, left: 16, zIndex: 10 }}>
+                  <Tooltip title="Step history">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => setHistoryAnchor(e.currentTarget)}
+                      aria-label="Show step history"
+                      sx={{
+                        bgcolor: "background.paper",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <HistoryIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+            </>
           )}
         </Box>
 
@@ -702,6 +740,6 @@ export function HomePage() {
         </Alert>
       </Snackbar>
     </Box>
-    </SentinelThemeProvider>
+    </SentientThemeProvider>
   );
 }

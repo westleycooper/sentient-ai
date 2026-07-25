@@ -57,6 +57,22 @@ describe("TranscriptDrawer", () => {
     expect(screen.getByText("What is the FTSE 100?")).toBeInTheDocument();
   });
 
+  it("uses white text on a user bubble for contrast against its purple/dark accent background (regression)", () => {
+    render(
+      <TranscriptDrawer
+        open
+        messages={[makeMessage({ content: "What is the FTSE 100?" })]}
+        steps={[]}
+        stepsByMsgId={{}}
+        isStreaming={false}
+        onClose={noop}
+        onSendText={noop}
+      />
+    );
+    const bubble = screen.getByText("What is the FTSE 100?").closest("div");
+    expect(bubble).toHaveStyle({ color: "#fff" });
+  });
+
   it("renders an assistant message through markdown", () => {
     render(
       <TranscriptDrawer

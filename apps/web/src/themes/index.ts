@@ -1,8 +1,8 @@
 /**
- * Sentinel theme registry.
+ * Sentient AI theme registry.
  *
- * Each entry is a flat `SentinelThemeTokens` spec — a minimal set of colours from
- * which `createSentinelTheme()` builds a full MUI theme.
+ * Each entry is a flat `SentientThemeTokens` spec — a minimal set of colours from
+ * which `createSentientTheme()` builds a full MUI theme.
  *
  * To add a new theme: add a new entry to THEMES below and give it a unique `id`.
  * The coding agent can do this in frontend mode; the id immediately appears in the
@@ -10,7 +10,7 @@
  */
 import { createTheme, type Theme } from "@mui/material/styles";
 
-export interface SentinelThemeTokens {
+export interface SentientThemeTokens {
   id: string;
   label: string;
   /** MUI palette mode — controls default component colours */
@@ -32,7 +32,7 @@ function hexToRgb(hex: string): string {
   return `${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)}`;
 }
 
-export function createSentinelTheme(t: SentinelThemeTokens): Theme {
+export function createSentientTheme(t: SentientThemeTokens): Theme {
   const d = t.mode === "dark";
   const divAlpha = d ? "0.15" : "0.20";
   const borderAlpha = d ? "0.25" : "0.30";
@@ -60,6 +60,12 @@ export function createSentinelTheme(t: SentinelThemeTokens): Theme {
     },
     shape: { borderRadius: 6 },
     components: {
+      // Bumps the root font size 16px -> 18px, which scales every rem-based
+      // size in the app (MUI's own typography variants and our own literal
+      // rem values in sx) proportionally rather than just body text.
+      MuiCssBaseline: {
+        styleOverrides: { html: { fontSize: "18px" } },
+      },
       MuiButton: {
         styleOverrides: { root: { textTransform: "none", fontWeight: 600 } },
       },
@@ -115,7 +121,7 @@ export function createSentinelTheme(t: SentinelThemeTokens): Theme {
 }
 
 /** Built-in theme registry. Add entries here to expose new themes in the UI. */
-export const THEMES: Record<string, SentinelThemeTokens> = {
+export const THEMES: Record<string, SentientThemeTokens> = {
   "dark-teal": {
     id: "dark-teal",
     label: "Dark Teal",

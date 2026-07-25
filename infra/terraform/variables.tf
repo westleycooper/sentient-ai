@@ -15,7 +15,7 @@ variable "location" {
 
 variable "org" {
   type    = string
-  default = "sentinel"
+  default = "sentient"
 }
 
 variable "owner" {
