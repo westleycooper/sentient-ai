@@ -48,8 +48,7 @@ import { SentientThemeProvider } from "../themes/SentientThemeProvider";
 import { THEMES, DEFAULT_THEME_ID } from "../themes/index";
 import { Waveform, type WaveformKind } from "../features/waveform/Waveform";
 
-/** Public repository — update when the project gets its permanent home. */
-const GITHUB_URL = "https://github.com/your-org/sentient";
+const GITHUB_URL = "https://github.com/westleycooper/sentient-ai";
 
 const DEMO_KINDS: { kind: WaveformKind; label: string }[] = [
   { kind: "wave", label: "Line wave" },
