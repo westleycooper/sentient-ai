@@ -1,4 +1,4 @@
-"""Sentient API — FastAPI entrypoint. One responsibility: wiring and startup."""
+"""Sentient AI API — FastAPI entrypoint. One responsibility: wiring and startup."""
 from __future__ import annotations
 
 import os
@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Sentient API",
+    title="Sentient AI API",
     version="0.1.0",
     description="Multi-reasoning voice agent platform.",
     lifespan=lifespan,

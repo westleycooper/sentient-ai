@@ -1,5 +1,5 @@
 /**
- * TanStack Query hooks for Sentient API.
+ * TanStack Query hooks for Sentient AI API.
  *
  * Generated from packages/contracts/openapi.json via /regen-contracts.
  * DO NOT hand-edit this file — edit the domain and regenerate.

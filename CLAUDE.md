@@ -1,4 +1,4 @@
-# CLAUDE.md — Sentient Platform
+# CLAUDE.md — Sentient AI Platform
 
 > This file is the single source of truth for how we build on this repo. Claude Code (and humans) should read it before any task. If a request conflicts with this document, surface the conflict rather than silently deviating. Keep it current: when an architectural decision changes, update this file **and** add an ADR under `docs/adr/`.
 
@@ -6,7 +6,7 @@
 
 ## 1. What we are building
 
-**Sentient** is a configurable, multi-reasoning voice agent platform. A user speaks; the platform transcribes (STT), runs a **multi-step LangGraph reasoning workflow** over the request with persistent context, and reads the answer back (TTS). The defining feature is that the *reasoning workflow itself* — its steps and its "subject-matter expertise" (SME) — is **user-configurable**, selectable from defaults (e.g. "FTSE 100 Analyst", "Mental Health Support", "Recruitment Agent") and editable/extensible from a single configuration page.
+**Sentient AI** is a configurable, multi-reasoning voice agent platform. A user speaks; the platform transcribes (STT), runs a **multi-step LangGraph reasoning workflow** over the request with persistent context, and reads the answer back (TTS). The defining feature is that the *reasoning workflow itself* — its steps and its "subject-matter expertise" (SME) — is **user-configurable**, selectable from defaults (e.g. "FTSE 100 Analyst", "Mental Health Support", "Recruitment Agent") and editable/extensible from a single configuration page.
 
 Each SME is modelled as a loose **bounded context** (DDD). The domain definition for an SME is the source of truth from which we generate TypeScript types and TanStack Query hooks — domain drives code, never the reverse.
 

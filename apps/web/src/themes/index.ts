@@ -1,5 +1,5 @@
 /**
- * Sentient theme registry.
+ * Sentient AI theme registry.
  *
  * Each entry is a flat `SentientThemeTokens` spec — a minimal set of colours from
  * which `createSentientTheme()` builds a full MUI theme.
