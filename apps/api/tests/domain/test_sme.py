@@ -1,5 +1,5 @@
-"""Tests for the sentinel_domain SME models."""
-from sentinel_domain.sme import (
+"""Tests for the sentient_domain SME models."""
+from sentient_domain.sme import (
     DEFAULT_TEMPLATES,
     LessonConfig,
     LessonQuestion,

@@ -24,7 +24,7 @@ class StructuredJsonFormatter(logging.Formatter):
         doc: dict = {
             "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
-            "service": "sentinel-api",
+            "service": "sentient-api",
             "env": os.getenv("ENV", "local"),
             "logger": record.name,
             "message": record.getMessage(),

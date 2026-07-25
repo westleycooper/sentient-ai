@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 from mcp.server.fastmcp.exceptions import ToolError
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.process_turn import ProcessTurnUseCase
 from application.use_cases.start_conversation import StartConversationUseCase

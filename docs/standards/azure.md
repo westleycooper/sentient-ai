@@ -17,11 +17,11 @@
 Azure-only API calls from the application layer. Wrap providers (e.g. Azure OpenAI) behind LLMPort in infrastructure.
 
 ## Naming
-{org}-{system}-{env}-{typeAbbrev}-{instance}, lower-kebab. e.g. sentinel-prod-ca-api-01.
+{org}-{system}-{env}-{typeAbbrev}-{instance}, lower-kebab. e.g. sentient-prod-ca-api-01.
 Abbrevs: ca=Container App, pg=Postgres, kv=Key Vault, cr=Container Registry, st=Storage, ai=App Insights, log=Log Analytics, id=Managed Identity, vnet=VNet.
 
 ## Mandatory tags (every resource)
-system=sentinel, env, owner, costCenter, managedBy=bicep, dataClassification.
+system=sentient, env, owner, costCenter, managedBy=bicep, dataClassification.
 
 ## Region
 Primary uksouth, failover ukwest. Region is a parameter, never hardcoded.

@@ -31,19 +31,19 @@ def _resource(*, uri_template: str, name: str, description: str, wraps: str) -> 
 
 _RESOURCES = [
     _resource(
-        uri_template="sentinel://sme-templates",
+        uri_template="sentient://sme-templates",
         name="list_sme_templates",
         description="All SME templates, summary fields.",
         wraps="GetSmeTemplatesUseCase",
     ),
     _resource(
-        uri_template="sentinel://sme-templates/{template_id}",
+        uri_template="sentient://sme-templates/{template_id}",
         name="get_sme_template",
         description="Full SME template definition.",
         wraps="GetSmeTemplatesUseCase",
     ),
     _resource(
-        uri_template="sentinel://conversations/{conversation_id}",
+        uri_template="sentient://conversations/{conversation_id}",
         name="get_conversation",
         description="Conversation transcript. Contains PII.",
         wraps="ConversationRepositoryPort.get",

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sentinel_domain.sme import (
+from sentient_domain.sme import (
     LessonConfig,
     ReasoningStep,
     RetrievalSourceConfig,

@@ -1,4 +1,4 @@
-"""Upsert the default SME templates from sentinel_domain into Postgres.
+"""Upsert the default SME templates from sentient_domain into Postgres.
 
 Run once after `alembic upgrade head`, and any time the domain defaults change:
     uv run python scripts/seed_defaults.py
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent.parent.parent / ".env.local")
 
 import psycopg
-from sentinel_domain.sme import DEFAULT_TEMPLATES
+from sentient_domain.sme import DEFAULT_TEMPLATES
 
 
 def _row(t) -> dict:

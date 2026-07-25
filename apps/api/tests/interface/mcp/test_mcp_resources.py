@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 
 import pytest
 from mcp.server.fastmcp.exceptions import ResourceError
-from sentinel_domain.sme import (
+from sentient_domain.sme import (
     ReasoningStep,
     RetrievalSourceConfig,
     RetrievalSourceKind,
@@ -83,7 +83,7 @@ def _patch_conversation_repo(monkeypatch, conv: Conversation | None):
 
 @pytest.mark.asyncio
 async def test_list_sme_templates_returns_summary_fields(monkeypatch):
-    # GetSmeTemplatesUseCase always merges in sentinel_domain.sme.DEFAULT_TEMPLATES
+    # GetSmeTemplatesUseCase always merges in sentient_domain.sme.DEFAULT_TEMPLATES
     # (stored wins on id collision) — assert our fakes are present, not exact set equality.
     _patch_sme_templates_uc(monkeypatch, [_SIMPLE_SME, _FULL_SME])
     result = json.loads(await mcp_server.list_sme_templates())

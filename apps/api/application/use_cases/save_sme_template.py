@@ -1,7 +1,7 @@
 """Use case: create or update an SME template."""
 from __future__ import annotations
 
-from sentinel_domain.sme import SmeTemplate
+from sentient_domain.sme import SmeTemplate
 
 from application.ports.sme_repository import SmeRepositoryPort
 

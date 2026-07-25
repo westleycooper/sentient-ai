@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 import httpx
 import pytest
 from fastapi import FastAPI
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
 from application.use_cases.process_turn import ProcessTurnUseCase
@@ -111,7 +111,7 @@ def _reset_counters(monkeypatch):
 async def test_read_resource_no_params(client, monkeypatch):
     _patch_sme_templates_uc(monkeypatch, [_SME])
     async with client as c:
-        resp = await c.post("/mcp-status/resources/read", json={"uri": "sentinel://sme-templates"})
+        resp = await c.post("/mcp-status/resources/read", json={"uri": "sentient://sme-templates"})
     assert resp.status_code == 200
     body = resp.json()["content"]
     assert any(t["id"] == "test-sme" for t in body)
@@ -122,7 +122,7 @@ async def test_read_resource_templated(client, monkeypatch):
     _patch_sme_templates_uc(monkeypatch, [_SME])
     async with client as c:
         resp = await c.post(
-            "/mcp-status/resources/read", json={"uri": "sentinel://sme-templates/test-sme"}
+            "/mcp-status/resources/read", json={"uri": "sentient://sme-templates/test-sme"}
         )
     assert resp.status_code == 200
     assert resp.json()["content"]["soul"] == "Test soul"
@@ -132,7 +132,7 @@ async def test_read_resource_templated(client, monkeypatch):
 async def test_read_resource_unknown_uri_returns_400(client, monkeypatch):
     _patch_sme_templates_uc(monkeypatch, [_SME])
     async with client as c:
-        resp = await c.post("/mcp-status/resources/read", json={"uri": "sentinel://does-not-exist"})
+        resp = await c.post("/mcp-status/resources/read", json={"uri": "sentient://does-not-exist"})
     assert resp.status_code == 400
 
 

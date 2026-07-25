@@ -1,4 +1,4 @@
-# Sentinel
+# Sentient
 
 Configurable, multi-reasoning voice agent platform. Speak -> STT -> multi-step
 LangGraph reasoning with persistent Postgres context -> TTS. Reasoning steps and
@@ -38,7 +38,7 @@ See **[SETUP.md](SETUP.md)** for full installation instructions covering macOS, 
 ## Repository layout
 
 ```
-sentinel/
+sentient/
   apps/
     api/          FastAPI + LangGraph — domain / application / infrastructure / interface
     web/          React 19 + Vite + MUI v9 + TanStack Query + Zustand + Three.js
@@ -72,7 +72,7 @@ points the same way, driven by `GET /mcp-status`'s `mounted` flag.
   this project's source tree, WebSocket-based with a tool-approval gate on
   every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
 - **MCP server** (<a href="http://localhost:5173/mcp" target="_blank" rel="noopener noreferrer"><code>/mcp</code> ↗</a>) —
-  exposes Sentinel's SME templates and conversation state to external MCP
+  exposes Sentient's SME templates and conversation state to external MCP
   clients (e.g. Claude Desktop) over Streamable HTTP at `/mcp`; the linked
   frontend page visualises what's exposed. No auth on the MCP transport in
   v1, which is why it's local-only for now. See [ADR-0004](docs/adr/0004-mcp-server.md).

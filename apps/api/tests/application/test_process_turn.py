@@ -2,7 +2,7 @@
 from collections.abc import AsyncIterator
 
 import pytest
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.process_turn import ProcessTurnUseCase
 from domain.conversation import Conversation

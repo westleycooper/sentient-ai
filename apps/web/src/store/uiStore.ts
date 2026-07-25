@@ -46,7 +46,7 @@ export const useUiStore = create<UiState>()(
       })),
     }),
     {
-      name: "sentinel-ui",
+      name: "sentient-ui",
       partialize: (s) => ({
         defaultSmeId: s.defaultSmeId,
         readAloud: s.readAloud,

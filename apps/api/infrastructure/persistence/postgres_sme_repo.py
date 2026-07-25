@@ -1,7 +1,7 @@
 """Postgres adapter for SmeRepositoryPort."""
 from __future__ import annotations
 
-from sentinel_domain.sme import (
+from sentient_domain.sme import (
     LessonConfig,
     ReasoningStep,
     RetrievalSourceConfig,
