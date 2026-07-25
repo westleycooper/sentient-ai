@@ -15,14 +15,14 @@ const status: McpStatus = {
   mount_path: "/mcp",
   resources: [
     {
-      uri_template: "sentinel://sme-templates",
+      uri_template: "sentient://sme-templates",
       name: "list_sme_templates",
       description: "All SME templates, summary fields.",
       wraps: "GetSmeTemplatesUseCase",
       params: [],
     },
     {
-      uri_template: "sentinel://sme-templates/{template_id}",
+      uri_template: "sentient://sme-templates/{template_id}",
       name: "get_sme_template",
       description: "Full SME template definition.",
       wraps: "GetSmeTemplatesUseCase",
@@ -60,14 +60,14 @@ describe("McpTopologyDiagram", () => {
 
   it("renders the server card with mount path and mounted state", () => {
     renderDiagram();
-    expect(screen.getByText("Sentinel MCP Server")).toBeInTheDocument();
+    expect(screen.getByText("Sentient AI MCP Server")).toBeInTheDocument();
     expect(screen.getByText(/\/mcp — mounted, local only/)).toBeInTheDocument();
   });
 
   it("renders each resource with its uri template and wrapped use case", () => {
     renderDiagram();
     expect(screen.getByText("list_sme_templates")).toBeInTheDocument();
-    expect(screen.getByText("sentinel://sme-templates")).toBeInTheDocument();
+    expect(screen.getByText("sentient://sme-templates")).toBeInTheDocument();
     expect(screen.getAllByText("→ GetSmeTemplatesUseCase").length).toBeGreaterThan(0);
   });
 
@@ -90,7 +90,7 @@ describe("McpTopologyDiagram", () => {
       expect(readButtons[0]).toBeEnabled();
 
       await userEvent.click(readButtons[0]);
-      expect(api.post).toHaveBeenCalledWith("/mcp-status/resources/read", { uri: "sentinel://sme-templates" });
+      expect(api.post).toHaveBeenCalledWith("/mcp-status/resources/read", { uri: "sentient://sme-templates" });
       expect(await screen.findByText(/"id": "a"/)).toBeInTheDocument();
     });
 
@@ -106,7 +106,7 @@ describe("McpTopologyDiagram", () => {
 
       await userEvent.click(templatedRead);
       expect(api.post).toHaveBeenCalledWith("/mcp-status/resources/read", {
-        uri: "sentinel://sme-templates/ftse100-analyst",
+        uri: "sentient://sme-templates/ftse100-analyst",
       });
     });
 

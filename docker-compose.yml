@@ -1,5 +1,8 @@
 version: "3.9"
 # Local development compose. cloud-agnostic (CLAUDE.md §8).
+# NOTE: the Postgres db/user keep the legacy "sentinel" name deliberately —
+# Postgres only applies POSTGRES_* on first init, so renaming them would break
+# every existing pgdata volume. The product is Sentient; the local db is not.
 services:
   postgres:
     image: pgvector/pgvector:pg16

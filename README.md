@@ -1,4 +1,4 @@
-# Sentinel
+# Sentient AI
 
 Configurable, multi-reasoning voice agent platform. Speak -> STT -> multi-step
 LangGraph reasoning with persistent Postgres context -> TTS. Reasoning steps and
@@ -6,31 +6,11 @@ subject-matter expertise (SME) are user-configurable from one page; domain drive
 generated frontend types + hooks. Minimal UI: Three.js waveform + mic button, with
 a slide-out chat transcript.
 
-- **DDD-modelled personas.** Each SME (FTSE 100 Analyst, Mental Health Support,
-  Recruitment Agent, ...) is a bounded context with its own reasoning steps,
-  rules, and RAG sources — no shared entities, translated at the boundary.
-  `packages/domain` is the source of truth: it drives the generated OpenAPI
-  contract and the frontend's TypeScript types + TanStack Query hooks.
-- **Self-hosted MCP server.** Sentinel also exposes its SME templates and live
-  conversation state as an MCP (Model Context Protocol) server, so external
-  clients like Claude Desktop can query into the platform directly, not just
-  through its own UI. See the in-product `/mcp` explorer and
-  `docs/adr/0004-mcp-server.md`.
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/sme-ui-ftse.png" alt="FTSE 100 Analyst SME — voice UI" /></td>
-    <td width="50%"><img src="docs/screenshots/mcp-server.png" alt="MCP server explorer" /></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/sme-config-steps.png" alt="SME config — reasoning steps" /></td>
-    <td width="50%"><img src="docs/screenshots/sme-config-rules.png" alt="SME config — rules" /></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/sme-config-rag.png" alt="SME config — RAG sources" /></td>
-    <td width="50%"><img src="docs/screenshots/sme-ui-blocks.png" alt="English Blocks Tutor SME — voice UI" /></td>
-  </tr>
-</table>
+> 🌐 **[View the showcase site ↗](https://westleycooper.github.io/sentient-ai/showcase/)** —
+> features, live Three.js demos, themes, and licensing, served straight from this
+> repo via GitHub Pages. (One-time setup: repo **Settings → Pages → Deploy from a
+> branch**, pick the branch and the **`/docs`** folder, save. Regenerate the static
+> bundle after showcase changes with `pnpm --filter sentient-web build:showcase`.)
 
 ---
 
@@ -49,6 +29,10 @@ cd apps/web && pnpm dev
 
 Then open **http://localhost:5173**.
 
+Port already taken by another Vite app? Override it: `pnpm dev --port 5174` (the
+`/api` and `/ws` dev proxies to the backend are unaffected — only the frontend's
+own port changes, so update the URL above accordingly).
+
 ---
 
 ## Getting started
@@ -60,7 +44,7 @@ See **[SETUP.md](SETUP.md)** for full installation instructions covering macOS, 
 ## Repository layout
 
 ```
-sentinel/
+sentient/
   apps/
     api/          FastAPI + LangGraph — domain / application / infrastructure / interface
     web/          React 19 + Vite + MUI v9 + TanStack Query + Zustand + Three.js
@@ -94,7 +78,7 @@ points the same way, driven by `GET /mcp-status`'s `mounted` flag.
   this project's source tree, WebSocket-based with a tool-approval gate on
   every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
 - **MCP server** (<a href="http://localhost:5173/mcp" target="_blank" rel="noopener noreferrer"><code>/mcp</code> ↗</a>) —
-  exposes Sentinel's SME templates and conversation state to external MCP
+  exposes Sentient AI's SME templates and conversation state to external MCP
   clients (e.g. Claude Desktop) over Streamable HTTP at `/mcp`; the linked
   frontend page visualises what's exposed. No auth on the MCP transport in
   v1, which is why it's local-only for now. See [ADR-0004](docs/adr/0004-mcp-server.md).

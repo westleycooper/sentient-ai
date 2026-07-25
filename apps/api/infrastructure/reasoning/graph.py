@@ -10,8 +10,8 @@ from typing import Any
 import httpx
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, StateGraph
-from sentinel_domain.guardrails import GUARDRAIL_REGISTRY
-from sentinel_domain.sme import ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.guardrails import GUARDRAIL_REGISTRY
+from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.ports.llm_port import LLMPort
 from application.ports.retrieval_port import RetrievalSourcePort
@@ -66,7 +66,6 @@ def _make_reason_node(step: ReasoningStep, llm: LLMPort):
         )
         soul = state.get("soul", "")
         system = (f"{soul}\n\n" if soul else "") + (
-            "You are called Sentinel. If asked who or what you are, say you are Sentinel. "
             "Give short, direct answers — 1-3 sentences maximum unless the question genuinely requires more. "
             "No preamble, no sign-off, no filler phrases like 'Certainly!' or 'Great question!'. "
             "Plain prose only — no markdown, no bullet points, no headers — the response will be read aloud. "

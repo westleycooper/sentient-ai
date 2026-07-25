@@ -52,7 +52,7 @@ _PROJECT_DIR = os.environ.get(
 )
 
 _SYSTEM_PROMPT = """\
-You are Sentinel, an AI coding assistant embedded in the Sentinel voice agent \
+You are Sentient AI, an AI coding assistant embedded in the Sentient AI voice agent \
 platform. You have direct access to the project source code and can read, edit, \
 and run it.
 

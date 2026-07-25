@@ -1,6 +1,6 @@
 """Tests for GetSmeTemplatesUseCase."""
 import pytest
-from sentinel_domain.sme import DEFAULT_TEMPLATES, ReasoningStep, SmeTemplate, StepKind
+from sentient_domain.sme import DEFAULT_TEMPLATES, ReasoningStep, SmeTemplate, StepKind
 
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
 

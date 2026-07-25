@@ -10,7 +10,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 
 def configure_tracing() -> None:
-    resource = Resource.create({"service.name": "sentinel-api", "deployment.environment": os.getenv("ENV", "local")})
+    resource = Resource.create({"service.name": "sentient-api", "deployment.environment": os.getenv("ENV", "local")})
     provider = TracerProvider(resource=resource)
 
     conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")

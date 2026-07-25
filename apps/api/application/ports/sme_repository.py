@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from sentinel_domain.sme import SmeTemplate
+from sentient_domain.sme import SmeTemplate
 
 
 class SmeRepositoryPort(Protocol):

@@ -47,6 +47,24 @@ class SmeRule(BaseModel):
     enabled: bool = True
 
 
+class LessonQuestion(BaseModel):
+    """One question in a Lesson: a prompt the user answers by spelling with blocks."""
+    id: str
+    title: str
+    question: str
+    answer: str
+    image_url: str | None = None
+
+
+class LessonConfig(BaseModel):
+    """Optional Lesson feature switch. Disabled by default on every SME; any
+    persona can opt in and configure questions via the same editor UI used
+    for steps/rules/sources."""
+    enabled: bool = False
+    visual_verify: bool = True
+    questions: list[LessonQuestion] = Field(default_factory=list)
+
+
 class SmeTemplate(BaseModel):
     """A selectable, cloneable, editable template. Persisted in Postgres.
 
@@ -59,8 +77,9 @@ class SmeTemplate(BaseModel):
     sources: list[RetrievalSourceConfig] = Field(default_factory=list)
     rules: list[SmeRule] = Field(default_factory=list)
     is_default: bool = False
-    visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid"] = "wave"
+    visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"] = "wave"
     theme_id: str = "dark-teal"
+    lesson: LessonConfig = Field(default_factory=LessonConfig)
 
     def model_json_schema_export(self) -> dict:
         return self.model_json_schema()
@@ -197,8 +216,37 @@ def recruitment_default() -> SmeTemplate:
     )
 
 
+def english_blocks_tutor_default() -> SmeTemplate:
+    return SmeTemplate(
+        id="english-blocks-tutor",
+        name="English Blocks Tutor",
+        soul=(
+            "You are a warm, encouraging phonics and spelling tutor for young "
+            "children, working alongside a physical set of about 40 double-sided "
+            "letter blocks (roughly two of each common letter, single copies of "
+            "rarer letters like Q, X, Z, J). You speak simply, praise effort, and "
+            "break words into sounds (phonics/blends) to help the child find the "
+            "right blocks. During a lesson you introduce each word, help the child "
+            "sound it out, and wait for them to show their spelling to the camera."
+        ),
+        steps=[
+            ReasoningStep(id="reason", name="Friendly phonics chat", kind=StepKind.REASON,
+                          config={"prompt": "Respond warmly and simply; break words into sounds when asked."}),
+        ],
+        rules=[
+            SmeRule(id="simple-language", description="Use short, simple sentences a young child can follow."),
+            SmeRule(id="encouraging", description="Always praise effort before correcting mistakes."),
+        ],
+        is_default=False,
+        visualisation_kind="wave",
+        theme_id="light",
+        lesson=LessonConfig(enabled=True, visual_verify=True, questions=[]),
+    )
+
+
 DEFAULT_TEMPLATES: list[SmeTemplate] = [
     ftse100_default(),
     mental_health_default(),
     recruitment_default(),
+    english_blocks_tutor_default(),
 ]

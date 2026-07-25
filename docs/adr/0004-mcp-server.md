@@ -1,4 +1,4 @@
-# ADR-0004: Sentinel as an MCP server
+# ADR-0004: Sentient AI as an MCP server
 
 - Status: Accepted
 - Date: 2026-07-20
@@ -6,18 +6,18 @@
 
 ## Context
 
-Sentinel's SME domain (bounded contexts, reasoning steps, retrieval sources)
+Sentient AI's SME domain (bounded contexts, reasoning steps, retrieval sources)
 is already well-modelled via DDD, and its conversation/reasoning state is
 live, structured data. External MCP (Model Context Protocol) clients —
-Claude Desktop, other agents — would benefit from querying into Sentinel
+Claude Desktop, other agents — would benefit from querying into Sentient AI
 directly rather than the platform staying a closed system reachable only
 through its own web UI.
 
-Two directions were possible: Sentinel as an MCP *client* (reasoning steps
-calling out to external MCP servers for data) or Sentinel as an MCP
+Two directions were possible: Sentient AI as an MCP *client* (reasoning steps
+calling out to external MCP servers for data) or Sentient AI as an MCP
 *server* (exposing its own data to external clients). This ADR covers the
 latter, which was the explicit choice: give external tools access to
-Sentinel's "clean, well-modelled, real-time data" — the SME templates and
+Sentient AI's "clean, well-modelled, real-time data" — the SME templates and
 conversation state — reusing the DDD investment already made rather than
 adding a new consumption path.
 
@@ -31,7 +31,7 @@ legible, not just present.
 
 Use the official `mcp` Python SDK (`mcp[cli]>=1.28,<2` — the SDK's own
 README caps below `2.x` while that line is pre-release), via `FastMCP` with
-`stateless_http=True, json_response=True`, since Sentinel is a persistent
+`stateless_http=True, json_response=True`, since Sentient AI is a persistent
 multi-user web service rather than a per-client stdio process. The server
 is mounted as a plain ASGI sub-app inside the existing FastAPI app:
 `app.mount("/mcp", mcp.streamable_http_app())`, with
@@ -47,9 +47,9 @@ Three read-only Resources and two Tools are exposed, each a thin
 `interface/mcp/server.py` handler over an **existing** application-layer
 use case — no new domain or application logic:
 
-- `sentinel://sme-templates` / `sentinel://sme-templates/{id}` →
+- `sentient://sme-templates` / `sentient://sme-templates/{id}` →
   `GetSmeTemplatesUseCase`
-- `sentinel://conversations/{id}` → `ConversationRepositoryPort.get`
+- `sentient://conversations/{id}` → `ConversationRepositoryPort.get`
   (messages only — reasoning-step events are never persisted, so they
   cannot be recovered here after the fact)
 - `start_conversation(sme_id)` → `StartConversationUseCase`
@@ -62,7 +62,7 @@ use case — no new domain or application logic:
   for this integration isn't justified yet.
 
 **The MCP mount is gated `ENV != production`**, exactly the pattern
-ADR-0003 established for the coding-agent WebSocket: `sentinel://conversations/{id}`
+ADR-0003 established for the coding-agent WebSocket: `sentient://conversations/{id}`
 returns transcript content, which CLAUDE.md §9 explicitly classifies as
 PII, to any MCP client that can reach the port, and there is no
 authentication on the MCP transport in v1. This is a deliberate, called-out
@@ -109,7 +109,7 @@ out of those layers.
 
 ## Alternatives considered
 
-**Sentinel as an MCP client** (reasoning steps calling out to external MCP
+**Sentient AI as an MCP client** (reasoning steps calling out to external MCP
 servers for data) — a legitimate direction for a future ADR, but a
 different feature: it would extend the RAG/tool-call reasoning-step
 pattern, not the DDD-domain-exposure goal this ADR addresses.
@@ -120,13 +120,13 @@ need, and client-side progress-notification support isn't reliable enough
 across MCP hosts yet to justify a second streaming code path.
 
 **Running the MCP server as a separate stdio-spawned process per client** —
-rejected; Sentinel is a persistent multi-user web service, not something
+rejected; Sentient AI is a persistent multi-user web service, not something
 spawned per-client.
 
 ## Addendum (2026-07-20): interactive explorer
 
 The `/mcp` page's resource/tool cards were originally descriptive only —
-`sentinel://...` URIs aren't browser-fetchable (reading one requires a real
+`sentient://...` URIs aren't browser-fetchable (reading one requires a real
 MCP session: `initialize` + JSON-RPC `resources/read` over the Streamable
 HTTP transport, not a plain GET), so there was no way to try them from the
 page. Added a small GraphiQL-style explorer directly on those cards.

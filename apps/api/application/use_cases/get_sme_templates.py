@@ -1,7 +1,7 @@
 """Use case: list all SME templates (defaults + user-created)."""
 from __future__ import annotations
 
-from sentinel_domain.sme import DEFAULT_TEMPLATES, SmeTemplate
+from sentient_domain.sme import DEFAULT_TEMPLATES, SmeTemplate
 
 from application.ports.sme_repository import SmeRepositoryPort
 

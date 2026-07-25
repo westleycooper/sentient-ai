@@ -70,3 +70,4 @@ class SmeTemplateModel(Base):
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")
     theme_id: Mapped[str] = mapped_column(String(100), nullable=False, server_default="dark-teal")
+    lesson: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
