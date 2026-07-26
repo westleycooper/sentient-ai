@@ -79,7 +79,16 @@ export function createSentientTheme(t: SentientThemeTokens): Theme {
         styleOverrides: { notchedOutline: { borderColor: `rgba(${rgb}, ${borderAlpha})` } },
       },
       MuiChip: {
-        styleOverrides: { root: { borderColor: `rgba(${rgb}, ${chipAlpha})` } },
+        styleOverrides: {
+          root: {
+            borderColor: `rgba(${rgb}, ${chipAlpha})`,
+            fontSize: "calc(0.8125rem + 1px)",
+            "&.MuiChip-sizeMedium": { height: 34 }, // default 32px + 2px
+            "&.MuiChip-sizeSmall": { height: 26 }, // default 24px + 2px
+            "&.MuiChip-sizeSmall .MuiChip-label": { paddingLeft: 10, paddingRight: 10 }, // default 8px + 2px
+          },
+          label: { paddingLeft: 14, paddingRight: 14 }, // default 12px + 2px (medium; overridden above for small)
+        },
       },
       MuiTooltip: {
         styleOverrides: {
