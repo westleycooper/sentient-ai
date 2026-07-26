@@ -236,3 +236,4 @@ lcov.info
 
 # Personal Claude Code overrides — settings.json is the team-shared baseline
 .claude/settings.local.json
+.claude/worktrees/
