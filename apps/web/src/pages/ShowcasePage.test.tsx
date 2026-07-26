@@ -36,6 +36,14 @@ describe("ShowcasePage", () => {
     expect(screen.getByText(/Commercial use is welcome/)).toBeInTheDocument();
   });
 
+  it("renders the product screenshot gallery from docs/screenshots", () => {
+    renderPage();
+    expect(screen.getByText("Straight from the product")).toBeInTheDocument();
+    expect(screen.getByAltText("RAG sources — knowledge wired from the UI")).toBeInTheDocument();
+    expect(screen.getByAltText("MCP server explorer")).toBeInTheDocument();
+    expect(screen.getAllByRole("img").length).toBeGreaterThanOrEqual(6);
+  });
+
   it("renders the enterprise-power section: RAG sources, guardrails, rules", () => {
     renderPage();
     expect(screen.getByText("Point it at your business")).toBeInTheDocument();

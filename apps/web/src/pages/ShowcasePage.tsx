@@ -58,6 +58,15 @@ const DEMO_KINDS: { kind: WaveformKind; label: string }[] = [
   { kind: "wavehead", label: "Talking head" },
 ];
 
+const SCREENSHOTS = [
+  { src: "screenshots/sme-ui-ftse.png", caption: "FTSE 100 Analyst — voice UI" },
+  { src: "screenshots/mcp-server.png", caption: "MCP server explorer" },
+  { src: "screenshots/sme-config-steps.png", caption: "Reasoning steps — configured, not coded" },
+  { src: "screenshots/sme-config-rules.png", caption: "Rules — plain-language governance" },
+  { src: "screenshots/sme-config-rag.png", caption: "RAG sources — knowledge wired from the UI" },
+  { src: "screenshots/sme-ui-blocks.png", caption: "English Blocks Tutor — another persona" },
+];
+
 const FEATURES = [
   {
     icon: <TuneIcon />,
@@ -128,13 +137,13 @@ const AI_NATIVE_CARDS = [
     icon: <TerminalIcon />,
     title: "Claude Code, embedded",
     body:
-      "The developer edition ships with a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
+      "Run it locally and developer mode adds a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
   },
   {
     icon: <HubOutlinedIcon />,
     title: "MCP server built in",
     body:
-      "In the developer edition, your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
+      "Another developer-mode option when running locally: your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
   },
   {
     icon: <SmartToyOutlinedIcon />,
@@ -264,6 +273,33 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
           </Typography>
         </Container>
 
+        {/* ── Screenshots ─────────────────────────────────────────────── */}
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
+            Straight from the product
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center" }}>
+            Two personas, their configuration screens, and the MCP explorer — as they run today.
+          </Typography>
+          <Grid container spacing={3}>
+            {SCREENSHOTS.map((shot) => (
+              <Grid key={shot.src} size={{ xs: 12, sm: 6 }}>
+                <Card variant="outlined">
+                  <Box
+                    component="img"
+                    src={import.meta.env.BASE_URL + shot.src}
+                    alt={shot.caption}
+                    sx={{ display: "block", width: "100%", height: "auto" }}
+                  />
+                  <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+                    {shot.caption}
+                  </Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
         {/* ── Enterprise power: RAG / guardrails / rules ──────────────── */}
         <Box sx={{ bgcolor: "background.paper", borderTop: 1, borderBottom: 1, borderColor: "divider" }}>
           <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -283,7 +319,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                         {c.icon}
                         <Typography variant="h6">{c.title}</Typography>
                       </Stack>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                         {c.body}
                       </Typography>
                       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -317,7 +353,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                       {c.icon}
                       <Typography variant="h6">{c.title}</Typography>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary">
                       {c.body}
                     </Typography>
                   </CardContent>
@@ -330,7 +366,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
         {/* ── Features ────────────────────────────────────────────────── */}
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
-            And everything else, standard
+            Superpowers, standard
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center" }}>
             Everything below ships in the open-source core. No paid tier, no gated features.
@@ -344,7 +380,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                       {f.icon}
                       <Typography variant="h6">{f.title}</Typography>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary">
                       {f.body}
                     </Typography>
                   </CardContent>
@@ -392,11 +428,11 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                           <Chip size="small" color="primary" variant="outlined" label={s.name} />
                           <Box sx={{ flex: 1 }} />
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="body2" color="text.secondary">
                             {s.ms} ms · {s.tokens.toLocaleString()} tokens
                           </Typography>
                         </Stack>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                        <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75 }}>
                           {s.detail}
                         </Typography>
                       </Box>
@@ -469,7 +505,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                 ].map((line) => (
                   <Stack key={line} direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
                     <AutoAwesomeIcon color="primary" sx={{ fontSize: 18, mt: 0.4 }} />
-                    <Typography variant="body2">{line}</Typography>
+                    <Typography variant="body1">{line}</Typography>
                   </Stack>
                 ))}
               </Stack>
@@ -477,7 +513,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Terms, in plain words
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Personal, educational, and research use is free. Commercial use is welcome and
                 actively encouraged — we'd love to see Sentient AI put to work. See the repository for
                 the full licence text.
