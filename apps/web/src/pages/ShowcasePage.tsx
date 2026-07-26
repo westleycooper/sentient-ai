@@ -110,8 +110,8 @@ const POWER_CARDS = [
     icon: <SecurityOutlinedIcon />,
     title: "Guardrails as workflow steps",
     body:
-      "Drop a guardrail-check step anywhere in an expert's reasoning workflow. Retrieved content and tool output are treated as untrusted — validated before any action, never allowed to override instructions.",
-    chips: ["Pre-action checks", "Prompt-injection defence", "Auditable"],
+      "Drop a guardrail-check step anywhere in an expert's reasoning workflow — validated before any action, with every check recorded in the step trace. Built for what regulators now expect of AI: finance, health, legal, HR. Retrieved content and tool output are treated as untrusted, never allowed to override instructions.",
+    chips: ["Regulated-industry ready", "Pre-action checks", "Prompt-injection defence", "Audit trail"],
   },
   {
     icon: <RuleOutlinedIcon />,
@@ -241,12 +241,12 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
             sx={{ mb: 3 }}
           />
           <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: "-0.03em", mb: 2 }}>
-            Voice agents with visible minds
+            Your AI experts. Your data. Your rules.
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 800, mx: "auto", fontWeight: 400 }}>
-            Sentient AI is the AI-native voice-agent platform: speak, watch a multi-step reasoning
-            workflow think in real time, and hear the answer back. Wire in your company's knowledge,
-            guardrails, and rules from one screen — new expertise is configuration, not code.
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 820, mx: "auto", fontWeight: 400 }}>
+            Sentient AI is the AI-native platform for building a roster of AI personas — each with
+            its own retrieval sources, guardrails, rules, and reasoning workflow, all configured
+            from one screen with no deploy. Voice in, transparent multi-step reasoning, voice out.
           </Typography>
           <Stack direction="row" spacing={2} sx={{ mt: 4, justifyContent: "center" }}>
             <Button size="large" variant="contained" startIcon={<RocketLaunchIcon />} {...launchProps}>
@@ -262,33 +262,6 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
             Live render — this is the actual visualisation component, not a screenshot.
           </Typography>
-        </Container>
-
-        {/* ── Features ────────────────────────────────────────────────── */}
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
-            Superpowers, standard
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center" }}>
-            Everything below ships in the open-source core. No paid tier, no gated features.
-          </Typography>
-          <Grid container spacing={3}>
-            {FEATURES.map((f) => (
-              <Grid key={f.title} size={{ xs: 12, sm: 6, md: 4 }}>
-                <Card variant="outlined" sx={{ height: "100%" }}>
-                  <CardContent>
-                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5, color: "primary.main" }}>
-                      {f.icon}
-                      <Typography variant="h6">{f.title}</Typography>
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary">
-                      {f.body}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
         </Container>
 
         {/* ── Enterprise power: RAG / guardrails / rules ──────────────── */}
@@ -346,6 +319,33 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                     </Stack>
                     <Typography variant="body2" color="text.secondary">
                       {c.body}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+
+        {/* ── Features ────────────────────────────────────────────────── */}
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Typography variant="h4" sx={{ mb: 1, textAlign: "center" }}>
+            And everything else, standard
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 4, textAlign: "center" }}>
+            Everything below ships in the open-source core. No paid tier, no gated features.
+          </Typography>
+          <Grid container spacing={3}>
+            {FEATURES.map((f) => (
+              <Grid key={f.title} size={{ xs: 12, sm: 6, md: 4 }}>
+                <Card variant="outlined" sx={{ height: "100%" }}>
+                  <CardContent>
+                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5, color: "primary.main" }}>
+                      {f.icon}
+                      <Typography variant="h6">{f.title}</Typography>
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                      {f.body}
                     </Typography>
                   </CardContent>
                 </Card>

@@ -31,7 +31,7 @@ describe("ShowcasePage", () => {
 
   it("renders the hero pitch and licence positioning", () => {
     renderPage();
-    expect(screen.getByText("Voice agents with visible minds")).toBeInTheDocument();
+    expect(screen.getByText("Your AI experts. Your data. Your rules.")).toBeInTheDocument();
     expect(screen.getByText(/Free for personal use\. Built for business\./)).toBeInTheDocument();
     expect(screen.getByText(/Commercial use is welcome/)).toBeInTheDocument();
   });
