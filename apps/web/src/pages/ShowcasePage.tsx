@@ -249,7 +249,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
             variant="outlined"
             sx={{ mb: 3 }}
           />
-          <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: "-0.03em", mb: 2 }}>
+          <Typography variant="h2" sx={{ fontWeight: 800, letterSpacing: "-0.03em", mb: 2, fontSize: { xs: "2.3rem", sm: "3rem", md: "3.75rem" } }}>
             Your AI experts. Your data. Your rules.
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 820, mx: "auto", fontWeight: 400 }}>
@@ -322,7 +322,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                         {c.body}
                       </Typography>
-                      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
+                      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
                         {c.chips.map((chip) => (
                           <Chip key={chip} size="small" variant="outlined" color="primary" label={chip} />
                         ))}
@@ -402,7 +402,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 7 }}>
               <Card variant="outlined">
-                <Stack direction="row" spacing={1} sx={{ p: 1.5, flexWrap: "wrap" }}>
+                <Stack direction="row" spacing={1} useFlexGap sx={{ p: 1.5, flexWrap: "wrap" }}>
                   {DEMO_KINDS.map((d) => (
                     <Chip
                       key={d.kind}
