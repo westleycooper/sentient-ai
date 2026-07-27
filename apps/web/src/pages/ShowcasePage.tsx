@@ -19,16 +19,22 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardContent,
   Chip,
   Container,
+  Dialog,
   Divider,
   Grid,
+  IconButton,
   Link,
   Stack,
   Typography,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import CloseIcon from "@mui/icons-material/Close";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -213,11 +219,23 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
   const navigate = useNavigate();
   const [themeId, setThemeId] = useState(DEFAULT_THEME_ID);
   const [demoKind, setDemoKind] = useState<WaveformKind>("wave3dgrid");
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   const launchLabel = standalone ? "Run it locally" : "Launch the app";
   const launchProps = standalone
     ? { href: `${GITHUB_URL}#quick-start-already-set-up`, target: "_blank", rel: "noopener noreferrer" }
     : { onClick: () => navigate("/") };
+
+  // Left/right arrow keys step through the lightbox; Escape is handled by Dialog itself.
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") setLightboxIdx((i) => (i === null ? i : (i + 1) % SCREENSHOTS.length));
+      if (e.key === "ArrowLeft") setLightboxIdx((i) => (i === null ? i : (i - 1 + SCREENSHOTS.length) % SCREENSHOTS.length));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIdx]);
 
   return (
     <SentientThemeProvider themeId={themeId}>
@@ -282,23 +300,69 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
             Two personas, their configuration screens, and the MCP explorer — as they run today.
           </Typography>
           <Grid container spacing={3}>
-            {SCREENSHOTS.map((shot) => (
+            {SCREENSHOTS.map((shot, i) => (
               <Grid key={shot.src} size={{ xs: 12, sm: 6 }}>
                 <Card variant="outlined">
-                  <Box
-                    component="img"
-                    src={import.meta.env.BASE_URL + shot.src}
-                    alt={shot.caption}
-                    sx={{ display: "block", width: "100%", height: "auto" }}
-                  />
-                  <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
-                    {shot.caption}
-                  </Typography>
+                  <CardActionArea onClick={() => setLightboxIdx(i)} aria-label={`Enlarge screenshot: ${shot.caption}`}>
+                    <Box
+                      component="img"
+                      src={import.meta.env.BASE_URL + shot.src}
+                      alt={shot.caption}
+                      sx={{ display: "block", width: "100%", height: "auto" }}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+                      {shot.caption}
+                    </Typography>
+                  </CardActionArea>
                 </Card>
               </Grid>
             ))}
           </Grid>
         </Container>
+
+        {/* ── Screenshot lightbox ─────────────────────────────────────── */}
+        <Dialog
+          open={lightboxIdx !== null}
+          onClose={() => setLightboxIdx(null)}
+          maxWidth="lg"
+          fullWidth
+          slotProps={{ paper: { sx: { bgcolor: "background.paper", backgroundImage: "none" } } }}
+        >
+          {lightboxIdx !== null && (
+            <Box sx={{ position: "relative" }}>
+              <IconButton
+                onClick={() => setLightboxIdx(null)}
+                aria-label="Close"
+                sx={{ position: "absolute", top: 8, right: 8, bgcolor: "background.paper", "&:hover": { bgcolor: "background.paper" } }}
+              >
+                <CloseIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => setLightboxIdx((i) => (i === null ? i : (i - 1 + SCREENSHOTS.length) % SCREENSHOTS.length))}
+                aria-label="Previous screenshot"
+                sx={{ position: "absolute", top: "50%", left: 8, transform: "translateY(-50%)", bgcolor: "background.paper", "&:hover": { bgcolor: "background.paper" } }}
+              >
+                <ChevronLeftIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => setLightboxIdx((i) => (i === null ? i : (i + 1) % SCREENSHOTS.length))}
+                aria-label="Next screenshot"
+                sx={{ position: "absolute", top: "50%", right: 8, transform: "translateY(-50%)", bgcolor: "background.paper", "&:hover": { bgcolor: "background.paper" } }}
+              >
+                <ChevronRightIcon />
+              </IconButton>
+              <Box
+                component="img"
+                src={import.meta.env.BASE_URL + SCREENSHOTS[lightboxIdx].src}
+                alt={SCREENSHOTS[lightboxIdx].caption}
+                sx={{ display: "block", width: "100%", height: "auto" }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ p: 1.5, textAlign: "center" }}>
+                {SCREENSHOTS[lightboxIdx].caption}
+              </Typography>
+            </Box>
+          )}
+        </Dialog>
 
         {/* ── Enterprise power: RAG / guardrails / rules ──────────────── */}
         <Box sx={{ bgcolor: "background.paper", borderTop: 1, borderBottom: 1, borderColor: "divider" }}>

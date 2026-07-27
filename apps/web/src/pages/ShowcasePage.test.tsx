@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -42,6 +42,21 @@ describe("ShowcasePage", () => {
     expect(screen.getByAltText("RAG sources — knowledge wired from the UI")).toBeInTheDocument();
     expect(screen.getByAltText("MCP server explorer")).toBeInTheDocument();
     expect(screen.getAllByRole("img").length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("clicking a screenshot opens a lightbox with that image enlarged, closable and navigable", async () => {
+    renderPage();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /Enlarge screenshot: MCP server explorer/ }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByAltText("MCP server explorer")).toBeInTheDocument();
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "Next screenshot" }));
+    expect(within(screen.getByRole("dialog")).getByAltText("Reasoning steps — configured, not coded")).toBeInTheDocument();
+
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("renders the enterprise-power section: RAG sources, guardrails, rules", () => {
