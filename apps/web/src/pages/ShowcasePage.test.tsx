@@ -103,9 +103,14 @@ describe("ShowcasePage", () => {
 
   it("switching the demo kind chip swaps the demo visualisation", async () => {
     renderPage();
-    await userEvent.click(screen.getByRole("button", { name: "Talking head" }));
+    await userEvent.click(screen.getByRole("button", { name: "Circle wave" }));
     const kinds = screen.getAllByTestId("waveform").map((w) => w.dataset.kind);
-    expect(kinds).toContain("wavehead");
+    expect(kinds).toContain("wavecircle");
+  });
+
+  it("does not offer the WIP talking-head visualisation", () => {
+    renderPage();
+    expect(screen.queryByRole("button", { name: "Talking head" })).not.toBeInTheDocument();
   });
 
   it("lists every registered theme as a clickable swatch", async () => {

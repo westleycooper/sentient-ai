@@ -61,7 +61,6 @@ const DEMO_KINDS: { kind: WaveformKind; label: string }[] = [
   { kind: "wavecircle", label: "Circle wave" },
   { kind: "wave3d", label: "3D dots" },
   { kind: "wave3dgrid", label: "3D grid" },
-  { kind: "wavehead", label: "Talking head" },
 ];
 
 const SCREENSHOTS = [
@@ -90,7 +89,7 @@ const FEATURES = [
     icon: <GraphicEqIcon />,
     title: "Voice end-to-end",
     body:
-      "Speech-to-text in, multi-step reasoning with persistent Postgres context, text-to-speech out — fronted by live Three.js visualisations, from oscilloscopes to a talking head.",
+      "Speech-to-text in, multi-step reasoning with persistent Postgres context, text-to-speech out — fronted by live Three.js visualisations, from oscilloscopes to reactive 3D grids.",
   },
   {
     icon: <FactCheckOutlinedIcon />,
@@ -283,8 +282,8 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
               Star on GitHub
             </Button>
           </Stack>
-          <Box sx={{ mt: 4, borderRadius: 2, overflow: "hidden", border: 1, borderColor: "divider" }}>
-            <LiveWaveform kind="wave3dgrid" height={340} />
+          <Box sx={{ mt: 4, maxWidth: 720, mx: "auto", borderRadius: 2, overflow: "hidden", border: 1, borderColor: "divider" }}>
+            <LiveWaveform kind="wave3dgrid" height={460} />
           </Box>
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
             Live render — this is the actual visualisation component, not a screenshot.
