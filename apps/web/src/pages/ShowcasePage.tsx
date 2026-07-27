@@ -134,10 +134,10 @@ const POWER_CARDS = [
 /** AI-native capabilities — the platform is built BY AI tooling, FOR AI operations. */
 const AI_NATIVE_CARDS = [
   {
-    icon: <TerminalIcon />,
-    title: "Claude Code, embedded",
+    icon: <SmartToyOutlinedIcon />,
+    title: "AI-native architecture",
     body:
-      "Run it locally and developer mode adds a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
+      "Born in the agentic era: LangGraph reasoning workflows, model-agnostic LLM ports (Claude 5-ready), token accounting in every trace, and a codebase authored with AI pair-engineering from the first commit.",
   },
   {
     icon: <HubOutlinedIcon />,
@@ -146,10 +146,10 @@ const AI_NATIVE_CARDS = [
       "Another developer-mode option when running locally: your experts and conversations are exposed over the Model Context Protocol — Claude Desktop or any MCP client can query them directly. Your agents become tools other AI can use.",
   },
   {
-    icon: <SmartToyOutlinedIcon />,
-    title: "AI-native architecture",
+    icon: <TerminalIcon />,
+    title: "Claude Code, embedded",
     body:
-      "Born in the agentic era: LangGraph reasoning workflows, model-agnostic LLM ports (Claude 5-ready), token accounting in every trace, and a codebase authored with AI pair-engineering from the first commit.",
+      "Run it locally and developer mode adds a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
   },
 ];
 
