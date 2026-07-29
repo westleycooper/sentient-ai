@@ -553,8 +553,8 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
                 Free for personal use. Built for business.
               </Typography>
               <Typography color="text.secondary" sx={{ mb: 2 }}>
-                Sentient AI is open source and free for personal projects, learning, and research —
-                forever. And if it can make your business money, even better: that's what it's for.
+                Sentient AI is open source and free for personal projects, learning, and research.
+                And if it can make your business money, even better: that's what it's for.
                 Self-host it on your cloud, white-label the UI with your theme, wire in your own
                 retrieval sources, and keep every token accounted for.
               </Typography>

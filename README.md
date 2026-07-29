@@ -90,3 +90,8 @@ open in a new tab — they won't resolve unless that server is running.
 ## Custom Claude Code commands
 
 `/new-sme`, `/new-service`, `/adr`, `/review`, `/regen-contracts`, `/check-boundaries`, `/pii-check`.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE). Free for personal, educational, and
+research use; commercial use is welcome and encouraged.

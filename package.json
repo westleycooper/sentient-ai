@@ -2,6 +2,7 @@
   "name": "sentient",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "scripts": {
     "dev:web": "pnpm --filter sentient-web dev",
     "build:web": "pnpm --filter sentient-web build",
