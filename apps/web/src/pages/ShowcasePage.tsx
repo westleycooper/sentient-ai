@@ -154,7 +154,7 @@ const AI_NATIVE_CARDS = [
     icon: <TerminalIcon />,
     title: "Claude Code, embedded",
     body:
-      "Run it locally and developer mode adds a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself.",
+      "Run it locally and developer mode adds a voice-driven Claude Code agent inside the platform: talk to it, and it reads, edits, and runs the project's own source — every action behind an approval gate. The platform that can extend itself. Speaking to it instead of typing is also an accessibility win — for anyone who finds sustained typing difficult, tiring, or impossible.",
   },
 ];
 

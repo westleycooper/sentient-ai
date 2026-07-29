@@ -76,7 +76,8 @@ points the same way, driven by `GET /mcp-status`'s `mounted` flag.
 - **Coding agent** (<a href="http://localhost:5173/agent" target="_blank" rel="noopener noreferrer"><code>/agent</code> ↗</a>) —
   a voice-driven coding assistant with direct read/write/execute access to
   this project's source tree, WebSocket-based with a tool-approval gate on
-  every action. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
+  every action. Speaking instead of typing also makes it an accessibility
+  feature, not just a novelty. See [ADR-0003](docs/adr/0003-coding-agent-websocket-tool-approval.md).
 - **MCP server** (<a href="http://localhost:5173/mcp" target="_blank" rel="noopener noreferrer"><code>/mcp</code> ↗</a>) —
   exposes Sentient AI's SME templates and conversation state to external MCP
   clients (e.g. Claude Desktop) over Streamable HTTP at `/mcp`; the linked
