@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import time
 from typing import Any
 
@@ -15,12 +14,11 @@ from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.ports.llm_port import LLMPort
 from application.ports.retrieval_port import RetrievalSourcePort
+from infrastructure.llm.platform_default import PLATFORM_DEFAULT_MODEL as _FAST_MODEL
 from infrastructure.reasoning.guardrail_executor import run_guardrail
 from infrastructure.reasoning.state import ConversationState, ReasoningStepEvent
 
 logger = logging.getLogger(__name__)
-
-_FAST_MODEL = os.environ.get("REASONING_MODEL", "claude-haiku-4-5-20251001")
 
 
 def _emit(state: ConversationState, ev: ReasoningStepEvent) -> None:

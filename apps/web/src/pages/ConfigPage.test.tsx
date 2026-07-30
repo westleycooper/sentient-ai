@@ -49,6 +49,9 @@ function mockGet(templates: SmeTemplate[], { mcpMounted = true }: { mcpMounted?:
     if (path === "/agent/config") return Promise.resolve(AGENT_CONFIG);
     if (path === "/agent/models") return Promise.resolve(AGENT_MODELS);
     if (path === "/models/frontier") return Promise.resolve([]);
+    if (path === "/models/platform-default") {
+      return Promise.resolve({ id: "anthropic:claude-haiku-4-5-20251001", provider: "anthropic", label: "Haiku 4.5" });
+    }
     if (path === "/models/local") {
       return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
     }

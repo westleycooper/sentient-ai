@@ -9,7 +9,9 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import type { StepEvent } from "../../api/hooks";
+import { formatLatency } from "../../lib/formatLatency";
 
 interface ReasoningStepsProps {
   steps: StepEvent[];
@@ -47,7 +49,7 @@ export function ReasoningSteps({ steps, isStreaming }: ReasoningStepsProps) {
 function StepRow({ step }: { step: StepEvent }) {
   const done = step.phase === "finished";
   const tokens = step.total_tokens > 0 ? `${step.total_tokens} tokens` : null;
-  const latency = step.latency_ms != null ? `${Math.round(step.latency_ms)} ms` : null;
+  const latency = step.latency_ms != null ? formatLatency(step.latency_ms) : null;
 
   return (
     <Collapse in>
@@ -60,6 +62,11 @@ function StepRow({ step }: { step: StepEvent }) {
         <Typography variant="caption" sx={{ flex: 1, color: "text.secondary" }}>
           {step.step_name}
         </Typography>
+        {step.model && (
+          <Tooltip title={`Model: ${step.model}`}>
+            <PsychologyAltOutlinedIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+          </Tooltip>
+        )}
         {tokens && (
           <Tooltip title="Token usage for this step">
             <Chip label={tokens} size="small" variant="outlined" sx={{ height: 18, fontSize: 10 }} />

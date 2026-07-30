@@ -269,7 +269,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
         <Container maxWidth="lg" sx={{ pt: { xs: 6, md: 10 }, pb: 4, textAlign: "center" }}>
           <Chip
             icon={<AutoAwesomeIcon />}
-            label="AI-native · open source · free for personal use"
+            label="AI-native · open source · free"
             color="primary"
             variant="outlined"
             sx={{ mb: 3 }}

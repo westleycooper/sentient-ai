@@ -7,11 +7,13 @@ import os
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+from sentient_domain.model_ref import parse_model_ref
 
 from application.use_cases.delete_local_model import DeleteLocalModelUseCase
 from application.use_cases.get_local_model_browser_state import GetLocalModelBrowserStateUseCase
 from application.use_cases.pull_local_model import PullLocalModelUseCase
 from domain.model_catalog import FRONTIER_MODELS
+from infrastructure.llm.platform_default import PLATFORM_DEFAULT_MODEL
 from interface.dependencies import (
     get_delete_local_model_uc,
     get_local_model_browser_uc,
@@ -21,6 +23,7 @@ from interface.dto import (
     FrontierModelOption,
     LocalModelBrowserResponse,
     LocalModelInfoResponse,
+    PlatformDefaultModelResponse,
     PullModelRequest,
     RecommendedModelOption,
 )
@@ -36,6 +39,18 @@ async def list_frontier_models():
         for provider, models in FRONTIER_MODELS.items()
         for m in models
     ]
+
+
+@router.get("/platform-default", response_model=PlatformDefaultModelResponse)
+async def get_platform_default_model():
+    """The actual model an SME/step falls back to when nothing is configured."""
+    provider, model_id = parse_model_ref(PLATFORM_DEFAULT_MODEL)
+    full_id = f"{provider}:{model_id}"
+    label = next(
+        (m["label"] for models in FRONTIER_MODELS.values() for m in models if m["id"] == full_id),
+        model_id,
+    )
+    return PlatformDefaultModelResponse(id=full_id, provider=provider, label=label)
 
 
 @router.get("/local", response_model=LocalModelBrowserResponse)

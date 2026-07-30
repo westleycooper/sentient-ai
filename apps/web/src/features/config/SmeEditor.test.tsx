@@ -28,9 +28,15 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
   };
 }
 
-function renderEditor(props: Partial<React.ComponentProps<typeof SmeEditor>> = {}) {
+function renderEditor(
+  props: Partial<React.ComponentProps<typeof SmeEditor>> = {},
+  frontierModels: unknown[] = []
+) {
   vi.mocked(api.get).mockImplementation((path: string) => {
-    if (path === "/models/frontier") return Promise.resolve([]);
+    if (path === "/models/frontier") return Promise.resolve(frontierModels);
+    if (path === "/models/platform-default") {
+      return Promise.resolve({ id: "anthropic:claude-haiku-4-5-20251001", provider: "anthropic", label: "Haiku 4.5" });
+    }
     if (path === "/models/local") {
       return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
     }
@@ -58,6 +64,19 @@ describe("SmeEditor", () => {
     renderEditor();
     expect(screen.getByLabelText(/Template name/)).toHaveValue("FTSE 100 Analyst");
     expect(screen.getByRole("textbox", { name: /Soul/ })).toHaveValue("A measured equity analyst.");
+  });
+
+  it("shows the resolved platform-default model, not just the words 'platform default'", async () => {
+    renderEditor();
+    expect(await screen.findByText("Anthropic Haiku 4.5 (default)")).toBeInTheDocument();
+  });
+
+  it("shows the SME's own default model when one is configured", async () => {
+    renderEditor(
+      { template: makeTemplate({ default_model: "openai:gpt-5.6-terra" }) },
+      [{ id: "openai:gpt-5.6-terra", provider: "openai", label: "GPT-5.6 Terra", description: "Balanced" }]
+    );
+    expect(await screen.findByText("OpenAI GPT-5.6 Terra (default)")).toBeInTheDocument();
   });
 
   it("labels each tab with its item count", () => {
@@ -121,6 +140,9 @@ describe("SmeEditor", () => {
   it("resets the draft and active tab when a different template is selected", () => {
     vi.mocked(api.get).mockImplementation((path: string) => {
       if (path === "/models/frontier") return Promise.resolve([]);
+      if (path === "/models/platform-default") {
+        return Promise.resolve({ id: "anthropic:claude-haiku-4-5-20251001", provider: "anthropic", label: "Haiku 4.5" });
+      }
       if (path === "/models/local") {
         return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
       }

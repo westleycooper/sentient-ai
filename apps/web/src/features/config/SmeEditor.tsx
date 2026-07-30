@@ -21,13 +21,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import SaveIcon from "@mui/icons-material/Save";
-import TuneIcon from "@mui/icons-material/Tune";
 import { StepEditor } from "./StepEditor";
 import { RagSourcesEditor } from "./RagSourcesEditor";
 import { RulesEditor } from "./RulesEditor";
 import { LessonEditor } from "./LessonEditor";
 import { ModelBrowser } from "./ModelBrowser";
+import { useModelDisplay } from "./useModelDisplay";
 import type { SmeTemplate } from "../../api/hooks";
 import { THEMES } from "../../themes/index";
 
@@ -42,6 +43,7 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
   const [draft, setDraft] = useState<SmeTemplate>(template);
   const [tab, setTab] = useState(0);
   const [modelBrowserOpen, setModelBrowserOpen] = useState(false);
+  const { describe } = useModelDisplay();
 
   useEffect(() => {
     setDraft(template);
@@ -108,17 +110,16 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
             }
             label="Lock"
           />
+        </Stack>
+
+        <Box>
           <Chip
-            icon={<TuneIcon />}
-            label={
-              draft.default_model
-                ? `Default model: ${draft.default_model}`
-                : "Default model: platform default"
-            }
+            icon={<PsychologyAltOutlinedIcon />}
+            label={`${describe(draft.default_model ?? null)} (default)`}
             onClick={() => setModelBrowserOpen(true)}
             variant="outlined"
           />
-        </Stack>
+        </Box>
 
         <ModelBrowser
           open={modelBrowserOpen}

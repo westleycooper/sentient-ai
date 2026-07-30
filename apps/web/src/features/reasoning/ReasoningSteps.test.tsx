@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { ReasoningSteps } from "./ReasoningSteps";
 import type { StepEvent } from "../../api/hooks";
@@ -57,5 +58,30 @@ describe("ReasoningSteps", () => {
   it("omits the latency chip when latency_ms is null", () => {
     render(<ReasoningSteps steps={[makeStep({ latency_ms: null })]} isStreaming={false} />);
     expect(screen.queryByText(/ms$/)).not.toBeInTheDocument();
+  });
+
+  it("shows a model icon whose tooltip names the model that step used", async () => {
+    render(<ReasoningSteps steps={[makeStep({ model: "gpt-5.6-terra" })]} isStreaming={false} />);
+    const icon = screen.getByTestId("PsychologyAltOutlinedIcon");
+    await userEvent.hover(icon);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Model: gpt-5.6-terra");
+  });
+
+  it("lets steps in the same run show different models", () => {
+    render(
+      <ReasoningSteps
+        steps={[
+          makeStep({ step_id: "a", step_name: "Retrieve", model: "claude-sonnet-5" }),
+          makeStep({ step_id: "b", step_name: "Analyse", model: "gemini-3.6-flash" }),
+        ]}
+        isStreaming={false}
+      />
+    );
+    expect(screen.getAllByTestId("PsychologyAltOutlinedIcon")).toHaveLength(2);
+  });
+
+  it("omits the model icon when a step never called an LLM", () => {
+    render(<ReasoningSteps steps={[makeStep({ model: null })]} isStreaming={false} />);
+    expect(screen.queryByTestId("PsychologyAltOutlinedIcon")).not.toBeInTheDocument();
   });
 });

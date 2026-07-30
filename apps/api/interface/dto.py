@@ -199,3 +199,12 @@ class LocalModelBrowserResponse(BaseModel):
 
 class PullModelRequest(BaseModel):
     model_tag: str
+
+
+class PlatformDefaultModelResponse(BaseModel):
+    """The actual model used when an SME (or a step) configures none —
+    resolves the same `PLATFORM_DEFAULT_MODEL` value the reasoning graph
+    falls back to, so the UI never has to guess or hardcode it."""
+    id: str
+    provider: str
+    label: str

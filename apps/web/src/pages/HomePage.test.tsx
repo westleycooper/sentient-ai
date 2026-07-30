@@ -154,23 +154,25 @@ describe("HomePage", () => {
     expect(fetch).not.toHaveBeenCalledWith("/api/tts/speak", expect.anything());
   });
 
-  it("navigates to /config and /mcp from the header icons", async () => {
+  it("navigates to /config from the header icon", async () => {
     renderPage([makeTemplate()]);
     await screen.findByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Go to configuration" }));
     expect(navigateMock).toHaveBeenCalledWith("/config");
-
-    await userEvent.click(await screen.findByRole("button", { name: "View MCP server topology" }));
-    expect(navigateMock).toHaveBeenCalledWith("/mcp");
   });
 
-  it("hides the Code toggle and MCP topology icon when local features are disabled (production)", async () => {
+  it("never shows an MCP topology icon on the main screen — that lives on the Config page", async () => {
+    renderPage([makeTemplate()]);
+    await screen.findByTestId("waveform");
+    expect(screen.queryByRole("button", { name: "View MCP server topology" })).not.toBeInTheDocument();
+  });
+
+  it("hides the Code toggle when local features are disabled (production)", async () => {
     renderPage([makeTemplate()], { mcpMounted: false });
     await screen.findByTestId("waveform");
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument()
     );
-    expect(screen.queryByRole("button", { name: "View MCP server topology" })).not.toBeInTheDocument();
   });
 
   it("starting and stopping the mic starts a conversation and streams an audio turn", async () => {

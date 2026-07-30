@@ -37,7 +37,7 @@ import {
   type FrontierModelOption,
 } from "../../api/hooks";
 
-const PROVIDER_LABELS: Record<string, string> = {
+export const PROVIDER_LABELS: Record<string, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",
   google: "Google",

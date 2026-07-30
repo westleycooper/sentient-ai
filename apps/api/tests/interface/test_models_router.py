@@ -65,6 +65,19 @@ async def test_list_frontier_models_includes_all_providers():
 
 
 @pytest.mark.asyncio
+async def test_platform_default_model_resolves_to_a_catalog_label():
+    app = _make_app(FakeLocalModelRuntime())
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.get("/models/platform-default")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["id"] == "anthropic:claude-haiku-4-5-20251001"
+    assert body["provider"] == "anthropic"
+    assert body["label"] == "Haiku 4.5"
+
+
+@pytest.mark.asyncio
 async def test_local_models_when_runtime_up():
     installed = [LocalModelInfo(id="gemma3:12b", name="gemma3:12b", size_bytes=100, modified_at="")]
     app = _make_app(FakeLocalModelRuntime(available=True, installed=installed))

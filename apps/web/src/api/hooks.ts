@@ -202,10 +202,25 @@ export interface PullProgressFrame {
   message?: string;
 }
 
+export interface PlatformDefaultModel {
+  id: string;
+  provider: string;
+  label: string;
+}
+
 export function useFrontierModels() {
   return useQuery<FrontierModelOption[]>({
     queryKey: ["models", "frontier"],
     queryFn: () => api.get<FrontierModelOption[]>("/models/frontier"),
+  });
+}
+
+/** The actual model an SME/step falls back to when nothing is configured —
+ * lets the UI show what "platform default" really resolves to. */
+export function usePlatformDefaultModel() {
+  return useQuery<PlatformDefaultModel>({
+    queryKey: ["models", "platform-default"],
+    queryFn: () => api.get<PlatformDefaultModel>("/models/platform-default"),
   });
 }
 
