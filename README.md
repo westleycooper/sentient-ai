@@ -75,7 +75,7 @@ reasoning step. The config page's model browser covers **frontier providers**
 `.env.local` to unlock the extra two, Anthropic works out of the box) and
 **local models via [Ollama](https://ollama.com/download)** — install it, run
 `ollama serve`, and the Local tab lets you download and select models like
-Gemma 3 with no API key. See [ADR-0005](docs/adr/0005-multi-provider-model-selection.md).
+Gemma 4 with no API key. See [ADR-0005](docs/adr/0005-multi-provider-model-selection.md).
 
 ## Local-only developer features
 

@@ -37,6 +37,12 @@ import {
   type FrontierModelOption,
 } from "../../api/hooks";
 
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  google: "Google",
+};
+
 interface ModelBrowserProps {
   open: boolean;
   onClose: () => void;
@@ -86,7 +92,7 @@ export function ModelBrowser({ open, onClose, value, onChange, allowNone }: Mode
             ) : (
               <Autocomplete<FrontierModelOption>
                 options={frontierModels ?? []}
-                groupBy={(m) => m.provider}
+                groupBy={(m) => PROVIDER_LABELS[m.provider] ?? m.provider}
                 getOptionLabel={(m) => m.label}
                 value={(frontierModels ?? []).find((m) => m.id === value) ?? null}
                 onChange={(_, m) => select(m ? m.id : null)}
@@ -202,7 +208,7 @@ export function ModelBrowser({ open, onClose, value, onChange, allowNone }: Mode
                   <TextField
                     size="small"
                     label="Pull any Ollama tag"
-                    placeholder="e.g. gemma3:27b"
+                    placeholder="e.g. gemma4:31b"
                     value={customTag}
                     onChange={(e) => setCustomTag(e.target.value)}
                     fullWidth

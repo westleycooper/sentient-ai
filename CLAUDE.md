@@ -69,7 +69,7 @@ We practise **loose DDD** — pragmatic, not dogmatic. See `docs/standards/ddd.m
 - **Every node emits a `ReasoningStepEvent`** to the event stream (step name, started/finished, token usage, latency) so the frontend can surface steps live. Stream at the **graph level** (per-node), not just chain level.
 - **Not every node needs a checkpointer.** Only the top-level conversation graph persists; sub-graphs/tool calls stay ephemeral unless they need resumability. Keeps the checkpoint table sustainable.
 - Model access goes through the `LLMPort` adapter; never call a provider SDK directly from a node.
-- **Model selection is config-driven and multi-provider.** Each SME has a `default_model` and can opt in to per-step overrides (`use_step_models`) via a namespaced model id (`"<provider>:<model-id>"`, e.g. `anthropic:claude-sonnet-5`, `ollama:gemma3:12b`). `LlmRouter` (an `LLMPort` implementation itself) dispatches to the configured provider adapter — Anthropic, OpenAI, Google, or a local Ollama runtime — with zero signature changes elsewhere. See ADR-0005.
+- **Model selection is config-driven and multi-provider.** Each SME has a `default_model` and can opt in to per-step overrides (`use_step_models`) via a namespaced model id (`"<provider>:<model-id>"`, e.g. `anthropic:claude-sonnet-5`, `ollama:gemma4:e4b`). `LlmRouter` (an `LLMPort` implementation itself) dispatches to the configured provider adapter — Anthropic, OpenAI, Google, or a local Ollama runtime — with zero signature changes elsewhere. See ADR-0005.
 
 ---
 

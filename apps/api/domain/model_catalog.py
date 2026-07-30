@@ -9,12 +9,21 @@ catalog entry's `id` straight through to `SmeTemplate.default_model` /
 `ReasoningStep.model` with no further string-building.
 
 These lists go stale as providers ship new models — review and update by hand
-periodically rather than relying on this being exhaustive or current.
+periodically rather than relying on this being exhaustive or current. Entries
+are real, callable model ids only — provider-side request parameters that
+aren't distinct model ids (e.g. OpenAI's reasoning-effort levels: none, low,
+medium, high, xhigh, max) aren't represented here, since `LLMPort` has no slot
+for them; that would need a separate port-level change if wanted.
 """
 from __future__ import annotations
 
 FRONTIER_MODELS: dict[str, list[dict]] = {
     "anthropic": [
+        {
+            "id": "anthropic:claude-fable-5",
+            "label": "Fable 5",
+            "description": "Agentic — purpose-built for long multi-step tasks and coding",
+        },
         {
             "id": "anthropic:claude-opus-5",
             "label": "Opus 5",
@@ -50,9 +59,14 @@ FRONTIER_MODELS: dict[str, list[dict]] = {
     ],
     "google": [
         {
-            "id": "google:gemini-3-pro",
-            "label": "Gemini 3 Pro",
-            "description": "Flagship reasoning model",
+            "id": "google:gemini-3.1-pro",
+            "label": "Gemini 3.1 Pro",
+            "description": "Flagship reasoning model (preview)",
+        },
+        {
+            "id": "google:gemini-3.6-flash",
+            "label": "Gemini 3.6 Flash",
+            "description": "Latest — improved token efficiency and agentic planning",
         },
         {
             "id": "google:gemini-3.5-flash",
@@ -68,8 +82,9 @@ FRONTIER_MODELS: dict[str, list[dict]] = {
 }
 
 RECOMMENDED_OLLAMA_MODELS: list[dict] = [
-    {"tag": "gemma3:12b", "label": "Gemma 3 12B", "description": "Google's open model — strong general reasoning, ~8GB VRAM"},
-    {"tag": "gemma3:4b", "label": "Gemma 3 4B", "description": "Lightweight Gemma 3 — runs on modest hardware"},
+    {"tag": "gemma4:e4b", "label": "Gemma 4 E4B", "description": "Google's open model, default size — strong general reasoning, ~10GB"},
+    {"tag": "gemma4:e2b", "label": "Gemma 4 E2B", "description": "Lightweight Gemma 4 — runs on modest hardware"},
+    {"tag": "gemma4:26b", "label": "Gemma 4 26B", "description": "Larger Gemma 4 MoE — competitive with much bigger models"},
     {"tag": "llama3.3:70b", "label": "Llama 3.3 70B", "description": "Meta's open model — high quality, needs a capable GPU"},
     {"tag": "mistral", "label": "Mistral", "description": "Fast, efficient general-purpose open model"},
     {"tag": "phi4", "label": "Phi-4", "description": "Microsoft's small model — strong reasoning for its size"},

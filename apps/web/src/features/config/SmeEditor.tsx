@@ -110,7 +110,11 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
           />
           <Chip
             icon={<TuneIcon />}
-            label={draft.default_model ? `Model: ${draft.default_model}` : "Model: platform default"}
+            label={
+              draft.default_model
+                ? `Default model: ${draft.default_model}`
+                : "Default model: platform default"
+            }
             onClick={() => setModelBrowserOpen(true)}
             variant="outlined"
           />

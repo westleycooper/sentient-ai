@@ -139,7 +139,7 @@ const POWER_CARDS = [
     icon: <PsychologyOutlinedIcon />,
     title: "Bring your own model",
     body:
-      "Pick a default model per expert, and optionally override it per reasoning step — mix providers within a single conversation. Browse the latest from Anthropic, OpenAI, and Google, or download and run open models locally via Ollama (Gemma 3 and friends), no API key required.",
+      "Pick a default model per expert, and optionally override it per reasoning step — mix providers within a single conversation. Browse the latest from Anthropic, OpenAI, and Google, or download and run open models locally via Ollama (Gemma 4 and friends), no API key required.",
     chips: ["Anthropic / OpenAI / Google", "Local models (Ollama)", "Per-step override", "No redeploy"],
   },
 ];

@@ -38,7 +38,7 @@ class OllamaLlmAdapter:
     async def complete(
         self, *, system: str, prompt: str, model: str | None = None
     ) -> LlmResult:
-        resolved_model = model or os.environ.get("OLLAMA_LLM_MODEL", "gemma3:12b")
+        resolved_model = model or os.environ.get("OLLAMA_LLM_MODEL", "gemma4:e4b")
         async with httpx.AsyncClient(timeout=120) as client:
             response = await client.post(
                 f"{self._base_url}/api/chat",
@@ -61,7 +61,7 @@ class OllamaLlmAdapter:
     async def complete_with_tools(
         self, *, system: str, prompt: str, tools: list[dict], model: str | None = None
     ) -> LlmToolResult:
-        resolved_model = model or os.environ.get("OLLAMA_LLM_MODEL", "gemma3:12b")
+        resolved_model = model or os.environ.get("OLLAMA_LLM_MODEL", "gemma4:e4b")
         ollama_tools = [
             {
                 "type": "function",

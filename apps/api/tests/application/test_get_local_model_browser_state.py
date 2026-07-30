@@ -27,15 +27,15 @@ class FakeLocalModelRuntime:
 
 @pytest.mark.asyncio
 async def test_browser_state_when_runtime_up_with_mixed_installed_and_recommended():
-    installed = [LocalModelInfo(id="gemma3:12b", name="gemma3:12b", size_bytes=1, modified_at="")]
+    installed = [LocalModelInfo(id="gemma4:e4b", name="gemma4:e4b", size_bytes=1, modified_at="")]
     uc = GetLocalModelBrowserStateUseCase(FakeLocalModelRuntime(available=True, installed=installed))
 
     state = await uc.execute()
 
     assert state.runtime_available is True
     assert state.installed == installed
-    # gemma3:12b is already installed, so it's excluded from the recommended shortlist
-    assert all(m["tag"] != "gemma3:12b" for m in state.recommended)
+    # gemma4:e4b is already installed, so it's excluded from the recommended shortlist
+    assert all(m["tag"] != "gemma4:e4b" for m in state.recommended)
     assert len(state.recommended) > 0
 
 
