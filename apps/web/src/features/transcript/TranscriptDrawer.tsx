@@ -209,7 +209,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
           borderBottom: "1px solid",
           borderColor: "divider",
           flexShrink: 0,
-          py: "22px",
+          py: "26px",
         }}
       >
         <Typography variant="h6" component="h2">
