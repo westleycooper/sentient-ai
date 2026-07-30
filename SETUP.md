@@ -80,7 +80,7 @@ Frontend is now at **http://localhost:5173**.
 3. Click the mic button — type or paste text when prompted (STT is stubbed locally; see below).
 4. Watch the reasoning steps appear live as LangGraph processes the turn.
 5. Click the chat icon to open the transcript drawer.
-6. Click the settings icon to edit SME templates, steps, and rules.
+6. Click the settings icon to edit SME templates, steps, rules, and per-SME/per-step models.
 
 ### What's stubbed in local dev
 
@@ -89,6 +89,8 @@ Frontend is now at **http://localhost:5173**.
 | Speech-to-text | Returns placeholder text | Set `STT_PROVIDER=azure` + Azure Speech keys in `.env.local` |
 | Text-to-speech | Returns silent audio | Set `TTS_PROVIDER=azure` or `TTS_PROVIDER=elevenlabs` + keys |
 | RAG retrieval | Returns a stub chunk | Wire a `RetrievalSourcePort` adapter and configure a source via the config page |
+| Other frontier model providers (OpenAI, Google) | Only Anthropic models appear in the model browser | Set `OPENAI_API_KEY` / `GOOGLE_API_KEY` in `.env.local` |
+| Local models (Ollama) | Model browser's "Local" tab shows an "Ollama isn't running" prompt | Install [Ollama](https://ollama.com/download), run `ollama serve`, then pick a model from the Local tab in the SME config page |
 
 ### Running tests
 

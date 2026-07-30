@@ -41,6 +41,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import InsightsIcon from "@mui/icons-material/Insights";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import RuleOutlinedIcon from "@mui/icons-material/RuleOutlined";
@@ -134,6 +135,13 @@ const POWER_CARDS = [
       "Behavioural rules are plain-language policies attached to each expert — toggleable, versioned in Postgres, enforced on every turn. \"Never give personalised financial advice\" is a row, not a redeploy.",
     chips: ["Per-expert", "Toggleable", "No redeploy"],
   },
+  {
+    icon: <PsychologyOutlinedIcon />,
+    title: "Bring your own model",
+    body:
+      "Pick a default model per expert, and optionally override it per reasoning step — mix providers within a single conversation. Browse the latest from Anthropic, OpenAI, and Google, or download and run open models locally via Ollama (Gemma 3 and friends), no API key required.",
+    chips: ["Anthropic / OpenAI / Google", "Local models (Ollama)", "Per-step override", "No redeploy"],
+  },
 ];
 
 /** AI-native capabilities — the platform is built BY AI tooling, FOR AI operations. */
@@ -142,7 +150,7 @@ const AI_NATIVE_CARDS = [
     icon: <SmartToyOutlinedIcon />,
     title: "AI-native architecture",
     body:
-      "Born in the agentic era: LangGraph reasoning workflows, model-agnostic LLM ports (Claude 5-ready), token accounting in every trace, and a codebase authored with AI pair-engineering from the first commit.",
+      "Born in the agentic era: LangGraph reasoning workflows, multi-provider model routing (Claude 5-ready) down to local models on your own machine, token accounting in every trace, and a codebase authored with AI pair-engineering from the first commit.",
   },
   {
     icon: <HubOutlinedIcon />,
@@ -375,7 +383,7 @@ export function ShowcasePage({ standalone = false }: ShowcasePageProps) {
             </Typography>
             <Grid container spacing={3}>
               {POWER_CARDS.map((c) => (
-                <Grid key={c.title} size={{ xs: 12, md: 4 }}>
+                <Grid key={c.title} size={{ xs: 12, md: 6 }}>
                   <Card variant="outlined" sx={{ height: "100%" }}>
                     <CardContent>
                       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 1.5, color: "primary.main" }}>
