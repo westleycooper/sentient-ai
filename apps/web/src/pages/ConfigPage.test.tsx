@@ -32,6 +32,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     visualisation_kind: "wave",
     theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
+    use_step_models: false,
     ...overrides,
   };
 }
@@ -47,6 +48,10 @@ function mockGet(templates: SmeTemplate[], { mcpMounted = true }: { mcpMounted?:
     if (path === "/sme") return Promise.resolve(templates);
     if (path === "/agent/config") return Promise.resolve(AGENT_CONFIG);
     if (path === "/agent/models") return Promise.resolve(AGENT_MODELS);
+    if (path === "/models/frontier") return Promise.resolve([]);
+    if (path === "/models/local") {
+      return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
+    }
     if (path === "/mcp-status") {
       return Promise.resolve({
         mounted: mcpMounted, mount_path: "/mcp", resources: [], tools: [],

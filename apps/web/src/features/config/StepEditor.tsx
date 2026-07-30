@@ -1,6 +1,8 @@
+import { useState } from "react";
 import {
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   IconButton,
@@ -14,7 +16,9 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TuneIcon from "@mui/icons-material/Tune";
 import type { ReasoningStep } from "../../api/hooks";
+import { ModelBrowser } from "./ModelBrowser";
 
 const STEP_KINDS = ["retrieve", "reason", "tool_call", "summarise", "guardrail_check"] as const;
 
@@ -32,9 +36,16 @@ const GUARDRAIL_CHECKS = [
 interface StepEditorProps {
   steps: ReasoningStep[];
   onChange: (steps: ReasoningStep[]) => void;
+  /** When true, LLM-calling steps show a per-step model picker that overrides
+   * the template's default model; when false, every step shares the default. */
+  useStepModels?: boolean;
 }
 
-export function StepEditor({ steps, onChange }: StepEditorProps) {
+const LLM_STEP_KINDS = new Set<ReasoningStep["kind"]>(["reason", "summarise", "tool_call", "guardrail_check"]);
+
+export function StepEditor({ steps, onChange, useStepModels }: StepEditorProps) {
+  const [modelBrowserIdx, setModelBrowserIdx] = useState<number | null>(null);
+
   const add = () => {
     onChange([
       ...steps,
@@ -146,6 +157,16 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
                   slotProps={{ htmlInput: { "aria-label": `Step ${idx + 1} config` } }}
                 />
               )}
+              {useStepModels && LLM_STEP_KINDS.has(step.kind) && (
+                <Chip
+                  size="small"
+                  icon={<TuneIcon fontSize="small" />}
+                  label={step.model ? `Model: ${step.model}` : "Model: template default"}
+                  onClick={() => setModelBrowserIdx(idx)}
+                  variant="outlined"
+                  sx={{ alignSelf: "flex-start" }}
+                />
+              )}
             </Stack>
             <Tooltip title="Remove step">
               <IconButton size="small" onClick={() => remove(idx)} aria-label={`Remove step ${idx + 1}`} sx={{ mt: 0.5 }}>
@@ -162,6 +183,16 @@ export function StepEditor({ steps, onChange }: StepEditorProps) {
           No steps yet. Click + to add one.
         </Typography>
       )}
+
+      <ModelBrowser
+        open={modelBrowserIdx !== null}
+        onClose={() => setModelBrowserIdx(null)}
+        value={modelBrowserIdx !== null ? (steps[modelBrowserIdx]?.model ?? null) : null}
+        onChange={(id) => {
+          if (modelBrowserIdx !== null) update(modelBrowserIdx, { model: id });
+        }}
+        allowNone
+      />
     </Stack>
   );
 }

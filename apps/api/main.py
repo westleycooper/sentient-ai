@@ -17,7 +17,16 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from infrastructure.observability.logging import configure_logging
 from infrastructure.observability.tracing import configure_tracing
 from interface.routers import agent as agent_router
-from interface.routers import agent_config, conversations, mcp_explorer, mcp_status, sme, stt, tts
+from interface.routers import (
+    agent_config,
+    conversations,
+    mcp_explorer,
+    mcp_status,
+    models,
+    sme,
+    stt,
+    tts,
+)
 
 configure_logging()
 configure_tracing()
@@ -77,6 +86,7 @@ app.include_router(conversations.router)
 app.include_router(tts.router)
 app.include_router(stt.router)
 app.include_router(agent_config.router)
+app.include_router(models.router)  # always on — local-model support is a self-hosted feature, not dev-only
 app.include_router(mcp_status.router)  # always on — no PII, safe in prod
 
 # Coding agent — local-only feature (ADR-0003). Never mounted in production.

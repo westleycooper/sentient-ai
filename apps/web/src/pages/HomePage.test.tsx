@@ -61,6 +61,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     steps: [], sources: [], rules: [], is_default: true,
     visualisation_kind: "wave", theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
+    use_step_models: false,
     ...overrides,
   };
 }

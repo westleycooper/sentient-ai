@@ -22,15 +22,20 @@ class AnthropicLlmAdapter:
             model=self._default_model,
             api_key=os.environ["ANTHROPIC_API_KEY"],
         )
+        self._clients: dict[str, ChatAnthropic] = {self._default_model: self._client}
+
+    def _client_for(self, model: str | None) -> ChatAnthropic:
+        key = model or self._default_model
+        client = self._clients.get(key)
+        if client is None:
+            client = ChatAnthropic(model=key, api_key=os.environ["ANTHROPIC_API_KEY"])
+            self._clients[key] = client
+        return client
 
     async def complete(
         self, *, system: str, prompt: str, model: str | None = None
     ) -> LlmResult:
-        client = (
-            self._client
-            if model is None or model == self._default_model
-            else ChatAnthropic(model=model, api_key=os.environ["ANTHROPIC_API_KEY"])
-        )
+        client = self._client_for(model)
         messages = [SystemMessage(content=system), HumanMessage(content=prompt)]
         response = await client.ainvoke(messages)
         usage = response.usage_metadata or {}
@@ -55,10 +60,7 @@ class AnthropicLlmAdapter:
             }
             for t in tools
         ]
-        client = (
-            self._client if model is None or model == self._default_model
-            else ChatAnthropic(model=model, api_key=os.environ["ANTHROPIC_API_KEY"])
-        )
+        client = self._client_for(model)
         bound = client.bind_tools(lc_tools)
         messages = [SystemMessage(content=system), HumanMessage(content=prompt)]
         response = await bound.ainvoke(messages)

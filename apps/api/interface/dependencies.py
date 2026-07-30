@@ -11,15 +11,23 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from application.ports.conversation_repository import ConversationRepositoryPort
+from application.ports.llm_port import LLMPort
+from application.ports.local_model_runtime_port import LocalModelRuntimePort
 from application.ports.sme_repository import SmeRepositoryPort
+from application.use_cases.delete_local_model import DeleteLocalModelUseCase
 from application.use_cases.delete_sme_template import DeleteSmeTemplateUseCase
 from application.use_cases.get_agent_config import GetAgentConfigUseCase
+from application.use_cases.get_local_model_browser_state import GetLocalModelBrowserStateUseCase
 from application.use_cases.get_sme_templates import GetSmeTemplatesUseCase
 from application.use_cases.process_turn import ProcessTurnUseCase
+from application.use_cases.pull_local_model import PullLocalModelUseCase
 from application.use_cases.save_agent_config import SaveAgentConfigUseCase
 from application.use_cases.save_sme_template import SaveSmeTemplateUseCase
 from application.use_cases.start_conversation import StartConversationUseCase
 from infrastructure.llm.anthropic_adapter import AnthropicLlmAdapter
+from infrastructure.llm.llm_router import LlmRouter
+from infrastructure.llm.ollama_adapter import OllamaLlmAdapter
+from infrastructure.llm.ollama_runtime_adapter import OllamaRuntimeAdapter
 from infrastructure.persistence.postgres_agent_config_repo import PostgresAgentConfigRepo
 from infrastructure.persistence.postgres_conversation_repo import PostgresConversationRepository
 from infrastructure.persistence.postgres_sme_repo import PostgresSmeRepository
@@ -75,9 +83,56 @@ async def get_db_session() -> AsyncSession:
         yield session
 
 
+def _build_llm_adapters() -> dict[str, LLMPort]:
+    """Every configured provider, simultaneously — unlike STT/TTS's "pick one
+    active provider", a single SME can reference different providers across
+    different reasoning steps, so LlmRouter needs them all available at once.
+    """
+    adapters: dict[str, LLMPort] = {}
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        adapters["anthropic"] = AnthropicLlmAdapter()
+    if os.environ.get("OPENAI_API_KEY"):
+        from infrastructure.llm.openai_adapter import OpenAiLlmAdapter
+        adapters["openai"] = OpenAiLlmAdapter()
+    if os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY"):
+        from infrastructure.llm.google_adapter import GoogleLlmAdapter
+        adapters["google"] = GoogleLlmAdapter()
+    # Ollama is registered unconditionally — its base URL isn't a secret, and
+    # "not running" is handled gracefully at call/health-check time, not here.
+    adapters["ollama"] = OllamaLlmAdapter(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
+    return adapters
+
+
 @lru_cache(maxsize=1)
-def _llm_adapter() -> AnthropicLlmAdapter:
-    return AnthropicLlmAdapter()
+def _llm_router() -> LlmRouter:
+    return LlmRouter(adapters=_build_llm_adapters(), default_provider="anthropic")
+
+
+@lru_cache(maxsize=1)
+def _ollama_runtime_adapter() -> OllamaRuntimeAdapter:
+    return OllamaRuntimeAdapter(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
+
+
+async def get_local_model_runtime() -> LocalModelRuntimePort:
+    return _ollama_runtime_adapter()
+
+
+async def get_local_model_browser_uc(
+    runtime: LocalModelRuntimePort = Depends(get_local_model_runtime),
+) -> GetLocalModelBrowserStateUseCase:
+    return GetLocalModelBrowserStateUseCase(runtime)
+
+
+async def get_pull_local_model_uc(
+    runtime: LocalModelRuntimePort = Depends(get_local_model_runtime),
+) -> PullLocalModelUseCase:
+    return PullLocalModelUseCase(runtime)
+
+
+async def get_delete_local_model_uc(
+    runtime: LocalModelRuntimePort = Depends(get_local_model_runtime),
+) -> DeleteLocalModelUseCase:
+    return DeleteLocalModelUseCase(runtime)
 
 
 @lru_cache(maxsize=1)
@@ -136,7 +191,7 @@ def set_checkpointer(cp) -> None:
 
 
 async def get_graph_runner(session: AsyncSession = Depends(get_db_session)) -> GraphRunner:
-    return GraphRunner(llm=_llm_adapter(), checkpointer=_checkpointer)
+    return GraphRunner(llm=_llm_router(), checkpointer=_checkpointer)
 
 
 # --- Use cases ---

@@ -11,6 +11,10 @@ Verified June 2026. Update with an ADR when bumping a major.
 - SQLAlchemy 2.x + Alembic
 - pgvector (Postgres extension)
 - OpenTelemetry SDK + azure-monitor-opentelemetry exporter
+- LLM providers behind `LLMPort`/`LlmRouter` (ADR-0005): `anthropic`, `openai`
+  (both already pinned for other features), `google-genai>=1.0` (new). Local
+  models via **Ollama**, reached over plain HTTP (`httpx`, already pinned) —
+  no SDK dependency.
 
 ## Frontend
 - React 19.x (keep >= 19.2.5 if ever using Server Functions; we don't)

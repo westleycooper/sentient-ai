@@ -26,6 +26,10 @@ class ReasoningStep(BaseModel):
     config: dict = Field(default_factory=dict)
     next_default: str | None = None
     next_on: dict[str, str] = Field(default_factory=dict)
+    model: str | None = None
+    """Namespaced model id (e.g. "openai:gpt-5.1", "ollama:gemma3:12b") overriding
+    the template default for this step. Only used when the template's
+    `use_step_models` is enabled; ignored otherwise."""
 
 
 class RetrievalSourceKind(StrEnum):
@@ -80,9 +84,25 @@ class SmeTemplate(BaseModel):
     visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"] = "wave"
     theme_id: str = "dark-teal"
     lesson: LessonConfig = Field(default_factory=LessonConfig)
+    default_model: str | None = None
+    """Namespaced model id (e.g. "anthropic:claude-sonnet-5") used for every
+    LLM-calling step unless `use_step_models` is enabled and a step overrides
+    it. `None` defers to the platform's zero-config default."""
+    use_step_models: bool = False
+    """When True, individual steps may use `ReasoningStep.model` instead of
+    `default_model`. When False (the default), every step shares `default_model`
+    — today's behaviour."""
 
     def model_json_schema_export(self) -> dict:
         return self.model_json_schema()
+
+    def resolve_model(self, step: ReasoningStep) -> str | None:
+        """Which namespaced model id a given step should use, or None if
+        nothing is configured (caller falls back to its own env-var default).
+        """
+        if self.use_step_models and step.model:
+            return step.model
+        return self.default_model
 
 
 def ftse100_default() -> SmeTemplate:
