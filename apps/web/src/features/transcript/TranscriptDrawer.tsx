@@ -209,6 +209,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
           borderBottom: "1px solid",
           borderColor: "divider",
           flexShrink: 0,
+          py: "22px",
         }}
       >
         <Typography variant="h6" component="h2">
@@ -271,7 +272,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
         <div ref={bottomRef} />
       </Box>
 
-      <Box sx={{ pt: 1.5, px: 1.5, pb: "124px", borderTop: "1px solid", borderColor: "divider", flexShrink: 0 }}>
+      <Box sx={{ pt: 1.5, px: 1.5, pb: "123px", borderTop: "1px solid", borderColor: "divider", flexShrink: 0 }}>
         <TextField
           fullWidth
           size="small"
