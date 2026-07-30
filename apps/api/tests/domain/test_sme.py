@@ -78,3 +78,50 @@ def test_reasoning_step_next_on_defaults_empty():
     step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON)
     assert step.next_on == {}
     assert step.next_default is None
+
+
+def test_sme_template_model_fields_default_to_unset():
+    t = ftse100_default()
+    assert t.default_model is None
+    assert t.use_step_models is False
+
+
+def test_reasoning_step_model_defaults_to_none():
+    step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON)
+    assert step.model is None
+
+
+def test_sme_template_model_fields_round_trip():
+    t = ftse100_default()
+    t = t.model_copy(update={
+        "default_model": "anthropic:claude-sonnet-5",
+        "use_step_models": True,
+        "steps": [s.model_copy(update={"model": "openai:gpt-5.1"}) for s in t.steps],
+    })
+    dumped = t.model_dump()
+    reloaded = SmeTemplate(**dumped)
+    assert reloaded == t
+
+
+def test_resolve_model_uses_step_override_when_enabled():
+    step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON, model="openai:gpt-5.1")
+    t = SmeTemplate(
+        id="t", name="T", soul="", steps=[step],
+        default_model="anthropic:claude-sonnet-5", use_step_models=True,
+    )
+    assert t.resolve_model(step) == "openai:gpt-5.1"
+
+
+def test_resolve_model_falls_back_to_default_when_step_override_disabled():
+    step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON, model="openai:gpt-5.1")
+    t = SmeTemplate(
+        id="t", name="T", soul="", steps=[step],
+        default_model="anthropic:claude-sonnet-5", use_step_models=False,
+    )
+    assert t.resolve_model(step) == "anthropic:claude-sonnet-5"
+
+
+def test_resolve_model_returns_none_when_nothing_configured():
+    step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON)
+    t = SmeTemplate(id="t", name="T", soul="", steps=[step])
+    assert t.resolve_model(step) is None

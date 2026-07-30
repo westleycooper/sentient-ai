@@ -71,3 +71,5 @@ class SmeTemplateModel(Base):
     visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")
     theme_id: Mapped[str] = mapped_column(String(100), nullable=False, server_default="dark-teal")
     lesson: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    default_model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    use_step_models: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")

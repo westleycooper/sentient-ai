@@ -59,12 +59,14 @@ describe("ShowcasePage", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("renders the enterprise-power section: RAG sources, guardrails, rules", () => {
+  it("renders the enterprise-power section: RAG sources, guardrails, rules, model selection", () => {
     renderPage();
     expect(screen.getByText("Point it at your business")).toBeInTheDocument();
     expect(screen.getByText("Your knowledge, plugged in")).toBeInTheDocument();
     expect(screen.getByText("Guardrails as workflow steps")).toBeInTheDocument();
     expect(screen.getByText("Rules your compliance team can read")).toBeInTheDocument();
+    expect(screen.getByText("Bring your own model")).toBeInTheDocument();
+    expect(screen.getByText(/Local models \(Ollama\)/)).toBeInTheDocument();
   });
 
   it("renders the AI-native section including the embedded Claude Code agent", () => {

@@ -40,6 +40,8 @@ class PostgresSmeRepository:
         row.visualisation_kind = template.visualisation_kind
         row.theme_id = template.theme_id
         row.lesson = template.lesson.model_dump()
+        row.default_model = template.default_model
+        row.use_step_models = template.use_step_models
         await self._session.commit()
 
     async def delete_template(self, template_id: str) -> None:
@@ -61,4 +63,6 @@ class PostgresSmeRepository:
             visualisation_kind=row.visualisation_kind or "wave",
             theme_id=row.theme_id or "dark-teal",
             lesson=LessonConfig(**(row.lesson or {})),
+            default_model=row.default_model,
+            use_step_models=row.use_step_models,
         )

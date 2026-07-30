@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import time
 from typing import Any
 
@@ -15,12 +14,11 @@ from sentient_domain.sme import ReasoningStep, SmeTemplate, StepKind
 
 from application.ports.llm_port import LLMPort
 from application.ports.retrieval_port import RetrievalSourcePort
+from infrastructure.llm.platform_default import PLATFORM_DEFAULT_MODEL as _FAST_MODEL
 from infrastructure.reasoning.guardrail_executor import run_guardrail
 from infrastructure.reasoning.state import ConversationState, ReasoningStepEvent
 
 logger = logging.getLogger(__name__)
-
-_FAST_MODEL = os.environ.get("REASONING_MODEL", "claude-haiku-4-5-20251001")
 
 
 def _emit(state: ConversationState, ev: ReasoningStepEvent) -> None:
@@ -52,10 +50,11 @@ def _make_retrieve_node(step: ReasoningStep, retriever: RetrievalSourcePort):
     return retrieve
 
 
-def _make_reason_node(step: ReasoningStep, llm: LLMPort):
+def _make_reason_node(step: ReasoningStep, llm: LLMPort, sme_template: SmeTemplate):
     label = step.name
     sid = step.id
     extra_prompt = step.config.get("prompt", "")
+    model = sme_template.resolve_model(step) or _FAST_MODEL
 
     async def reason_and_answer(state: ConversationState) -> ConversationState:
         if state.get("blocked"):
@@ -86,7 +85,7 @@ def _make_reason_node(step: ReasoningStep, llm: LLMPort):
                 prompt = f"Conversation so far:\n{history_lines}\n\nCurrent question: {state['question']}"
         else:
             prompt = f"Question: {state['question']}\n\nContext:\n{context}" if context.strip() else state["question"]
-        res = await llm.complete(system=system, prompt=prompt, model=_FAST_MODEL)
+        res = await llm.complete(system=system, prompt=prompt, model=model)
         state["analysis"] = res.text
         state["answer"] = res.text
         _emit(state, ReasoningStepEvent(
@@ -103,11 +102,12 @@ def _make_reason_node(step: ReasoningStep, llm: LLMPort):
     return reason_and_answer
 
 
-def _make_summarise_node(step: ReasoningStep, llm: LLMPort):
+def _make_summarise_node(step: ReasoningStep, llm: LLMPort, sme_template: SmeTemplate):
     label = step.name
     sid = step.id
     require_citations = step.config.get("require_citations", False)
     fmt = step.config.get("format", "prose")
+    model = sme_template.resolve_model(step) or _FAST_MODEL
 
     async def summarise(state: ConversationState) -> ConversationState:
         if state.get("blocked"):
@@ -151,7 +151,7 @@ def _make_summarise_node(step: ReasoningStep, llm: LLMPort):
 
         soul = state.get("soul", "")
         system = (f"{soul}\n\n" if soul else "") + system_suffix
-        res = await llm.complete(system=system, prompt=prompt, model=_FAST_MODEL)
+        res = await llm.complete(system=system, prompt=prompt, model=model)
         state["answer"] = res.text
         _emit(state, ReasoningStepEvent(
             step_id=sid, step_name=label, phase="finished",
@@ -167,10 +167,11 @@ def _make_summarise_node(step: ReasoningStep, llm: LLMPort):
     return summarise
 
 
-def _make_tool_call_node(step: ReasoningStep, llm: LLMPort):
+def _make_tool_call_node(step: ReasoningStep, llm: LLMPort, sme_template: SmeTemplate):
     label = step.name
     sid = step.id
     cfg = step.config
+    model = sme_template.resolve_model(step) or _FAST_MODEL
 
     tool_schema = {
         "name": cfg.get("tool_name", f"tool_{sid}"),
@@ -199,7 +200,7 @@ def _make_tool_call_node(step: ReasoningStep, llm: LLMPort):
 
         try:
             result = await llm.complete_with_tools(
-                system=system, prompt=prompt, tools=[tool_schema], model=_FAST_MODEL
+                system=system, prompt=prompt, tools=[tool_schema], model=model
             )
         except Exception as exc:
             logger.warning("tool_call_node: LLM tool decision failed — %s", exc)
@@ -265,8 +266,8 @@ def build_graph(
     sme_template: SmeTemplate,
 ):
     # Separate guardrail checks from pipeline steps
-    input_checks: list[tuple[str, str]] = []
-    output_checks: list[tuple[str, str]] = []
+    input_checks: list[tuple[str, str, str]] = []
+    output_checks: list[tuple[str, str, str]] = []
     pipeline_steps: list[ReasoningStep] = []
 
     for step in sme_template.steps:
@@ -275,11 +276,12 @@ def build_graph(
             defn = GUARDRAIL_REGISTRY.get(check_id)
             if defn is None:
                 continue
-            pair = (check_id, step.name or defn.display_name)
+            resolved_model = sme_template.resolve_model(step) or _FAST_MODEL
+            triple = (check_id, step.name or defn.display_name, resolved_model)
             if defn.phase == "input":
-                input_checks.append(pair)
+                input_checks.append(triple)
             else:
-                output_checks.append(pair)
+                output_checks.append(triple)
         else:
             pipeline_steps.append(step)
 
@@ -290,9 +292,9 @@ def build_graph(
 
     async def input_guard(state: ConversationState) -> ConversationState:
         soul = state.get("soul", "")
-        for check_id, display_name in input_checks:
+        for check_id, display_name, model in input_checks:
             t0 = time.perf_counter()
-            passed, rejection = await run_guardrail(check_id, state["question"], llm, soul=soul)
+            passed, rejection = await run_guardrail(check_id, state["question"], llm, soul=soul, model=model)
             _emit(state, ReasoningStepEvent(
                 step_id=f"guard-in-{check_id}",
                 step_name=display_name,
@@ -311,9 +313,9 @@ def build_graph(
             return state
         soul = state.get("soul", "")
         answer = state.get("answer", "")
-        for check_id, display_name in output_checks:
+        for check_id, display_name, model in output_checks:
             t0 = time.perf_counter()
-            passed, rejection = await run_guardrail(check_id, answer, llm, soul=soul)
+            passed, rejection = await run_guardrail(check_id, answer, llm, soul=soul, model=model)
             _emit(state, ReasoningStepEvent(
                 step_id=f"guard-out-{check_id}",
                 step_name=display_name,
@@ -333,11 +335,11 @@ def build_graph(
         if step.kind == StepKind.RETRIEVE:
             node_registry[f"retrieve_{step.id}"] = _make_retrieve_node(step, retriever)
         elif step.kind == StepKind.REASON:
-            node_registry[f"reason_{step.id}"] = _make_reason_node(step, llm)
+            node_registry[f"reason_{step.id}"] = _make_reason_node(step, llm, sme_template)
         elif step.kind == StepKind.SUMMARISE:
-            node_registry[f"summarise_{step.id}"] = _make_summarise_node(step, llm)
+            node_registry[f"summarise_{step.id}"] = _make_summarise_node(step, llm, sme_template)
         elif step.kind == StepKind.TOOL_CALL:
-            node_registry[f"tool_{step.id}"] = _make_tool_call_node(step, llm)
+            node_registry[f"tool_{step.id}"] = _make_tool_call_node(step, llm, sme_template)
         else:
             logger.warning("build_graph: unknown step kind %r — skipping %s", step.kind, step.id)
 

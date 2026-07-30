@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HistoryIcon from "@mui/icons-material/History";
-import HubIcon from "@mui/icons-material/Hub";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import SchoolIcon from "@mui/icons-material/School";
 import SettingsIcon from "@mui/icons-material/Settings";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
@@ -53,6 +53,7 @@ import {
 } from "../api/hooks";
 import { streamAudioTurn, streamEvents } from "../api/client";
 import type { TurnEvent, TranscriptEvent } from "../api/hooks";
+import { formatLatency } from "../lib/formatLatency";
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -518,20 +519,11 @@ export function HomePage() {
             ) : undefined
           }
           leftContent={
-            <>
-              <Tooltip title="Configure SMEs">
-                <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
-                  <SettingsIcon />
-                </IconButton>
-              </Tooltip>
-              {localFeaturesEnabled && (
-                <Tooltip title="MCP server topology">
-                  <IconButton onClick={() => navigate("/mcp")} aria-label="View MCP server topology">
-                    <HubIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </>
+            <Tooltip title="Configure SMEs">
+              <IconButton onClick={() => navigate("/config")} aria-label="Go to configuration">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
           }
         >
           <Tooltip title={`Visualisation: ${WAVE_LABELS[activeKind]}`}>
@@ -684,9 +676,14 @@ export function HomePage() {
                       <Typography variant="caption" color="text.disabled" sx={{ flex: 1 }}>
                         {step.step_name}
                       </Typography>
+                      {step.model && (
+                        <Tooltip title={`Model: ${step.model}`}>
+                          <PsychologyAltOutlinedIcon sx={{ fontSize: 12, color: "text.disabled" }} />
+                        </Tooltip>
+                      )}
                       {step.latency_ms != null && (
                         <Chip
-                          label={`${Math.round(step.latency_ms)} ms`}
+                          label={formatLatency(step.latency_ms)}
                           size="small"
                           variant="outlined"
                           sx={{ height: 16, fontSize: 9, opacity: 0.7 }}

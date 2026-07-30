@@ -1,8 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SmeEditor } from "./SmeEditor";
+import { api } from "../../api/client";
 import type { SmeTemplate } from "../../api/hooks";
+
+vi.mock("../../api/client", () => ({
+  api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  streamEvents: vi.fn(),
+}));
 
 function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
   return {
@@ -16,19 +23,64 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     visualisation_kind: "wave",
     theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
+    use_step_models: false,
     ...overrides,
   };
 }
 
+function renderEditor(
+  props: Partial<React.ComponentProps<typeof SmeEditor>> = {},
+  frontierModels: unknown[] = []
+) {
+  vi.mocked(api.get).mockImplementation((path: string) => {
+    if (path === "/models/frontier") return Promise.resolve(frontierModels);
+    if (path === "/models/platform-default") {
+      return Promise.resolve({ id: "anthropic:claude-haiku-4-5-20251001", provider: "anthropic", label: "Haiku 4.5" });
+    }
+    if (path === "/models/local") {
+      return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
+    }
+    return Promise.reject(new Error(`unexpected GET ${path}`));
+  });
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <SmeEditor
+        template={makeTemplate()}
+        onSave={vi.fn()}
+        isSaving={false}
+        {...props}
+      />
+    </QueryClientProvider>
+  );
+}
+
 describe("SmeEditor", () => {
+  afterEach(() => {
+    vi.mocked(api.get).mockReset();
+  });
+
   it("renders the template name and soul on the initial tab", () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />);
+    renderEditor();
     expect(screen.getByLabelText(/Template name/)).toHaveValue("FTSE 100 Analyst");
     expect(screen.getByRole("textbox", { name: /Soul/ })).toHaveValue("A measured equity analyst.");
   });
 
+  it("shows the resolved platform-default model, not just the words 'platform default'", async () => {
+    renderEditor();
+    expect(await screen.findByText("Anthropic Haiku 4.5 (default)")).toBeInTheDocument();
+  });
+
+  it("shows the SME's own default model when one is configured", async () => {
+    renderEditor(
+      { template: makeTemplate({ default_model: "openai:gpt-5.6-terra" }) },
+      [{ id: "openai:gpt-5.6-terra", provider: "openai", label: "GPT-5.6 Terra", description: "Balanced" }]
+    );
+    expect(await screen.findByText("OpenAI GPT-5.6 Terra (default)")).toBeInTheDocument();
+  });
+
   it("labels each tab with its item count", () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />);
+    renderEditor();
     expect(screen.getByRole("tab", { name: "Steps (1)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Rules (0)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "RAG Sources (0)" })).toBeInTheDocument();
@@ -43,21 +95,21 @@ describe("SmeEditor", () => {
         questions: [{ id: "q1", title: "Whale", question: "Spell: whale", answer: "whale", image_url: null }],
       },
     });
-    render(<SmeEditor template={template} onSave={vi.fn()} isSaving={false} />);
+    renderEditor({ template });
     await userEvent.click(screen.getByRole("tab", { name: "Lesson (1)" }));
     expect(screen.getByText("Questions")).toBeInTheDocument();
     expect(screen.getByLabelText("Question 1 title")).toHaveValue("Whale");
   });
 
   it("switches panels when a tab is clicked", async () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />);
+    renderEditor();
     expect(screen.queryByText("Reasoning Steps")).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("tab", { name: "Steps (1)" }));
     expect(screen.getByText("Reasoning Steps")).toBeInTheDocument();
   });
 
   it("disables Save until the draft differs from the saved template", async () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />);
+    renderEditor();
     const saveButton = screen.getByRole("button", { name: "Save template" });
     expect(saveButton).toBeDisabled();
 
@@ -66,14 +118,14 @@ describe("SmeEditor", () => {
   });
 
   it("disables Save while isSaving is true, even when dirty", async () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={true} />);
+    renderEditor({ isSaving: true });
     await userEvent.type(screen.getByLabelText(/Template name/), "!");
     expect(screen.getByRole("button", { name: "Save template" })).toBeDisabled();
   });
 
   it("calls onSave with the edited draft on submit", async () => {
     const onSave = vi.fn();
-    render(<SmeEditor template={makeTemplate()} onSave={onSave} isSaving={false} />);
+    renderEditor({ onSave });
     await userEvent.type(screen.getByLabelText(/Template name/), "!");
     await userEvent.click(screen.getByRole("button", { name: "Save template" }));
 
@@ -81,18 +133,35 @@ describe("SmeEditor", () => {
   });
 
   it("shows the save error alert when saveError is set", () => {
-    render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} saveError="Network error" />);
+    renderEditor({ saveError: "Network error" });
     expect(screen.getByText("Network error")).toBeInTheDocument();
   });
 
   it("resets the draft and active tab when a different template is selected", () => {
-    const { rerender } = render(<SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />);
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path === "/models/frontier") return Promise.resolve([]);
+      if (path === "/models/platform-default") {
+        return Promise.resolve({ id: "anthropic:claude-haiku-4-5-20251001", provider: "anthropic", label: "Haiku 4.5" });
+      }
+      if (path === "/models/local") {
+        return Promise.resolve({ runtime_available: false, base_url: "", installed: [], recommended: [] });
+      }
+      return Promise.reject(new Error(`unexpected GET ${path}`));
+    });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { rerender } = render(
+      <QueryClientProvider client={qc}>
+        <SmeEditor template={makeTemplate()} onSave={vi.fn()} isSaving={false} />
+      </QueryClientProvider>
+    );
     rerender(
-      <SmeEditor
-        template={makeTemplate({ id: "recruitment-agent", name: "Recruitment Agent" })}
-        onSave={vi.fn()}
-        isSaving={false}
-      />
+      <QueryClientProvider client={qc}>
+        <SmeEditor
+          template={makeTemplate({ id: "recruitment-agent", name: "Recruitment Agent" })}
+          onSave={vi.fn()}
+          isSaving={false}
+        />
+      </QueryClientProvider>
     );
     expect(screen.getByLabelText(/Template name/)).toHaveValue("Recruitment Agent");
   });

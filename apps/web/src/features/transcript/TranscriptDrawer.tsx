@@ -20,12 +20,14 @@ import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
 import PsychologyIcon from "@mui/icons-material/Psychology";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Markdown from "react-markdown";
 import type { Components } from "react-markdown";
 import type { Message, StepEvent } from "../../api/hooks";
 import { useUiStore } from "../../store/uiStore";
+import { formatLatency } from "../../lib/formatLatency";
 
 const LANG_ACCENT: Record<string, string> = {
   bash: "#22d3ee", sh: "#22d3ee",
@@ -207,6 +209,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
           borderBottom: "1px solid",
           borderColor: "divider",
           flexShrink: 0,
+          py: "26px",
         }}
       >
         <Typography variant="h6" component="h2">
@@ -269,7 +272,7 @@ export function TranscriptDrawer({ open, onClose, messages, steps, stepsByMsgId,
         <div ref={bottomRef} />
       </Box>
 
-      <Box sx={{ pt: 1.5, px: 1.5, pb: "116px", borderTop: "1px solid", borderColor: "divider", flexShrink: 0 }}>
+      <Box sx={{ pt: 1.5, px: 1.5, pb: "123px", borderTop: "1px solid", borderColor: "divider", flexShrink: 0 }}>
         <TextField
           fullWidth
           size="small"
@@ -336,7 +339,7 @@ function StepsBlock({ steps, isStreaming }: { steps: StepEvent[]; isStreaming: b
         </Typography>
         {!isStreaming && totalTokens > 0 && (
           <Typography variant="caption" color="text.disabled" sx={{ mr: 1 }}>
-            {totalTokens} tokens · {Math.round(totalMs)}ms
+            {totalTokens} tokens · {formatLatency(totalMs)}
           </Typography>
         )}
         {isStreaming ? (
@@ -360,12 +363,17 @@ function StepsBlock({ steps, isStreaming }: { steps: StepEvent[]; isStreaming: b
 function StepRow({ step }: { step: StepEvent }) {
   return (
     <Stack direction="row" sx={{ px: 1.5, py: 0.75, alignItems: "flex-start" }} spacing={1}>
-      <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "primary.main", mt: 0.75, flexShrink: 0 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "primary.main", flexShrink: 0 }} />
           <Typography variant="caption" sx={{ fontWeight: 600 }}>{step.step_name}</Typography>
+          {step.model && (
+            <Tooltip title={`Model: ${step.model}`}>
+              <PsychologyAltOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+            </Tooltip>
+          )}
           {step.latency_ms != null && (
-            <Typography variant="caption" color="text.disabled">{Math.round(step.latency_ms)}ms</Typography>
+            <Typography variant="caption" color="text.disabled">{formatLatency(step.latency_ms)}</Typography>
           )}
           {step.total_tokens > 0 && (
             <Chip

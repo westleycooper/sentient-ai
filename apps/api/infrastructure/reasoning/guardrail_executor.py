@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 import logging
-import os
 
 from application.ports.llm_port import LLMPort
 
 logger = logging.getLogger(__name__)
-
-_FAST_MODEL = os.environ.get("REASONING_MODEL", "claude-haiku-4-5-20251001")
 
 # Each entry: system prompt, user prompt template, rejection message shown to user.
 _CHECKS: dict[str, dict[str, str]] = {
@@ -109,6 +106,7 @@ async def run_guardrail(
     llm: LLMPort,
     *,
     soul: str = "",
+    model: str,
 ) -> tuple[bool, str]:
     """
     Run a single named guardrail check.
@@ -116,6 +114,8 @@ async def run_guardrail(
     Returns (passed, rejection_message).
     passed=True means no issue found — processing should continue.
     On LLM error the check fails open (returns True) to avoid blocking the user.
+    `model` is always a fully-resolved model string — the caller (graph.py)
+    is responsible for the step → template-default → env-var fallback chain.
     """
     spec = _CHECKS.get(check_id)
     if spec is None:
@@ -124,7 +124,7 @@ async def run_guardrail(
 
     prompt = spec["prompt"].format(text=text, soul=soul)
     try:
-        res = await llm.complete(system=spec["system"], prompt=prompt, model=_FAST_MODEL)
+        res = await llm.complete(system=spec["system"], prompt=prompt, model=model)
         first_line = res.text.strip().split("\n")[0].strip().upper()
         passed = first_line.startswith("PASS")
         return passed, "" if passed else spec["rejection"]

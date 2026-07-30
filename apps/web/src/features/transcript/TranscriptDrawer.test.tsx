@@ -183,6 +183,27 @@ describe("TranscriptDrawer", () => {
     expect(screen.getByText(/Reasoning… \(1 step\)/)).toBeInTheDocument();
   });
 
+  it("shows a model icon per step, with a tooltip naming the model that step used", async () => {
+    render(
+      <TranscriptDrawer
+        open
+        messages={[makeMessage({ role: "user", content: "Hi" })]}
+        steps={[
+          makeStep({ step_id: "a", step_name: "Retrieve", model: "claude-sonnet-5" }),
+          makeStep({ step_id: "b", step_name: "Analyse", model: "gpt-5.6-terra" }),
+        ]}
+        stepsByMsgId={{}}
+        isStreaming={true}
+        onClose={noop}
+        onSendText={noop}
+      />
+    );
+    const icons = screen.getAllByTestId("PsychologyAltOutlinedIcon");
+    expect(icons).toHaveLength(2);
+    await userEvent.hover(icons[1]);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Model: gpt-5.6-terra");
+  });
+
   it("calls onClose when the close button is clicked", async () => {
     const onClose = vi.fn();
     render(

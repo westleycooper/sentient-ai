@@ -7,6 +7,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Divider,
   FormControl,
   FormControlLabel,
@@ -18,12 +19,16 @@ import {
   Tab,
   Tabs,
   TextField,
+  Typography,
 } from "@mui/material";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
 import SaveIcon from "@mui/icons-material/Save";
 import { StepEditor } from "./StepEditor";
 import { RagSourcesEditor } from "./RagSourcesEditor";
 import { RulesEditor } from "./RulesEditor";
 import { LessonEditor } from "./LessonEditor";
+import { ModelBrowser } from "./ModelBrowser";
+import { useModelDisplay } from "./useModelDisplay";
 import type { SmeTemplate } from "../../api/hooks";
 import { THEMES } from "../../themes/index";
 
@@ -37,6 +42,8 @@ interface SmeEditorProps {
 export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorProps) {
   const [draft, setDraft] = useState<SmeTemplate>(template);
   const [tab, setTab] = useState(0);
+  const [modelBrowserOpen, setModelBrowserOpen] = useState(false);
+  const { describe } = useModelDisplay();
 
   useEffect(() => {
     setDraft(template);
@@ -105,6 +112,23 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
           />
         </Stack>
 
+        <Box>
+          <Chip
+            icon={<PsychologyAltOutlinedIcon />}
+            label={`${describe(draft.default_model ?? null)} (default)`}
+            onClick={() => setModelBrowserOpen(true)}
+            variant="outlined"
+          />
+        </Box>
+
+        <ModelBrowser
+          open={modelBrowserOpen}
+          onClose={() => setModelBrowserOpen(false)}
+          value={draft.default_model ?? null}
+          onChange={(id) => set("default_model", id)}
+          allowNone
+        />
+
         <Tabs value={tab} onChange={(_, v) => setTab(v)} aria-label="SME editor sections">
           <Tab label="Soul / Persona" id="tab-soul" aria-controls="tabpanel-soul" />
           <Tab label={`Steps (${draft.steps.length})`} id="tab-steps" aria-controls="tabpanel-steps" />
@@ -132,7 +156,29 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
 
         {tab === 1 && (
           <Box role="tabpanel" id="tabpanel-steps" aria-labelledby="tab-steps">
-            <StepEditor steps={draft.steps} onChange={(steps) => set("steps", steps)} />
+            <FormControlLabel
+              sx={{ mb: 1.5 }}
+              control={
+                <Switch
+                  checked={draft.use_step_models}
+                  onChange={(e) => set("use_step_models", e.target.checked)}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2">Use different models for reasoning steps</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Off: every step uses the template's default model above. On: each step below
+                    can choose its own model, falling back to the default when unset.
+                  </Typography>
+                </Box>
+              }
+            />
+            <StepEditor
+              steps={draft.steps}
+              onChange={(steps) => set("steps", steps)}
+              useStepModels={draft.use_step_models}
+            />
           </Box>
         )}
 

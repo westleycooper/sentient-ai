@@ -53,6 +53,8 @@ async def save_sme_template(
         visualisation_kind=body.visualisation_kind,
         theme_id=body.theme_id,
         lesson=LessonConfig(**body.lesson) if body.lesson else LessonConfig(),
+        default_model=body.default_model,
+        use_step_models=body.use_step_models,
     )
     saved = await uc.execute(template)
     return SmeTemplateResponse.from_domain(saved)

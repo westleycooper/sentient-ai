@@ -6,8 +6,9 @@
  *
  * Until codegen is wired up in CI these are hand-authored to match the FastAPI routes.
  */
+import { useCallback, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "./client";
+import { api, streamEvents } from "./client";
 
 // --- Types (mirror FastAPI DTOs) ---
 
@@ -18,6 +19,9 @@ export interface ReasoningStep {
   config: Record<string, unknown>;
   next_default: string | null;
   next_on: Record<string, string>;
+  /** Namespaced model id (e.g. "openai:gpt-5.6-terra") overriding the template
+   * default for this step. Only used when the template's `use_step_models` is on. */
+  model?: string | null;
 }
 
 export interface RetrievalSource {
@@ -58,6 +62,12 @@ export interface SmeTemplate {
   visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead";
   theme_id: string;
   lesson: LessonConfig;
+  /** Namespaced model id (e.g. "anthropic:claude-sonnet-5") used for every
+   * LLM-calling step unless `use_step_models` is on and a step overrides it.
+   * `null` defers to the platform's zero-config default. */
+  default_model?: string | null;
+  /** When true, individual steps may use their own `model` instead of `default_model`. */
+  use_step_models: boolean;
 }
 
 export interface Message {
@@ -151,6 +161,124 @@ export function useDeleteSmeTemplate() {
     mutationFn: (id: string) => api.delete(`/sme/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sme"] }),
   });
+}
+
+// --- Model selection (ADR-0005) ---
+
+export interface FrontierModelOption {
+  id: string;
+  provider: string;
+  label: string;
+  description: string;
+}
+
+export interface RecommendedModelOption {
+  tag: string;
+  label: string;
+  description: string;
+}
+
+export interface LocalModelInfo {
+  id: string;
+  name: string;
+  size_bytes: number;
+  modified_at: string;
+}
+
+export interface LocalModelBrowserState {
+  runtime_available: boolean;
+  base_url: string;
+  installed: LocalModelInfo[];
+  recommended: RecommendedModelOption[];
+}
+
+export interface PullProgressFrame {
+  type: "progress" | "complete" | "error";
+  status?: string;
+  digest?: string | null;
+  completed?: number | null;
+  total?: number | null;
+  model_tag?: string;
+  message?: string;
+}
+
+export interface PlatformDefaultModel {
+  id: string;
+  provider: string;
+  label: string;
+}
+
+export function useFrontierModels() {
+  return useQuery<FrontierModelOption[]>({
+    queryKey: ["models", "frontier"],
+    queryFn: () => api.get<FrontierModelOption[]>("/models/frontier"),
+  });
+}
+
+/** The actual model an SME/step falls back to when nothing is configured —
+ * lets the UI show what "platform default" really resolves to. */
+export function usePlatformDefaultModel() {
+  return useQuery<PlatformDefaultModel>({
+    queryKey: ["models", "platform-default"],
+    queryFn: () => api.get<PlatformDefaultModel>("/models/platform-default"),
+  });
+}
+
+export function useLocalModelBrowser() {
+  return useQuery<LocalModelBrowserState>({
+    queryKey: ["models", "local"],
+    queryFn: () => api.get<LocalModelBrowserState>("/models/local"),
+  });
+}
+
+export function useDeleteLocalModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["models", "local", "delete"],
+    mutationFn: (tag: string) => api.delete(`/models/local/${encodeURIComponent(tag)}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["models", "local"] }),
+  });
+}
+
+/** Pulls (downloads) a local model, streaming progress over SSE. Not a
+ * TanStack mutation — `/models/local/pull` is a long-lived stream, not a
+ * single request/response, so this builds directly on `streamEvents`. */
+export function usePullLocalModel() {
+  const qc = useQueryClient();
+  const [progress, setProgress] = useState<PullProgressFrame | null>(null);
+  const [isPulling, setIsPulling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  const pull = useCallback(
+    (modelTag: string) => {
+      setIsPulling(true);
+      setProgress(null);
+      setError(null);
+      cleanupRef.current = streamEvents(
+        "/models/local/pull",
+        { model_tag: modelTag },
+        (raw) => {
+          const frame = raw as PullProgressFrame;
+          setProgress(frame);
+          if (frame.type === "complete") {
+            setIsPulling(false);
+            qc.invalidateQueries({ queryKey: ["models", "local"] });
+          } else if (frame.type === "error") {
+            setIsPulling(false);
+            setError(frame.message ?? "Pull failed");
+          }
+        },
+        (err) => {
+          setIsPulling(false);
+          setError(err.message);
+        }
+      );
+    },
+    [qc]
+  );
+
+  return { pull, progress, isPulling, error };
 }
 
 // --- Agent Config types ---

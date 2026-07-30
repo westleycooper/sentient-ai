@@ -20,6 +20,8 @@ class SmeTemplateResponse(BaseModel):
     visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
     lesson: dict = Field(default_factory=dict)
+    default_model: str | None = None
+    use_step_models: bool = False
 
     @classmethod
     def from_domain(cls, t: SmeTemplate) -> SmeTemplateResponse:
@@ -34,6 +36,8 @@ class SmeTemplateResponse(BaseModel):
             visualisation_kind=t.visualisation_kind,
             theme_id=t.theme_id,
             lesson=t.lesson.model_dump(),
+            default_model=t.default_model,
+            use_step_models=t.use_step_models,
         )
 
 
@@ -48,6 +52,8 @@ class SaveSmeTemplateRequest(BaseModel):
     visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
     lesson: dict = Field(default_factory=dict)
+    default_model: str | None = None
+    use_step_models: bool = False
 
 
 # --- Conversations ---
@@ -160,3 +166,45 @@ class McpCallToolRequest(BaseModel):
 
 class McpInteractResponse(BaseModel):
     content: Any = None
+
+
+# --- Model selection (ADR-0005) ---
+
+class FrontierModelOption(BaseModel):
+    id: str
+    provider: str
+    label: str
+    description: str
+
+
+class RecommendedModelOption(BaseModel):
+    tag: str
+    label: str
+    description: str
+
+
+class LocalModelInfoResponse(BaseModel):
+    id: str
+    name: str
+    size_bytes: int
+    modified_at: str
+
+
+class LocalModelBrowserResponse(BaseModel):
+    runtime_available: bool
+    base_url: str
+    installed: list[LocalModelInfoResponse]
+    recommended: list[RecommendedModelOption]
+
+
+class PullModelRequest(BaseModel):
+    model_tag: str
+
+
+class PlatformDefaultModelResponse(BaseModel):
+    """The actual model used when an SME (or a step) configures none —
+    resolves the same `PLATFORM_DEFAULT_MODEL` value the reasoning graph
+    falls back to, so the UI never has to guess or hardcode it."""
+    id: str
+    provider: str
+    label: str
