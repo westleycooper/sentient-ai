@@ -63,7 +63,12 @@ export function HomePage() {
   const readAloudRef = useRef(readAloud);
   readAloudRef.current = readAloud;
 
-  const [amplitude, setAmplitude] = useState<Float32Array>(new Float32Array(256));
+  // Agent = TTS playback (the main visualisation); User = live mic input
+  // (the small visualisation next to the mic button). Previously a single
+  // shared amplitude state flipped between the two sources — split so both
+  // can be shown side by side, each with its own SME-configured wave kind.
+  const [agentAmplitude, setAgentAmplitude] = useState<Float32Array>(new Float32Array(256));
+  const [userAmplitude, setUserAmplitude] = useState<Float32Array>(new Float32Array(256));
   const [steps, setSteps] = useState<StepEvent[]>([]);
   const [stepHistory, setStepHistory] = useState<StepEvent[][]>([]);
   const [stepsByMsgId, setStepsByMsgId] = useState<Record<string, StepEvent[]>>({});
@@ -81,7 +86,7 @@ export function HomePage() {
   const prevSmeIdRef = useRef<string | null>(null);
   const WAVE_CYCLE: WaveformKind[] = ["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"];
   const WAVE_LABELS: Record<WaveformKind, string> = {
-    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid", wavehead: "Talking head",
+    wave: "Line wave", wavecircle: "Circle wave", wave3d: "3D dots", wave3dgrid: "3D grid", wavehead: "Talking head (WIP)",
   };
 
   // Keep a ref so archive-on-clear in callbacks always sees fresh steps
@@ -125,11 +130,12 @@ export function HomePage() {
   }, [activeSme?.id]);
 
   const activeKind: WaveformKind = waveKindOverride ?? (activeSme?.visualisation_kind as WaveformKind) ?? "wave";
+  const activeUserKind: WaveformKind = (activeSme?.user_visualisation_kind as WaveformKind) ?? "wave";
   const cycleWaveKind = () =>
     setWaveKindOverride(WAVE_CYCLE[(WAVE_CYCLE.indexOf(activeKind) + 1) % WAVE_CYCLE.length]);
 
   const handleAmplitudeChunk = useCallback((buf: Float32Array) => {
-    setAmplitude(new Float32Array(buf));
+    setUserAmplitude(new Float32Array(buf));
 
     if (!vadIsActiveRef.current) return;
 
@@ -245,7 +251,7 @@ export function HomePage() {
         const freqBuf = new Float32Array(analyser.frequencyBinCount);
         const tick = () => {
           analyser.getFloatTimeDomainData(freqBuf);
-          setAmplitude(new Float32Array(freqBuf));
+          setAgentAmplitude(new Float32Array(freqBuf));
           ttsAnimRef.current = requestAnimationFrame(tick);
         };
         setIsTtsPlaying(true);
@@ -253,7 +259,7 @@ export function HomePage() {
         source.onended = () => {
           cancelAnimationFrame(ttsAnimRef.current);
           setIsTtsPlaying(false);
-          setAmplitude(new Float32Array(256));
+          setAgentAmplitude(new Float32Array(256));
         };
         source.start();
       } catch { /* non-fatal — text greeting still visible */ }
@@ -316,7 +322,7 @@ export function HomePage() {
       const freqBuf = new Float32Array(analyser.frequencyBinCount);
       const tick = () => {
         analyser.getFloatTimeDomainData(freqBuf);
-        setAmplitude(new Float32Array(freqBuf));
+        setAgentAmplitude(new Float32Array(freqBuf));
         ttsAnimRef.current = requestAnimationFrame(tick);
       };
       setIsTtsPlaying(true);
@@ -324,7 +330,7 @@ export function HomePage() {
       source.onended = () => {
         cancelAnimationFrame(ttsAnimRef.current);
         setIsTtsPlaying(false);
-        setAmplitude(new Float32Array(256));
+        setAgentAmplitude(new Float32Array(256));
       };
       source.start();
     } catch (e) {
@@ -341,7 +347,7 @@ export function HomePage() {
     }
     setRecording(false);
     const blob = await stopRec();
-    setAmplitude(new Float32Array(256));
+    setUserAmplitude(new Float32Array(256));
 
     const convId = await ensureConversation();
     const userMsgId = crypto.randomUUID();
@@ -556,7 +562,7 @@ export function HomePage() {
             <>
               <Box sx={{ position: "absolute", top: 16, right: 16, width: 120, height: 80, zIndex: 10, borderRadius: 1, overflow: "hidden" }}>
                 <Waveform
-                  amplitude={amplitude}
+                  amplitude={agentAmplitude}
                   active={recording || isTtsPlaying}
                   color={waveColor}
                   peakColor={wavePeakColor}
@@ -571,7 +577,7 @@ export function HomePage() {
           ) : (
             <>
               <Waveform
-                amplitude={amplitude}
+                amplitude={agentAmplitude}
                 active={recording || isTtsPlaying}
                 color={waveColor}
                 peakColor={wavePeakColor}
@@ -698,8 +704,29 @@ export function HomePage() {
           })}
         </Popover>
 
-        {/* Mic button */}
-        <Stack sx={{ alignItems: "center", flexShrink: 0 }}>
+        {/* User waveform + mic button */}
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Box
+            sx={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              overflow: "hidden",
+              flexShrink: 0,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+            aria-label="Your voice"
+          >
+            <Waveform
+              amplitude={userAmplitude}
+              active={recording}
+              color={waveColor}
+              peakColor={wavePeakColor}
+              bgColor={activeTokens.bgPaper}
+              kind={activeUserKind}
+            />
+          </Box>
           <MicButton
             state={recState}
             onStart={handleMicStart}

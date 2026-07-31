@@ -86,6 +86,15 @@ def test_sme_template_model_fields_default_to_unset():
     assert t.use_step_models is False
 
 
+def test_user_visualisation_kind_defaults_to_wave_and_is_independent_of_agent_kind():
+    t = ftse100_default()
+    assert t.user_visualisation_kind == "wave"
+
+    t = t.model_copy(update={"visualisation_kind": "wave3d", "user_visualisation_kind": "wavecircle"})
+    assert t.visualisation_kind == "wave3d"
+    assert t.user_visualisation_kind == "wavecircle"
+
+
 def test_reasoning_step_model_defaults_to_none():
     step = ReasoningStep(id="s1", name="Test", kind=StepKind.REASON)
     assert step.model is None

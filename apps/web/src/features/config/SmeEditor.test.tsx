@@ -21,6 +21,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     rules: [],
     is_default: false,
     visualisation_kind: "wave",
+    user_visualisation_kind: "wave",
     theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
     use_step_models: false,
@@ -69,6 +70,21 @@ describe("SmeEditor", () => {
   it("shows the resolved platform-default model, not just the words 'platform default'", async () => {
     renderEditor();
     expect(await screen.findByText("Anthropic Haiku 4.5 (default)")).toBeInTheDocument();
+  });
+
+  it("has independent Agent and User waveform selects, defaulting to Sound Wave", () => {
+    renderEditor();
+    expect(screen.getByLabelText("Agent waveform visualisation")).toHaveTextContent("Sound Wave");
+    expect(screen.getByLabelText("User waveform visualisation")).toHaveTextContent("Sound Wave");
+  });
+
+  it("changing the User waveform does not affect the Agent waveform", async () => {
+    renderEditor();
+    await userEvent.click(screen.getByLabelText("User waveform visualisation"));
+    await userEvent.click(await screen.findByRole("option", { name: "Circle Wave" }));
+
+    expect(screen.getByLabelText("User waveform visualisation")).toHaveTextContent("Circle Wave");
+    expect(screen.getByLabelText("Agent waveform visualisation")).toHaveTextContent("Sound Wave");
   });
 
   it("shows the SME's own default model when one is configured", async () => {

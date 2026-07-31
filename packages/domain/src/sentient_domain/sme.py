@@ -82,6 +82,11 @@ class SmeTemplate(BaseModel):
     rules: list[SmeRule] = Field(default_factory=list)
     is_default: bool = False
     visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"] = "wave"
+    """Visualisation shown for the agent's spoken response (the main view)."""
+    user_visualisation_kind: Literal["wave", "wavecircle", "wave3d", "wave3dgrid", "wavehead"] = "wave"
+    """Visualisation shown for the user's own mic input (the small view next
+    to the mic button). Independent of `visualisation_kind` — an SME can pair
+    any agent visual with any user visual."""
     theme_id: str = "dark-teal"
     lesson: LessonConfig = Field(default_factory=LessonConfig)
     default_model: str | None = None

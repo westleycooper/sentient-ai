@@ -14,6 +14,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     rules: [{ id: "r1", description: "Cite sources", enabled: true }],
     is_default: false,
     visualisation_kind: "wave",
+    user_visualisation_kind: "wave",
     theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
     use_step_models: false,

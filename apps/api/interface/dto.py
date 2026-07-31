@@ -18,6 +18,7 @@ class SmeTemplateResponse(BaseModel):
     rules: list[dict]
     is_default: bool
     visualisation_kind: str = "wave"
+    user_visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
     lesson: dict = Field(default_factory=dict)
     default_model: str | None = None
@@ -34,6 +35,7 @@ class SmeTemplateResponse(BaseModel):
             rules=[r.model_dump() for r in t.rules],
             is_default=t.is_default,
             visualisation_kind=t.visualisation_kind,
+            user_visualisation_kind=t.user_visualisation_kind,
             theme_id=t.theme_id,
             lesson=t.lesson.model_dump(),
             default_model=t.default_model,
@@ -50,6 +52,7 @@ class SaveSmeTemplateRequest(BaseModel):
     rules: list[dict] = Field(default_factory=list)
     is_default: bool = False
     visualisation_kind: str = "wave"
+    user_visualisation_kind: str = "wave"
     theme_id: str = "dark-teal"
     lesson: dict = Field(default_factory=dict)
     default_model: str | None = None

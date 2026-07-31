@@ -38,6 +38,7 @@ class PostgresSmeRepository:
         row.rules = [r.model_dump() for r in template.rules]
         row.is_default = template.is_default
         row.visualisation_kind = template.visualisation_kind
+        row.user_visualisation_kind = template.user_visualisation_kind
         row.theme_id = template.theme_id
         row.lesson = template.lesson.model_dump()
         row.default_model = template.default_model
@@ -61,6 +62,7 @@ class PostgresSmeRepository:
             rules=[SmeRule(**r) for r in (row.rules or [])],
             is_default=row.is_default,
             visualisation_kind=row.visualisation_kind or "wave",
+            user_visualisation_kind=row.user_visualisation_kind or "wave",
             theme_id=row.theme_id or "dark-teal",
             lesson=LessonConfig(**(row.lesson or {})),
             default_model=row.default_model,

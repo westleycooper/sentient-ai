@@ -31,6 +31,7 @@ def _row(t) -> dict:
         "is_default": t.is_default,
         "lesson": json.dumps(t.lesson.model_dump()),
         "visualisation_kind": t.visualisation_kind,
+        "user_visualisation_kind": t.user_visualisation_kind,
         "theme_id": t.theme_id,
         "default_model": t.default_model,
         "use_step_models": t.use_step_models,
@@ -49,24 +50,25 @@ def main() -> None:
                 cur.execute(
                     """
                     INSERT INTO sme_templates
-                        (id, name, soul, steps, sources, rules, is_default, lesson, visualisation_kind, theme_id,
-                         default_model, use_step_models)
+                        (id, name, soul, steps, sources, rules, is_default, lesson, visualisation_kind,
+                         user_visualisation_kind, theme_id, default_model, use_step_models)
                     VALUES
                         (%(id)s, %(name)s, %(soul)s, %(steps)s::jsonb, %(sources)s::jsonb, %(rules)s::jsonb,
-                         %(is_default)s, %(lesson)s::jsonb, %(visualisation_kind)s, %(theme_id)s,
-                         %(default_model)s, %(use_step_models)s)
+                         %(is_default)s, %(lesson)s::jsonb, %(visualisation_kind)s, %(user_visualisation_kind)s,
+                         %(theme_id)s, %(default_model)s, %(use_step_models)s)
                     ON CONFLICT (id) DO UPDATE SET
-                        name               = EXCLUDED.name,
-                        soul               = EXCLUDED.soul,
-                        steps              = EXCLUDED.steps,
-                        sources            = EXCLUDED.sources,
-                        rules              = EXCLUDED.rules,
-                        is_default         = EXCLUDED.is_default,
-                        lesson             = EXCLUDED.lesson,
-                        visualisation_kind = EXCLUDED.visualisation_kind,
-                        theme_id           = EXCLUDED.theme_id,
-                        default_model      = EXCLUDED.default_model,
-                        use_step_models    = EXCLUDED.use_step_models
+                        name                     = EXCLUDED.name,
+                        soul                     = EXCLUDED.soul,
+                        steps                    = EXCLUDED.steps,
+                        sources                  = EXCLUDED.sources,
+                        rules                    = EXCLUDED.rules,
+                        is_default               = EXCLUDED.is_default,
+                        lesson                   = EXCLUDED.lesson,
+                        visualisation_kind       = EXCLUDED.visualisation_kind,
+                        user_visualisation_kind  = EXCLUDED.user_visualisation_kind,
+                        theme_id                 = EXCLUDED.theme_id,
+                        default_model            = EXCLUDED.default_model,
+                        use_step_models          = EXCLUDED.use_step_models
                     """,
                     row,
                 )
