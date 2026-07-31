@@ -30,6 +30,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
     rules: [],
     is_default: true,
     visualisation_kind: "wave",
+    user_visualisation_kind: "wave",
     theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
     use_step_models: false,

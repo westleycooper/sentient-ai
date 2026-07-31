@@ -51,6 +51,7 @@ async def save_sme_template(
         rules=[SmeRule(**r) for r in body.rules],
         is_default=body.is_default,
         visualisation_kind=body.visualisation_kind,
+        user_visualisation_kind=body.user_visualisation_kind,
         theme_id=body.theme_id,
         lesson=LessonConfig(**body.lesson) if body.lesson else LessonConfig(),
         default_model=body.default_model,

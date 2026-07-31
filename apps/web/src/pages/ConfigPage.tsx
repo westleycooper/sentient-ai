@@ -98,6 +98,7 @@ export function ConfigPage() {
       rules: [],
       is_default: false,
       visualisation_kind: "wave",
+      user_visualisation_kind: "wave",
       theme_id: "dark-teal",
       lesson: { enabled: false, visual_verify: true, questions: [] },
       default_model: null,

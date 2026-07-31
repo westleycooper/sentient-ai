@@ -32,6 +32,14 @@ import { useModelDisplay } from "./useModelDisplay";
 import type { SmeTemplate } from "../../api/hooks";
 import { THEMES } from "../../themes/index";
 
+const WAVEFORM_OPTIONS: { value: SmeTemplate["visualisation_kind"]; label: string }[] = [
+  { value: "wave", label: "Sound Wave" },
+  { value: "wavecircle", label: "Circle Wave" },
+  { value: "wave3d", label: "3D Wave" },
+  { value: "wave3dgrid", label: "3D Grid" },
+  { value: "wavehead", label: "Talking Head (WIP)" },
+];
+
 interface SmeEditorProps {
   template: SmeTemplate;
   onSave: (t: SmeTemplate) => void;
@@ -70,20 +78,51 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
             size="small"
             sx={{ flex: 1 }}
           />
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="vis-kind-label">Waveform</InputLabel>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={draft.is_default}
+                onChange={(e) => set("is_default", e.target.checked)}
+                slotProps={{ input: { "aria-label": "Lock — prevent deletion" } }}
+              />
+            }
+            label="Lock"
+          />
+        </Stack>
+
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
+          <Chip
+            icon={<PsychologyAltOutlinedIcon />}
+            label={`${describe(draft.default_model ?? null)} (default)`}
+            onClick={() => setModelBrowserOpen(true)}
+            variant="outlined"
+          />
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel id="vis-kind-label">Agent Waveform</InputLabel>
             <Select
               labelId="vis-kind-label"
-              label="Waveform"
+              label="Agent Waveform"
               value={draft.visualisation_kind ?? "wave"}
               onChange={(e) => set("visualisation_kind", e.target.value as "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead")}
-              aria-label="Waveform visualisation"
+              aria-label="Agent waveform visualisation"
             >
-              <MenuItem value="wave">Sound Wave</MenuItem>
-              <MenuItem value="wavecircle">Circle Wave</MenuItem>
-              <MenuItem value="wave3d">3D Wave</MenuItem>
-              <MenuItem value="wave3dgrid">3D Grid</MenuItem>
-              <MenuItem value="wavehead">Talking Head</MenuItem>
+              {WAVEFORM_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel id="user-vis-kind-label">User Waveform</InputLabel>
+            <Select
+              labelId="user-vis-kind-label"
+              label="User Waveform"
+              value={draft.user_visualisation_kind ?? "wave"}
+              onChange={(e) => set("user_visualisation_kind", e.target.value as "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead")}
+              aria-label="User waveform visualisation"
+            >
+              {WAVEFORM_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+              ))}
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 130 }}>
@@ -100,26 +139,7 @@ export function SmeEditor({ template, onSave, isSaving, saveError }: SmeEditorPr
               ))}
             </Select>
           </FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={draft.is_default}
-                onChange={(e) => set("is_default", e.target.checked)}
-                slotProps={{ input: { "aria-label": "Lock — prevent deletion" } }}
-              />
-            }
-            label="Lock"
-          />
         </Stack>
-
-        <Box>
-          <Chip
-            icon={<PsychologyAltOutlinedIcon />}
-            label={`${describe(draft.default_model ?? null)} (default)`}
-            onClick={() => setModelBrowserOpen(true)}
-            variant="outlined"
-          />
-        </Box>
 
         <ModelBrowser
           open={modelBrowserOpen}

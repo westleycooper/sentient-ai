@@ -43,7 +43,7 @@ const WAVE_LABELS: Record<WaveformKind, string> = {
   wavecircle: "Circle wave",
   wave3d: "3D dots",
   wave3dgrid: "3D grid",
-  wavehead: "Talking head",
+  wavehead: "Talking head (WIP)",
 };
 
 const SESSION_ID = crypto.randomUUID();

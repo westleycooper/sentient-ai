@@ -69,6 +69,7 @@ class SmeTemplateModel(Base):
     rules: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")
+    user_visualisation_kind: Mapped[str] = mapped_column(String(50), nullable=False, server_default="wave")
     theme_id: Mapped[str] = mapped_column(String(100), nullable=False, server_default="dark-teal")
     lesson: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     default_model: Mapped[str | None] = mapped_column(String(200), nullable=True)

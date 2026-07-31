@@ -59,7 +59,7 @@ function makeTemplate(overrides: Partial<SmeTemplate> = {}): SmeTemplate {
   return {
     id: "ftse100-analyst", name: "FTSE 100 Analyst", soul: "s",
     steps: [], sources: [], rules: [], is_default: true,
-    visualisation_kind: "wave", theme_id: "dark-teal",
+    visualisation_kind: "wave", user_visualisation_kind: "wave", theme_id: "dark-teal",
     lesson: { enabled: false, visual_verify: true, questions: [] },
     use_step_models: false,
     ...overrides,
@@ -130,22 +130,38 @@ describe("HomePage", () => {
 
   it("uses the active SME's default waveform kind, and the cycle button advances it", async () => {
     renderPage([makeTemplate({ visualisation_kind: "wavecircle" })]);
-    await waitFor(() => expect(screen.getByTestId("waveform").dataset.kind).toBe("wavecircle"));
+    await waitFor(() => expect(screen.getAllByTestId("waveform")[0].dataset.kind).toBe("wavecircle"));
 
     await userEvent.click(screen.getByRole("button", { name: "Cycle waveform visualisation" }));
-    expect(screen.getByTestId("waveform").dataset.kind).toBe("wave3d");
+    expect(screen.getAllByTestId("waveform")[0].dataset.kind).toBe("wave3d");
+  });
+
+  it("renders a second, independent waveform for the user's own voice next to the mic button", async () => {
+    renderPage([makeTemplate({ visualisation_kind: "wavecircle", user_visualisation_kind: "wave3dgrid" })]);
+    await waitFor(() => {
+      const waves = screen.getAllByTestId("waveform");
+      expect(waves).toHaveLength(2);
+      expect(waves[0].dataset.kind).toBe("wavecircle");
+      expect(waves[1].dataset.kind).toBe("wave3dgrid");
+    });
+
+    // Cycling the agent's visualisation (header button) must not affect the user's.
+    await userEvent.click(screen.getByRole("button", { name: "Cycle waveform visualisation" }));
+    const waves = screen.getAllByTestId("waveform");
+    expect(waves[0].dataset.kind).toBe("wave3d");
+    expect(waves[1].dataset.kind).toBe("wave3dgrid");
   });
 
   it("toggles read aloud", async () => {
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Toggle read aloud" }));
     expect(useUiStore.getState().readAloud).toBe(true);
   });
 
   it("does not speak the greeting aloud when read-aloud is off (regression)", async () => {
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     expect(useUiStore.getState().readAloud).toBe(false);
 
     // The greeting only plays on the user's first interaction (autoplay policy).
@@ -156,20 +172,20 @@ describe("HomePage", () => {
 
   it("navigates to /config from the header icon", async () => {
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Go to configuration" }));
     expect(navigateMock).toHaveBeenCalledWith("/config");
   });
 
   it("never shows an MCP topology icon on the main screen — that lives on the Config page", async () => {
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     expect(screen.queryByRole("button", { name: "View MCP server topology" })).not.toBeInTheDocument();
   });
 
   it("hides the Code toggle when local features are disabled (production)", async () => {
     renderPage([makeTemplate()], { mcpMounted: false });
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: /coding agent/i })).not.toBeInTheDocument()
     );
@@ -180,7 +196,7 @@ describe("HomePage", () => {
       { conversation_id: "conv-1", sme_id: "ftse100-analyst", created_at: new Date().toISOString() } satisfies StartConversationResponse
     );
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
 
     await userEvent.click(screen.getByRole("button", { name: "Start recording" }));
     expect(mockStartRec).toHaveBeenCalled();
@@ -202,7 +218,7 @@ describe("HomePage", () => {
       { conversation_id: "conv-1", sme_id: "ftse100-analyst", created_at: new Date().toISOString() } satisfies StartConversationResponse
     );
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Start recording" }));
     await userEvent.click(screen.getByRole("button", { name: "Stop recording" }));
     await waitFor(() => expect(streamAudioTurn).toHaveBeenCalled());
@@ -220,7 +236,7 @@ describe("HomePage", () => {
       { conversation_id: "conv-1", sme_id: "ftse100-analyst", created_at: new Date().toISOString() } satisfies StartConversationResponse
     );
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
 
     await userEvent.type(screen.getByLabelText("Type a message"), "Hello{enter}");
 
@@ -239,7 +255,7 @@ describe("HomePage", () => {
       { conversation_id: "conv-1", sme_id: "ftse100-analyst", created_at: new Date().toISOString() } satisfies StartConversationResponse
     );
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
     await userEvent.click(screen.getByRole("button", { name: "Start recording" }));
     await userEvent.click(screen.getByRole("button", { name: "Stop recording" }));
     await waitFor(() => expect(streamAudioTurn).toHaveBeenCalled());
@@ -254,7 +270,7 @@ describe("HomePage", () => {
       { conversation_id: "conv-1", sme_id: "ftse100-analyst", created_at: new Date().toISOString() } satisfies StartConversationResponse
     );
     renderPage([makeTemplate()]);
-    await screen.findByTestId("waveform");
+    await screen.findAllByTestId("waveform");
 
     await userEvent.type(screen.getByLabelText("Type a message"), "First{enter}");
     await waitFor(() => expect(streamEvents).toHaveBeenCalledTimes(1));
@@ -289,7 +305,7 @@ describe("HomePage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Start Lesson" }));
 
     expect(screen.getByTestId("lesson-panel")).toBeInTheDocument();
-    expect(screen.getByTestId("waveform")).toBeInTheDocument();
+    expect(screen.getAllByTestId("waveform").length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "Start Lesson" })).not.toBeInTheDocument();
   });
 

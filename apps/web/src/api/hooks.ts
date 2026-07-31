@@ -59,7 +59,11 @@ export interface SmeTemplate {
   sources: RetrievalSource[];
   rules: SmeRule[];
   is_default: boolean;
+  /** Visualisation shown for the agent's spoken response (the main view). */
   visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead";
+  /** Visualisation shown for the user's own mic input (the small view next
+   * to the mic button). Independent of `visualisation_kind`. */
+  user_visualisation_kind: "wave" | "wavecircle" | "wave3d" | "wave3dgrid" | "wavehead";
   theme_id: string;
   lesson: LessonConfig;
   /** Namespaced model id (e.g. "anthropic:claude-sonnet-5") used for every
